@@ -167,3 +167,24 @@ export interface MarkdownSection {
   /** Lines within the body, trimmed and filtered for empties. */
   lines: string[];
 }
+
+/**
+ * A matcher definition that maps natural language patterns in instruction
+ * files to structured, machine-verifiable rules.
+ */
+export interface RuleMatcher {
+  /** Unique identifier prefix for rules produced by this matcher. */
+  id: string;
+  /** Regex patterns that match instruction lines this rule covers. */
+  patterns: RegExp[];
+  /** The rule category. */
+  category: RuleCategory;
+  /** Which verifier handles this rule. */
+  verifier: VerifierType;
+  /** Human-readable description of what this rule checks. */
+  description: string;
+  /** Default severity. */
+  severity: 'error' | 'warning';
+  /** Build the verification pattern from the matched line. */
+  buildPattern: (line: string, match: RegExpMatchArray) => VerificationPattern;
+}
