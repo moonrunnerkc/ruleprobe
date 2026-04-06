@@ -1,0 +1,47 @@
+{
+  "name": "ruleprobe",
+  "version": "0.1.0",
+  "description": "Verify whether AI coding agents follow the instruction files they're given",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ruleprobe": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "coding-agent",
+    "instruction-adherence",
+    "verification",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "cursorrules",
+    "benchmark"
+  ],
+  "author": "Brad (Aftermath Technologies)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moonrunnerkc/ruleprobe.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "glob": "^11.0.0",
+    "ts-morph": "^24.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
