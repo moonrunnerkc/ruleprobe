@@ -5,6 +5,9 @@
  * instruction file parsing, rule extraction, verification, and reporting.
  */
 
+/** Valid output format for adherence reports. */
+export type ReportFormat = 'text' | 'json' | 'markdown' | 'rdjson';
+
 /** Categories of machine-verifiable rules extracted from instruction files. */
 export type RuleCategory =
   | 'naming'

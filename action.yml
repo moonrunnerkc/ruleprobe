@@ -1,0 +1,98 @@
+name: "RuleProbe: Verify Instruction Adherence"
+description: >
+  Verify whether AI coding agent output follows project instruction file rules.
+  Deterministic checks, no LLM calls, no API keys beyond GITHUB_TOKEN.
+
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  instruction-file:
+    description: "Path to instruction file (CLAUDE.md, AGENTS.md, .cursorrules, etc)"
+    required: true
+  output-dir:
+    description: "Directory containing code to verify"
+    required: true
+    default: "src"
+  agent:
+    description: "Agent identifier for the report"
+    required: false
+    default: "ci"
+  model:
+    description: "Model identifier for the report"
+    required: false
+    default: "unknown"
+  format:
+    description: "Report format: text, json, or markdown"
+    required: false
+    default: "text"
+  severity:
+    description: "Minimum severity to report: error, warning, or all"
+    required: false
+    default: "all"
+  fail-on-violation:
+    description: "Fail the action if any rule violations are found"
+    required: false
+    default: "true"
+  post-comment:
+    description: "Post results as a PR comment"
+    required: false
+    default: "true"
+  reviewdog-format:
+    description: "Also output in reviewdog rdjson format for annotation integration"
+    required: false
+    default: "false"
+
+outputs:
+  score:
+    description: "Adherence score as a percentage"
+    value: ${{ steps.verify.outputs.score }}
+  passed:
+    description: "Number of rules that passed"
+    value: ${{ steps.verify.outputs.passed }}
+  failed:
+    description: "Number of rules that failed"
+    value: ${{ steps.verify.outputs.failed }}
+  total:
+    description: "Total number of rules checked"
+    value: ${{ steps.verify.outputs.total }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Install ruleprobe
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}"
+        npm ci --ignore-scripts
+        npm run build
+
+    - name: Run ruleprobe verify
+      id: verify
+      shell: bash
+      env:
+        INPUT_INSTRUCTION_FILE: ${{ inputs.instruction-file }}
+        INPUT_OUTPUT_DIR: ${{ inputs.output-dir }}
+        INPUT_AGENT: ${{ inputs.agent }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_SEVERITY: ${{ inputs.severity }}
+        INPUT_FAIL_ON_VIOLATION: ${{ inputs.fail-on-violation }}
+        INPUT_REVIEWDOG_FORMAT: ${{ inputs.reviewdog-format }}
+        RULEPROBE_BIN: ${{ github.action_path }}/dist/cli.js
+      run: bash "${{ github.action_path }}/action-scripts/run-verify.sh"
+
+    - name: Post PR comment
+      if: inputs.post-comment == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        INPUT_FAIL_ON_VIOLATION: ${{ inputs.fail-on-violation }}
+        RULEPROBE_REPORT_FILE: ${{ github.workspace }}/.ruleprobe-report.txt
+      run: bash "${{ github.action_path }}/action-scripts/post-comment.sh"

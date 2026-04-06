@@ -16,6 +16,7 @@ import type {
   RuleCategory,
   CategoryScore,
   InstructionFileType,
+  ReportFormat,
 } from './types.js';
 
 import { parseInstructionFile, parseInstructionContent } from './parsers/index.js';
@@ -35,6 +36,7 @@ export type {
   RuleCategory,
   CategoryScore,
   InstructionFileType,
+  ReportFormat,
 };
 
 // Re-export core functions

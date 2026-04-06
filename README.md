@@ -130,6 +130,69 @@ const text = formatReport(report, 'markdown');
 console.log(text);
 ```
 
+## GitHub Action
+
+Run RuleProbe on every pull request. No API keys required beyond `GITHUB_TOKEN`. No LLM calls. Deterministic results. Runs in seconds.
+
+### Minimal Setup
+
+```yaml
+name: RuleProbe
+on: [pull_request]
+jobs:
+  check-rules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: moonrunnerkc/ruleprobe@v0.1.0
+        with:
+          instruction-file: AGENTS.md
+          output-dir: src
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Full Input Reference
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `instruction-file` | yes | | Path to instruction file (CLAUDE.md, AGENTS.md, .cursorrules, etc) |
+| `output-dir` | yes | `src` | Directory containing code to verify |
+| `agent` | no | `ci` | Agent identifier for the report |
+| `model` | no | `unknown` | Model identifier for the report |
+| `format` | no | `text` | Report format: text, json, or markdown |
+| `severity` | no | `all` | Minimum severity to report: error, warning, or all |
+| `fail-on-violation` | no | `true` | Fail the action if any rule violations are found |
+| `post-comment` | no | `true` | Post results as a PR comment |
+| `reviewdog-format` | no | `false` | Also output in reviewdog rdjson format |
+
+### Outputs
+
+The action sets these outputs for downstream steps: `score`, `passed`, `failed`, `total`.
+
+### Reviewdog Integration
+
+```yaml
+- uses: moonrunnerkc/ruleprobe@v0.1.0
+  with:
+    instruction-file: AGENTS.md
+    output-dir: src
+    reviewdog-format: "true"
+    fail-on-violation: "true"
+    post-comment: "true"
+```
+
+### Exit Codes
+
+The verify command returns structured exit codes for CI consumption:
+
+- `0`: all rules passed
+- `1`: one or more rule violations found
+- `2`: execution error (file not found, parse failure, etc)
+
 ## Supported Instruction Files
 
 - CLAUDE.md
