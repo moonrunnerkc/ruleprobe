@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { verifyFileSystemRule } from '../../src/verifier/file-verifier.js';
 import type { Rule } from '../../src/types.js';
 
@@ -124,10 +126,37 @@ describe('File verifier: max file length', () => {
 // -- Strict mode --
 
 describe('File verifier: strict mode', () => {
-  it('detects missing tsconfig.json', () => {
+  it('finds tsconfig.json in ancestor directory', () => {
     const rule = makeRule('strict-mode', true);
+    // failingDir is under project root, which has tsconfig.json with strict: true
     const result = verifyFileSystemRule(rule, failingDir);
-    expect(result.passed).toBe(false);
-    expect(result.evidence[0]!.found).toContain('tsconfig.json not found');
+    expect(result.passed).toBe(true);
+  });
+
+  it('fails when no tsconfig.json exists in any ancestor', () => {
+    const rule = makeRule('strict-mode', true);
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      const result = verifyFileSystemRule(rule, isolated);
+      expect(result.passed).toBe(false);
+      expect(result.evidence[0]!.found).toContain('tsconfig.json not found');
+      expect(result.evidence[0]!.found).toContain('searched');
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
+  });
+
+  it('fails when tsconfig.json lacks strict: true', () => {
+    const rule = makeRule('strict-mode', true);
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      const tsconfigPath = join(isolated, 'tsconfig.json');
+      writeFileSync(tsconfigPath, JSON.stringify({ compilerOptions: { strict: false } }));
+      const result = verifyFileSystemRule(rule, isolated);
+      expect(result.passed).toBe(false);
+      expect(result.evidence[0]!.found).toContain('strict');
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
   });
 });

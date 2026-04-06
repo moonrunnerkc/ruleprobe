@@ -47,6 +47,7 @@ describe('Verifier orchestrator: passing fixtures', () => {
     makeRule('tests-exist', 'test-requirement', 'filesystem', 'test-files-exist', 'src/**/*.ts', true),
     makeRule('max-line', 'forbidden-pattern', 'regex', 'max-line-length', '*.ts', '120'),
     makeRule('max-file', 'forbidden-pattern', 'regex', 'max-file-length', '*.ts', '300'),
+    makeRule('strict-mode', 'structure', 'filesystem', 'strict-mode', 'tsconfig.json', true, 'project'),
   ];
 
   it('returns all rules as passing', () => {
@@ -82,6 +83,7 @@ describe('Verifier orchestrator: failing fixtures', () => {
     makeRule('tests-exist', 'test-requirement', 'filesystem', 'test-files-exist', 'src/**/*.ts', true),
     makeRule('max-line', 'forbidden-pattern', 'regex', 'max-line-length', '*.ts', '100'),
     makeRule('max-file', 'forbidden-pattern', 'regex', 'max-file-length', '*.ts', '300'),
+    makeRule('strict-mode', 'structure', 'filesystem', 'strict-mode', 'tsconfig.json', true, 'project'),
   ];
 
   it('flags multiple rules as failing', () => {
@@ -89,8 +91,8 @@ describe('Verifier orchestrator: failing fixtures', () => {
     const results = verifyOutput(ruleSet, failingDir);
 
     const failed = results.filter((r) => !r.passed);
-    // All nine rules should fail against the failing fixtures
-    expect(failed.length).toBe(rules.length);
+    // strict-mode passes (ancestor walk finds project root tsconfig.json), rest fail
+    expect(failed.length).toBe(rules.length - 1);
   });
 
   it('routes rules to the correct verifiers', () => {
@@ -102,7 +104,7 @@ describe('Verifier orchestrator: failing fixtures', () => {
     const regexResults = results.filter((r) => r.rule.verifier === 'regex');
 
     expect(astResults).toHaveLength(5);
-    expect(fsResults).toHaveLength(2);
+    expect(fsResults).toHaveLength(3);
     expect(regexResults).toHaveLength(2);
   });
 

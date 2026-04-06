@@ -7,12 +7,10 @@
  */
 
 import { readdirSync, statSync, readFileSync, existsSync } from 'node:fs';
-import { join, basename, relative, extname } from 'node:path';
+import { join, basename, relative, extname, resolve, dirname } from 'node:path';
 import type { Rule, RuleResult, Evidence } from '../types.js';
 
 const KEBAB_CASE_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
-const CAMEL_CASE_FILE_PATTERN = /^[a-z][a-zA-Z0-9]*$/;
-const PASCAL_CASE_FILE_PATTERN = /^[A-Z][a-zA-Z0-9]*$/;
 
 /**
  * Recursively collect all file paths under a directory.
@@ -179,23 +177,50 @@ function checkMaxFileLength(
 }
 
 /**
+ * Find tsconfig.json by walking up from outputDir through ancestor
+ * directories (up to 5 levels or filesystem root).
+ */
+function findTsconfig(outputDir: string): { path: string; searched: string[] } | { path: null; searched: string[] } {
+  const searched: string[] = [];
+  let current = resolve(outputDir);
+  const maxLevels = 5;
+
+  for (let i = 0; i <= maxLevels; i++) {
+    const candidate = join(current, 'tsconfig.json');
+    searched.push(current);
+    if (existsSync(candidate)) {
+      return { path: candidate, searched };
+    }
+    const parent = dirname(current);
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
+
+  return { path: null, searched };
+}
+
+/**
  * Check for the existence of a tsconfig.json with strict mode enabled.
+ *
+ * Walks up from outputDir to find tsconfig.json in ancestor directories.
  */
 function checkStrictMode(outputDir: string): Evidence[] {
-  const tsconfigPath = join(outputDir, 'tsconfig.json');
+  const result = findTsconfig(outputDir);
 
-  if (!existsSync(tsconfigPath)) {
+  if (result.path === null) {
     return [{
       file: 'tsconfig.json',
       line: null,
-      found: 'tsconfig.json not found',
+      found: `tsconfig.json not found (searched: ${result.searched.join(', ')})`,
       expected: 'tsconfig.json with strict: true',
       context: '',
     }];
   }
 
   try {
-    const content = readFileSync(tsconfigPath, 'utf-8');
+    const content = readFileSync(result.path, 'utf-8');
     const parsed: unknown = JSON.parse(content);
     if (
       typeof parsed === 'object' &&
