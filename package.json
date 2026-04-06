@@ -12,7 +12,8 @@
     "build": "tsc && cp -r src/runner/task-templates dist/runner/task-templates",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "audit": "npm audit --audit-level=moderate"
   },
   "keywords": [
     "ai",
@@ -34,14 +35,14 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "chalk": "^5.3.0",
-    "commander": "^12.1.0",
-    "glob": "^11.0.0",
-    "ts-morph": "^24.0.0"
+    "chalk": "5.6.2",
+    "commander": "12.1.0",
+    "glob": "11.1.0",
+    "ts-morph": "24.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "typescript": "^5.6.0",
-    "vitest": "^2.1.0"
+    "@types/node": "22.19.17",
+    "typescript": "5.9.3",
+    "vitest": "2.1.9"
   }
 }
