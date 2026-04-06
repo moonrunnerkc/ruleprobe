@@ -1,0 +1,15 @@
+# Source files (compiled output in dist/ is what gets published)
+src/
+tests/
+
+# Development files
+.vscode/
+.github/
+docs/
+*.tsbuildinfo
+vitest.config.ts
+tsconfig.json
+
+# Git
+.git/
+.gitignore

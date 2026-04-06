@@ -1,0 +1,392 @@
+{
+  "run": {
+    "agent": "agent-b",
+    "model": "gpt-5",
+    "taskTemplateId": "rest-endpoint",
+    "outputDir": "/home/brad/projects/ruleprobe/tests/fixtures/case-study-output/agent-b",
+    "timestamp": "2026-04-06T18:37:24.253Z",
+    "durationSeconds": null
+  },
+  "ruleset": {
+    "sourceFile": "/home/brad/projects/ruleprobe/tests/fixtures/case-study-rules.md",
+    "sourceType": "unknown",
+    "rules": [
+      {
+        "id": "naming-camelcase-variables-1",
+        "category": "naming",
+        "source": "- Use camelCase for all variable and function names",
+        "description": "Variables and functions must use camelCase naming",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "camelCase",
+          "target": "variables",
+          "expected": "camelCase",
+          "scope": "file"
+        }
+      },
+      {
+        "id": "naming-pascalcase-types-2",
+        "category": "naming",
+        "source": "- Use PascalCase for types, interfaces, and classes",
+        "description": "Types, interfaces, and classes must use PascalCase naming",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "PascalCase",
+          "target": "types",
+          "expected": "PascalCase",
+          "scope": "file"
+        }
+      },
+      {
+        "id": "naming-kebab-case-files-3",
+        "category": "naming",
+        "source": "- File names must use kebab-case",
+        "description": "File names must use kebab-case",
+        "severity": "error",
+        "verifier": "filesystem",
+        "pattern": {
+          "type": "kebab-case",
+          "target": "filenames",
+          "expected": "kebab-case",
+          "scope": "project"
+        }
+      },
+      {
+        "id": "forbidden-no-any-type-4",
+        "category": "forbidden-pattern",
+        "source": "- Never use any type in TypeScript code",
+        "description": "The \"any\" type must not be used",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "no-any",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      },
+      {
+        "id": "forbidden-no-console-log-5",
+        "category": "forbidden-pattern",
+        "source": "- No console.log in production code",
+        "description": "console.log must not be used in production code",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "no-console-log",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      },
+      {
+        "id": "structure-named-exports-only-6",
+        "category": "structure",
+        "source": "- Use named exports only, no default exports",
+        "description": "Only named exports are allowed, no default exports",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "named-exports-only",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      },
+      {
+        "id": "structure-jsdoc-required-7",
+        "category": "structure",
+        "source": "- Every public function must have a JSDoc comment",
+        "description": "Every public function must have a JSDoc comment",
+        "severity": "warning",
+        "verifier": "ast",
+        "pattern": {
+          "type": "jsdoc-required",
+          "target": "*.ts",
+          "expected": true,
+          "scope": "file"
+        }
+      },
+      {
+        "id": "structure-max-file-length-8",
+        "category": "structure",
+        "source": "- Files must not exceed 300 lines",
+        "description": "Files must not exceed the maximum line count",
+        "severity": "warning",
+        "verifier": "regex",
+        "pattern": {
+          "type": "max-file-length",
+          "target": "*.ts",
+          "expected": "300",
+          "scope": "file"
+        }
+      },
+      {
+        "id": "test-files-exist-9",
+        "category": "test-requirement",
+        "source": "- Every source file must have a corresponding test file",
+        "description": "Every source file must have a corresponding test file",
+        "severity": "error",
+        "verifier": "filesystem",
+        "pattern": {
+          "type": "test-files-exist",
+          "target": "src/**/*.ts",
+          "expected": true,
+          "scope": "project"
+        }
+      },
+      {
+        "id": "import-no-path-aliases-10",
+        "category": "import-pattern",
+        "source": "- Imports must use relative paths, no path aliases",
+        "description": "Imports must use relative paths, not path aliases",
+        "severity": "warning",
+        "verifier": "ast",
+        "pattern": {
+          "type": "no-path-aliases",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      }
+    ],
+    "unparseable": []
+  },
+  "results": [
+    {
+      "rule": {
+        "id": "naming-camelcase-variables-1",
+        "category": "naming",
+        "source": "- Use camelCase for all variable and function names",
+        "description": "Variables and functions must use camelCase naming",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "camelCase",
+          "target": "variables",
+          "expected": "camelCase",
+          "scope": "file"
+        }
+      },
+      "passed": false,
+      "evidence": [
+        {
+          "file": "/home/brad/projects/ruleprobe/tests/fixtures/case-study-output/agent-b/src/routes/bookmarks.ts",
+          "line": 14,
+          "found": "max_bookmarks_per_page",
+          "expected": "camelCase",
+          "context": "\nconst max_bookmarks_per_page = 50;\n"
+        }
+      ]
+    },
+    {
+      "rule": {
+        "id": "naming-pascalcase-types-2",
+        "category": "naming",
+        "source": "- Use PascalCase for types, interfaces, and classes",
+        "description": "Types, interfaces, and classes must use PascalCase naming",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "PascalCase",
+          "target": "types",
+          "expected": "PascalCase",
+          "scope": "file"
+        }
+      },
+      "passed": true,
+      "evidence": []
+    },
+    {
+      "rule": {
+        "id": "naming-kebab-case-files-3",
+        "category": "naming",
+        "source": "- File names must use kebab-case",
+        "description": "File names must use kebab-case",
+        "severity": "error",
+        "verifier": "filesystem",
+        "pattern": {
+          "type": "kebab-case",
+          "target": "filenames",
+          "expected": "kebab-case",
+          "scope": "project"
+        }
+      },
+      "passed": true,
+      "evidence": []
+    },
+    {
+      "rule": {
+        "id": "forbidden-no-any-type-4",
+        "category": "forbidden-pattern",
+        "source": "- Never use any type in TypeScript code",
+        "description": "The \"any\" type must not be used",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "no-any",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      },
+      "passed": true,
+      "evidence": []
+    },
+    {
+      "rule": {
+        "id": "forbidden-no-console-log-5",
+        "category": "forbidden-pattern",
+        "source": "- No console.log in production code",
+        "description": "console.log must not be used in production code",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "no-console-log",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      },
+      "passed": true,
+      "evidence": []
+    },
+    {
+      "rule": {
+        "id": "structure-named-exports-only-6",
+        "category": "structure",
+        "source": "- Use named exports only, no default exports",
+        "description": "Only named exports are allowed, no default exports",
+        "severity": "error",
+        "verifier": "ast",
+        "pattern": {
+          "type": "named-exports-only",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      },
+      "passed": false,
+      "evidence": [
+        {
+          "file": "/home/brad/projects/ruleprobe/tests/fixtures/case-study-output/agent-b/src/routes/bookmarks.ts",
+          "line": 335,
+          "found": "default export",
+          "expected": "named exports only",
+          "context": "/** Default handler for unmatched routes. */\nexport default function notFoundHandler(): ApiError {\n  return { status: 404, message: 'Route not found' };"
+        }
+      ]
+    },
+    {
+      "rule": {
+        "id": "structure-jsdoc-required-7",
+        "category": "structure",
+        "source": "- Every public function must have a JSDoc comment",
+        "description": "Every public function must have a JSDoc comment",
+        "severity": "warning",
+        "verifier": "ast",
+        "pattern": {
+          "type": "jsdoc-required",
+          "target": "*.ts",
+          "expected": true,
+          "scope": "file"
+        }
+      },
+      "passed": true,
+      "evidence": []
+    },
+    {
+      "rule": {
+        "id": "structure-max-file-length-8",
+        "category": "structure",
+        "source": "- Files must not exceed 300 lines",
+        "description": "Files must not exceed the maximum line count",
+        "severity": "warning",
+        "verifier": "regex",
+        "pattern": {
+          "type": "max-file-length",
+          "target": "*.ts",
+          "expected": "300",
+          "scope": "file"
+        }
+      },
+      "passed": false,
+      "evidence": [
+        {
+          "file": "src/routes/bookmarks.ts",
+          "line": null,
+          "found": "338 lines",
+          "expected": "max 300 lines",
+          "context": ""
+        }
+      ]
+    },
+    {
+      "rule": {
+        "id": "test-files-exist-9",
+        "category": "test-requirement",
+        "source": "- Every source file must have a corresponding test file",
+        "description": "Every source file must have a corresponding test file",
+        "severity": "error",
+        "verifier": "filesystem",
+        "pattern": {
+          "type": "test-files-exist",
+          "target": "src/**/*.ts",
+          "expected": true,
+          "scope": "project"
+        }
+      },
+      "passed": true,
+      "evidence": []
+    },
+    {
+      "rule": {
+        "id": "import-no-path-aliases-10",
+        "category": "import-pattern",
+        "source": "- Imports must use relative paths, no path aliases",
+        "description": "Imports must use relative paths, not path aliases",
+        "severity": "warning",
+        "verifier": "ast",
+        "pattern": {
+          "type": "no-path-aliases",
+          "target": "*.ts",
+          "expected": false,
+          "scope": "file"
+        }
+      },
+      "passed": true,
+      "evidence": []
+    }
+  ],
+  "summary": {
+    "totalRules": 10,
+    "passed": 7,
+    "failed": 3,
+    "warnings": 1,
+    "adherenceScore": 70,
+    "byCategory": {
+      "naming": {
+        "passed": 2,
+        "total": 3
+      },
+      "forbidden-pattern": {
+        "passed": 2,
+        "total": 2
+      },
+      "structure": {
+        "passed": 1,
+        "total": 3
+      },
+      "test-requirement": {
+        "passed": 1,
+        "total": 1
+      },
+      "import-pattern": {
+        "passed": 1,
+        "total": 1
+      }
+    }
+  }
+}
