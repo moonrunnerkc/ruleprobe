@@ -43,34 +43,6 @@ function checkMaxLineLength(
 }
 
 /**
- * Check file length (total line count) against a maximum.
- *
- * @param content - File content as string
- * @param filePath - Relative file path for evidence
- * @param maxLines - Maximum allowed lines per file
- * @returns Evidence array for violations
- */
-function checkMaxFileLength(
-  content: string,
-  filePath: string,
-  maxLines: number,
-): Evidence[] {
-  const lineCount = content.split('\n').length;
-
-  if (lineCount > maxLines) {
-    return [{
-      file: filePath,
-      line: null,
-      found: `${lineCount} lines`,
-      expected: `max ${maxLines} lines`,
-      context: '',
-    }];
-  }
-
-  return [];
-}
-
-/**
  * Verify a regex-based rule against a set of files.
  *
  * Routes to the appropriate check function based on the rule's
@@ -101,13 +73,6 @@ export function verifyRegexRule(
             ? parseInt(rule.pattern.expected, 10)
             : 120;
           allEvidence.push(...checkMaxLineLength(content, relPath, maxLength));
-          break;
-        }
-        case 'max-file-length': {
-          const maxLines = typeof rule.pattern.expected === 'string'
-            ? parseInt(rule.pattern.expected, 10)
-            : 300;
-          allEvidence.push(...checkMaxFileLength(content, relPath, maxLines));
           break;
         }
         default:

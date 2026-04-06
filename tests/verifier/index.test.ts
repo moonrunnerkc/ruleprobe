@@ -46,7 +46,7 @@ describe('Verifier orchestrator: passing fixtures', () => {
     makeRule('kebab-files', 'naming', 'filesystem', 'kebab-case', 'filenames', true),
     makeRule('tests-exist', 'test-requirement', 'filesystem', 'test-files-exist', 'src/**/*.ts', true),
     makeRule('max-line', 'forbidden-pattern', 'regex', 'max-line-length', '*.ts', '120'),
-    makeRule('max-file', 'forbidden-pattern', 'regex', 'max-file-length', '*.ts', '300'),
+    makeRule('max-file', 'structure', 'filesystem', 'max-file-length', '*.ts', '300'),
     makeRule('strict-mode', 'structure', 'filesystem', 'strict-mode', 'tsconfig.json', true, 'project'),
   ];
 
@@ -82,7 +82,7 @@ describe('Verifier orchestrator: failing fixtures', () => {
     makeRule('kebab-files', 'naming', 'filesystem', 'kebab-case', 'filenames', true),
     makeRule('tests-exist', 'test-requirement', 'filesystem', 'test-files-exist', 'src/**/*.ts', true),
     makeRule('max-line', 'forbidden-pattern', 'regex', 'max-line-length', '*.ts', '100'),
-    makeRule('max-file', 'forbidden-pattern', 'regex', 'max-file-length', '*.ts', '300'),
+    makeRule('max-file', 'structure', 'filesystem', 'max-file-length', '*.ts', '300'),
     makeRule('strict-mode', 'structure', 'filesystem', 'strict-mode', 'tsconfig.json', true, 'project'),
   ];
 
@@ -104,8 +104,8 @@ describe('Verifier orchestrator: failing fixtures', () => {
     const regexResults = results.filter((r) => r.rule.verifier === 'regex');
 
     expect(astResults).toHaveLength(5);
-    expect(fsResults).toHaveLength(3);
-    expect(regexResults).toHaveLength(2);
+    expect(fsResults).toHaveLength(4);
+    expect(regexResults).toHaveLength(1);
   });
 
   it('each result contains evidence of failures', () => {

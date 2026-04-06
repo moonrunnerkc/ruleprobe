@@ -84,16 +84,4 @@ describe('Regex verifier: max line length', () => {
   });
 });
 
-// -- Failing fixtures: file length --
 
-describe('Regex verifier: max file length', () => {
-  const longFile = resolve(failingDir, 'src/long-file.ts');
-
-  it('detects files exceeding 300-line limit', () => {
-    const rule = makeRule('max-file-length', '300');
-    const result = verifyRegexRule(rule, [longFile], failingDir);
-    expect(result.passed).toBe(false);
-    expect(result.evidence).toHaveLength(1);
-    expect(result.evidence[0]!.found).toMatch(/\d+ lines/);
-  });
-});
