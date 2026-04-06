@@ -1,0 +1,556 @@
+============================================================
+RuleProbe Phase 3 Verification Log
+Date: 2026-04-06T18:22:36Z
+============================================================
+
+=== TEST SUITE ===
+
+
+ RUN  v2.1.9 /home/brad/projects/ruleprobe
+
+ ✓ tests/fixtures/sample-output/passing/tests/utils/validation.test.ts (1 test) 3ms
+ ✓ tests/fixtures/sample-output/passing/tests/user-service.test.ts (1 test) 3ms
+ ✓ tests/verifier/file-verifier.test.ts (9 tests) 6ms
+ ✓ tests/fixtures/sample-output/passing/tests/types.test.ts (1 test) 3ms
+ ✓ tests/parsers/markdown-parser.test.ts (11 tests) 6ms
+ ✓ tests/verifier/regex-verifier.test.ts (6 tests) 5ms
+ ✓ tests/reporter/markdown.test.ts (12 tests) 5ms
+ ✓ tests/reporter/json.test.ts (6 tests) 6ms
+ ✓ tests/reporter/text.test.ts (10 tests) 13ms
+ ✓ tests/parsers/rule-extractor.test.ts (49 tests) 30ms
+ ✓ tests/verifier/ast-verifier.test.ts (19 tests) 2046ms
+   ✓ AST verifier: passing fixtures > finds no default exports in passing code 577ms
+   ✓ AST verifier: passing fixtures > finds no missing JSDoc on exported functions in passing code 397ms
+   ✓ AST verifier: default export detection > detects default export 330ms
+   ✓ AST verifier: missing JSDoc detection > detects exported functions missing JSDoc 353ms
+   ✓ AST verifier: missing JSDoc detection > does not flag non-exported functions for missing JSDoc 336ms
+ ✓ tests/verifier/index.test.ts (7 tests) 4435ms
+   ✓ Verifier orchestrator: passing fixtures > returns all rules as passing 1269ms
+   ✓ Verifier orchestrator: passing fixtures > preserves rule order in results 909ms
+   ✓ Verifier orchestrator: failing fixtures > flags multiple rules as failing 720ms
+   ✓ Verifier orchestrator: failing fixtures > routes rules to the correct verifiers 754ms
+   ✓ Verifier orchestrator: failing fixtures > each result contains evidence of failures 781ms
+ ✓ tests/cli/cli.test.ts (16 tests) 30083ms
+   ✓ CLI: parse command > outputs JSON when --format json 1670ms
+   ✓ CLI: parse command > outputs text by default 1503ms
+   ✓ CLI: parse command > includes unparseable lines with --show-unparseable 1430ms
+   ✓ CLI: parse command > fails with actionable error for missing file 1640ms
+   ✓ CLI: verify command > produces text output for passing fixtures 2585ms
+   ✓ CLI: verify command > produces JSON output with --format json 2618ms
+   ✓ CLI: verify command > produces markdown output with --format markdown 2728ms
+   ✓ CLI: verify command > shows failures for failing fixtures 2430ms
+   ✓ CLI: verify command > fails with actionable error for missing instruction file 1418ms
+   ✓ CLI: verify command > fails with actionable error for missing output directory 1363ms
+   ✓ CLI: tasks command > lists available task templates 1386ms
+   ✓ CLI: tasks command > shows template descriptions 1465ms
+   ✓ CLI: task command > shows template info for a valid template 1625ms
+   ✓ CLI: task command > fails for unknown template 1393ms
+   ✓ CLI: compare command > produces markdown comparison table 3396ms
+   ✓ CLI: help > shows help text with --help 1431ms
+
+ Test Files  13 passed (13)
+      Tests  148 passed (148)
+   Start at  12:22:37
+   Duration  30.45s (transform 480ms, setup 0ms, collect 1.58s, tests 36.65s, environment 3ms, prepare 1.02s)
+
+
+============================================================
+=== CLI COMMANDS ===
+============================================================
+
+--- CMD 1: parse --format json ---
+{
+  "sourceFile": "/home/brad/projects/ruleprobe/tests/fixtures/sample-claude.md",
+  "sourceType": "unknown",
+  "rules": [
+    {
+      "id": "forbidden-no-any-type-1",
+      "category": "forbidden-pattern",
+      "source": "- TypeScript strict mode, no any types",
+      "description": "The \"any\" type must not be used",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "no-any",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "structure-strict-mode-2",
+      "category": "structure",
+      "source": "- TypeScript strict mode, no any types",
+      "description": "TypeScript strict mode must be enabled",
+      "severity": "error",
+      "verifier": "filesystem",
+      "pattern": {
+        "type": "strict-mode",
+        "target": "tsconfig.json",
+        "expected": true,
+        "scope": "project"
+      }
+    },
+    {
+      "id": "structure-named-exports-only-3",
+      "category": "structure",
+      "source": "- Named exports only, no default exports",
+      "description": "Only named exports are allowed, no default exports",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "named-exports-only",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "naming-kebab-case-files-4",
+      "category": "naming",
+      "source": "- File names: kebab-case (e.g., user-service.ts, api-handler.ts)",
+      "description": "File names must use kebab-case",
+      "severity": "error",
+      "verifier": "filesystem",
+      "pattern": {
+        "type": "kebab-case",
+        "target": "filenames",
+        "expected": "kebab-case",
+        "scope": "project"
+      }
+    },
+    {
+      "id": "naming-camelcase-variables-5",
+      "category": "naming",
+      "source": "- Variable and function names: camelCase",
+      "description": "Variables and functions must use camelCase naming",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "camelCase",
+        "target": "variables",
+        "expected": "camelCase",
+        "scope": "file"
+      }
+    },
+    {
+      "id": "naming-camelcase-general-6",
+      "category": "naming",
+      "source": "- Variable and function names: camelCase",
+      "description": "Identifiers must use camelCase naming",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "camelCase",
+        "target": "identifiers",
+        "expected": "camelCase",
+        "scope": "file"
+      }
+    },
+    {
+      "id": "naming-pascalcase-types-7",
+      "category": "naming",
+      "source": "- Type and interface names: PascalCase",
+      "description": "Types, interfaces, and classes must use PascalCase naming",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "PascalCase",
+        "target": "types",
+        "expected": "PascalCase",
+        "scope": "file"
+      }
+    },
+    {
+      "id": "structure-jsdoc-required-8",
+      "category": "structure",
+      "source": "- Every public function has a JSDoc comment describing its contract",
+      "description": "Every public function must have a JSDoc comment",
+      "severity": "warning",
+      "verifier": "ast",
+      "pattern": {
+        "type": "jsdoc-required",
+        "target": "*.ts",
+        "expected": true,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "structure-max-file-length-9",
+      "category": "structure",
+      "source": "- Maximum file length: 300 lines. If a file exceeds this, it needs decomposition.",
+      "description": "Files must not exceed the maximum line count",
+      "severity": "warning",
+      "verifier": "regex",
+      "pattern": {
+        "type": "max-file-length",
+        "target": "*.ts",
+        "expected": "300",
+        "scope": "file"
+      }
+    },
+    {
+      "id": "forbidden-no-console-log-10",
+      "category": "forbidden-pattern",
+      "source": "- No console.log in production code; use a structured logger",
+      "description": "console.log must not be used in production code",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "no-console-log",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "test-files-exist-11",
+      "category": "test-requirement",
+      "source": "- Test files: co-located in tests/ directory mirroring src/ structure, named *.test.ts",
+      "description": "Every source file must have a corresponding test file",
+      "severity": "error",
+      "verifier": "filesystem",
+      "pattern": {
+        "type": "test-files-exist",
+        "target": "src/**/*.ts",
+        "expected": true,
+        "scope": "project"
+      }
+    },
+    {
+      "id": "test-named-pattern-12",
+      "category": "test-requirement",
+      "source": "- Test files: co-located in tests/ directory mirroring src/ structure, named *.test.ts",
+      "description": "Test files must be named *.test.ts",
+      "severity": "error",
+      "verifier": "filesystem",
+      "pattern": {
+        "type": "test-file-naming",
+        "target": "tests/**",
+        "expected": "*.test.ts",
+        "scope": "project"
+      }
+    },
+    {
+      "id": "import-no-path-aliases-14",
+      "category": "import-pattern",
+      "source": "- Imports use relative paths within the project (no path aliases)",
+      "description": "Imports must use relative paths, not path aliases",
+      "severity": "warning",
+      "verifier": "ast",
+      "pattern": {
+        "type": "no-path-aliases",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "import-no-deep-relative-15",
+      "category": "import-pattern",
+      "source": "- No relative imports deeper than 2 levels",
+      "description": "Relative imports must not go too deep",
+      "severity": "warning",
+      "verifier": "ast",
+      "pattern": {
+        "type": "no-deep-relative-imports",
+        "target": "*.ts",
+        "expected": "2",
+        "scope": "file"
+      }
+    }
+  ]
+}
+
+--- CMD 2: parse --format text --show-unparseable ---
+Extracted 13 rules:
+
+  naming-camelcase-variables-1
+    Category: naming
+    Verifier: ast
+    Pattern:  camelCase (variables)
+    Source:    "- Variables should be camelCase"
+
+  naming-camelcase-general-2
+    Category: naming
+    Verifier: ast
+    Pattern:  camelCase (identifiers)
+    Source:    "- Variables should be camelCase"
+
+  naming-pascalcase-types-3
+    Category: naming
+    Verifier: ast
+    Pattern:  PascalCase (types)
+    Source:    "- Types and interfaces: PascalCase"
+
+  naming-kebab-case-files-4
+    Category: naming
+    Verifier: filesystem
+    Pattern:  kebab-case (filenames)
+    Source:    "- File names must be kebab-case"
+
+  forbidden-no-any-type-5
+    Category: forbidden-pattern
+    Verifier: ast
+    Pattern:  no-any (*.ts)
+    Source:    "- Never use any type annotations"
+
+  forbidden-no-console-log-6
+    Category: forbidden-pattern
+    Verifier: ast
+    Pattern:  no-console-log (*.ts)
+    Source:    "- Don't use console.log, use the logger module instead"
+
+  structure-named-exports-only-7
+    Category: structure
+    Verifier: ast
+    Pattern:  named-exports-only (*.ts)
+    Source:    "- Avoid default exports, use named exports"
+
+  structure-max-file-length-8
+    Category: structure
+    Verifier: regex
+    Pattern:  max-file-length (*.ts)
+    Source:    "- Maximum file length: 250 lines"
+
+  structure-max-line-length-9
+    Category: forbidden-pattern
+    Verifier: regex
+    Pattern:  max-line-length (*.ts)
+    Source:    "- Lines should not exceed 100 characters"
+
+  test-files-exist-10
+    Category: test-requirement
+    Verifier: filesystem
+    Pattern:  test-files-exist (src/**/*.ts)
+    Source:    "- Every source file must have a corresponding test file"
+
+  import-no-path-aliases-11
+    Category: import-pattern
+    Verifier: ast
+    Pattern:  no-path-aliases (*.ts)
+    Source:    "- Use relative paths, no path aliases"
+
+  import-no-deep-relative-12
+    Category: import-pattern
+    Verifier: ast
+    Pattern:  no-deep-relative-imports (*.ts)
+    Source:    "- Avoid deep relative imports"
+
+  structure-jsdoc-required-13
+    Category: structure
+    Verifier: ast
+    Pattern:  jsdoc-required (*.ts)
+    Source:    "- Every public function must have a JSDoc comment"
+
+
+Unparseable lines (5):
+
+  - - Use readable variable names
+  - - Follow best practices for TypeScript
+  - - Write clean code
+  - - Maintain good test coverage
+  - - Use conventional commits
+
+--- CMD 3: verify failing --format text ---
+RuleProbe Adherence Report
+Agent: test-agent | Model: test-model | Task: manual
+Date: 2026-04-06T18:23:13.006Z
+
+Rules: 14 total | 2 passed | 12 failed | Score: 14%
+
+FAIL  forbidden-pattern/forbidden-no-any-type-1
+      src/UserService.ts:2 - found: user_id: any
+      src/UserService.ts:2 - found: export function fetch_user_data(user_id: any): any {
+  const User_Name: any = "test";
+  const account_balance = 100;
+  console.log("Fetching user:", user_id);
+
+  const result: any = {
+    id: user_id,
+    name: User_Name,
+    balance: account_balance,
+  };
+
+  console.log("Result:", result);
+  return result;
+}
+      src/UserService.ts:3 - found: User_Name: any = "test"
+      src/UserService.ts:7 - found: result: any = {
+    id: user_id,
+    name: User_Name,
+    balance: account_balance,
+  }
+      src/UserService.ts:17 - found: req: any
+      src/UserService.ts:17 - found: res: any
+FAIL  structure/structure-strict-mode-2
+      tsconfig.json - found: tsconfig.json not found
+FAIL  structure/structure-named-exports-only-3
+      src/UserService.ts:17 - found: default export
+FAIL  naming/naming-kebab-case-files-4
+      src/UserService.ts - found: UserService.ts
+FAIL  naming/naming-camelcase-variables-5
+      src/UserService.ts:3 - found: User_Name
+      src/UserService.ts:4 - found: account_balance
+      src/UserService.ts:19 - found: response_data
+      src/UserService.ts:24 - found: is_valid
+      src/UserService.ts:2 - found: fetch_user_data
+      src/UserService.ts:23 - found: process_payment
+FAIL  naming/naming-camelcase-general-6
+      src/UserService.ts:3 - found: User_Name
+      src/UserService.ts:4 - found: account_balance
+      src/UserService.ts:19 - found: response_data
+      src/UserService.ts:24 - found: is_valid
+      src/UserService.ts:2 - found: fetch_user_data
+      src/UserService.ts:23 - found: process_payment
+PASS  naming/naming-pascalcase-types-7
+FAIL  structure/structure-jsdoc-required-8
+      src/UserService.ts:2 - found: function fetch_user_data has no JSDoc
+      src/UserService.ts:17 - found: function defaultHandler has no JSDoc
+      src/UserService.ts:23 - found: function process_payment has no JSDoc
+FAIL  structure/structure-max-file-length-9
+      src/long-file.ts - found: 509 lines
+FAIL  forbidden-pattern/forbidden-no-console-log-10
+      src/UserService.ts:5 - found: console.log("Fetching user:", user_id)
+      src/UserService.ts:13 - found: console.log("Result:", result)
+      src/UserService.ts:18 - found: console.log("handling request")
+FAIL  test-requirement/test-files-exist-11
+      src/UserService.ts - found: no test file found
+      src/helpers.ts - found: no test file found
+      src/line-length.ts - found: no test file found
+      src/long-file.ts - found: no test file found
+PASS  test-requirement/test-named-pattern-12
+FAIL  import-pattern/import-no-path-aliases-14
+      src/helpers.ts:7 - found: @/utils/helpers.js
+      src/helpers.ts:8 - found: @utils/other.js
+FAIL  import-pattern/import-no-deep-relative-15
+      src/helpers.ts:5 - found: ../../../deeply/nested/module.js
+      src/helpers.ts:6 - found: ../../../../even/deeper/module.js
+
+By Category:
+  naming:             1/4 (25%)
+  forbidden-pattern:  0/2 (0%)
+  structure:          0/4 (0%)
+  import-pattern:     0/2 (0%)
+  test-requirement:   1/2 (50%)
+
+--- CMD 4: verify passing --format markdown ---
+# RuleProbe Adherence Report
+
+**Agent:** unknown | **Model:** unknown | **Task:** manual
+**Date:** 2026-04-06T18:23:15.736Z
+
+**Rules:** 14 total | 13 passed | 1 failed | **Score: 93%**
+
+## Results
+
+### :white_check_mark: PASS: forbidden-pattern/forbidden-no-any-type-1
+
+### :x: FAIL: structure/structure-strict-mode-2
+
+```
+tsconfig.json - found: tsconfig.json not found
+```
+
+### :white_check_mark: PASS: structure/structure-named-exports-only-3
+
+### :white_check_mark: PASS: naming/naming-kebab-case-files-4
+
+### :white_check_mark: PASS: naming/naming-camelcase-variables-5
+
+### :white_check_mark: PASS: naming/naming-camelcase-general-6
+
+### :white_check_mark: PASS: naming/naming-pascalcase-types-7
+
+### :white_check_mark: PASS: structure/structure-jsdoc-required-8
+
+### :white_check_mark: PASS: structure/structure-max-file-length-9
+
+### :white_check_mark: PASS: forbidden-pattern/forbidden-no-console-log-10
+
+### :white_check_mark: PASS: test-requirement/test-files-exist-11
+
+### :white_check_mark: PASS: test-requirement/test-named-pattern-12
+
+### :white_check_mark: PASS: import-pattern/import-no-path-aliases-14
+
+### :white_check_mark: PASS: import-pattern/import-no-deep-relative-15
+
+## Category Summary
+
+| Category | Passed | Total | Score |
+|----------|--------|-------|-------|
+| naming | 4 | 4 | 100% |
+| forbidden-pattern | 2 | 2 | 100% |
+| structure | 3 | 4 | 75% |
+| import-pattern | 2 | 2 | 100% |
+| test-requirement | 2 | 2 | 100% |
+
+--- CMD 5: compare --format markdown ---
+# RuleProbe: Agent Instruction Adherence Comparison
+
+Rules source: /home/brad/projects/ruleprobe/tests/fixtures/sample-claude.md (14 rules extracted, 4 unparseable)
+Task: manual
+Date: 2026-04-06
+
+| Rule | passing | failing |
+| ------ | :------: | :------: |
+| The "any" type must not be used | PASS | FAIL |
+| TypeScript strict mode must be enabled | FAIL | FAIL |
+| Only named exports are allowed, no default exports | PASS | FAIL |
+| File names must use kebab-case | PASS | FAIL |
+| Variables and functions must use camelCase naming | PASS | FAIL |
+| Identifiers must use camelCase naming | PASS | FAIL |
+| Types, interfaces, and classes must use PascalCase naming | PASS | PASS |
+| Every public function must have a JSDoc comment | PASS | FAIL |
+| Files must not exceed the maximum line count | PASS | FAIL |
+| console.log must not be used in production code | PASS | FAIL |
+| Every source file must have a corresponding test file | PASS | FAIL |
+| Test files must be named *.test.ts | PASS | PASS |
+| Imports must use relative paths, not path aliases | PASS | FAIL |
+| Relative imports must not go too deep | PASS | FAIL |
+
+| Agent | Score |
+|-------|-------|
+| passing (unknown) | 93% |
+| failing (unknown) | 14% |
+
+--- CMD 6: tasks ---
+Available task templates:
+
+  rest-endpoint
+    REST API Endpoint
+    Build a REST API endpoint for managing user bookmarks (POST, GET, DELETE).
+    Exercises: naming, forbidden-pattern, structure, test-requirement
+
+  utility-module
+    Utility Module with Tests
+    Build a string utility module with validation, formatting, and full test coverage.
+    Exercises: naming, forbidden-pattern, structure, test-requirement, import-pattern
+
+  react-component
+    React Component
+    Build a reusable data table component with sorting, filtering, and pagination.
+    Exercises: naming, forbidden-pattern, structure, test-requirement
+
+
+--- CMD 7: --help ---
+Usage: ruleprobe [options] [command]
+
+Verify whether AI coding agents follow the instruction files they're given
+
+Options:
+  -V, --version                                     output the version number
+  -h, --help                                        display help for command
+
+Commands:
+  parse [options] <instruction-file>                Parse an instruction file and output extracted rules
+  verify [options] <instruction-file> <output-dir>  Parse rules from instruction file, verify agent output against them
+  tasks                                             List available task templates
+  task <template-id>                                Output the full task prompt for a given template
+  compare [options] <instruction-file> <dirs...>    Run verification against multiple agent outputs and produce a comparison
+  help [command]                                    display help for command
+
+============================================================
+Phase 3 verification complete.
+============================================================
