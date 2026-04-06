@@ -64,7 +64,7 @@ describe('CLI: parse command', () => {
 
   it('fails with actionable error for missing file', () => {
     const { stderr, status } = runFail('parse nonexistent-file.md');
-    expect(status).toBe(1);
+    expect(status).toBe(2);
     expect(stderr).toContain('File not found');
   });
 });
@@ -97,17 +97,17 @@ describe('CLI: verify command', () => {
   });
 
   it('shows failures for failing fixtures', () => {
-    const output = run(
+    const { stderr, status } = runFail(
       `verify ${CLAUDE_FIXTURE} ${FAILING_DIR} --agent bad-agent --model bad-model`,
     );
-    expect(output).toContain('FAIL');
+    expect(status).toBe(1);
   });
 
   it('fails with actionable error for missing instruction file', () => {
     const { stderr, status } = runFail(
       `verify nonexistent.md ${PASSING_DIR}`,
     );
-    expect(status).toBe(1);
+    expect(status).toBe(2);
     expect(stderr).toContain('not found');
   });
 
@@ -115,7 +115,7 @@ describe('CLI: verify command', () => {
     const { stderr, status } = runFail(
       `verify ${CLAUDE_FIXTURE} /tmp/ruleprobe-nonexistent-dir-xyz`,
     );
-    expect(status).toBe(1);
+    expect(status).toBe(2);
     expect(stderr).toContain('outside the working directory');
   });
 });
@@ -147,7 +147,7 @@ describe('CLI: task command', () => {
 
   it('fails for unknown template', () => {
     const { stderr, status } = runFail('task nonexistent-template');
-    expect(status).toBe(1);
+    expect(status).toBe(2);
     expect(stderr).toContain('Unknown task template');
   });
 });

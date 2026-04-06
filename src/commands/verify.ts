@@ -2,7 +2,8 @@
  * Handler for the "verify" CLI command.
  *
  * Parses rules from an instruction file, verifies agent output
- * against them, and produces an adherence report.
+ * against them, and produces an adherence report. Returns a
+ * meaningful exit code: 0 (all pass), 1 (violations), 2 (error).
  */
 
 import { existsSync, writeFileSync } from 'node:fs';
@@ -13,7 +14,7 @@ import { generateReport } from '../index.js';
 import { formatReport } from '../reporter/index.js';
 import { validateOutputDir, currentTimestamp } from '../runner/index.js';
 import { resolveSafePath } from '../utils/safe-path.js';
-import type { AgentRun } from '../types.js';
+import type { AgentRun, ReportFormat } from '../types.js';
 
 /** Options accepted by the verify command. */
 export interface VerifyOpts {
@@ -25,6 +26,17 @@ export interface VerifyOpts {
   severity: string;
   allowSymlinks: boolean;
 }
+
+/**
+ * Exit code constants for the verify command.
+ *
+ * 0: all rules passed
+ * 1: one or more rule violations found
+ * 2: execution error (file not found, parse failure, etc)
+ */
+export const EXIT_ALL_PASSED = 0;
+export const EXIT_VIOLATIONS = 1;
+export const EXIT_ERROR = 2;
 
 /**
  * Execute the verify command.
@@ -53,8 +65,8 @@ export function handleVerify(
     exitWithError(`Instruction file not found: ${filePath}`);
   }
 
-  const validFormats = ['text', 'json', 'markdown'];
-  if (!validFormats.includes(opts.format)) {
+  const validFormats: ReportFormat[] = ['text', 'json', 'markdown', 'rdjson'];
+  if (!validFormats.includes(opts.format as ReportFormat)) {
     exitWithError(
       `Invalid format "${opts.format}". Use one of: ${validFormats.join(', ')}`,
     );
@@ -94,7 +106,7 @@ export function handleVerify(
   const report = generateReport(run, ruleSet, results);
   const formatted = formatReport(
     report,
-    opts.format as 'text' | 'json' | 'markdown',
+    opts.format as ReportFormat,
   );
 
   if (opts.output) {
@@ -103,4 +115,7 @@ export function handleVerify(
   } else {
     process.stdout.write(formatted + '\n');
   }
+
+  const hasViolations = report.summary.failed > 0;
+  process.exit(hasViolations ? EXIT_VIOLATIONS : EXIT_ALL_PASSED);
 }

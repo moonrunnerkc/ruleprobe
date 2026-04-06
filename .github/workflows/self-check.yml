@@ -1,0 +1,17 @@
+name: RuleProbe Self-Check
+on: [pull_request]
+
+jobs:
+  self-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          instruction-file: .github/copilot-instructions.md
+          output-dir: src
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

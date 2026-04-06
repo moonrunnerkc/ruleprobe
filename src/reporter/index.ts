@@ -5,26 +5,28 @@
  * Single entry point for all report formatting.
  */
 
-import type { AdherenceReport } from '../types.js';
+import type { AdherenceReport, ReportFormat } from '../types.js';
 import { formatText, formatTextPlain } from './text.js';
 import { formatJson } from './json.js';
 import { formatMarkdown } from './markdown.js';
+import { formatRdjson } from './rdjson.js';
 
 export { formatText, formatTextPlain, formatParseText } from './text.js';
 export { formatJson } from './json.js';
 export { formatMarkdown, formatComparisonMarkdown } from './markdown.js';
+export { formatRdjson } from './rdjson.js';
 
 /**
  * Format an AdherenceReport in the specified output format.
  *
  * @param report - The adherence report to format
- * @param format - Output format: "text", "json", or "markdown"
+ * @param format - Output format: "text", "json", "markdown", or "rdjson"
  * @returns Formatted string
  * @throws Error if format is not recognized
  */
 export function formatReport(
   report: AdherenceReport,
-  format: 'text' | 'json' | 'markdown',
+  format: ReportFormat,
 ): string {
   switch (format) {
     case 'text':
@@ -33,6 +35,8 @@ export function formatReport(
       return formatJson(report);
     case 'markdown':
       return formatMarkdown(report);
+    case 'rdjson':
+      return formatRdjson(report);
     default: {
       const exhaustive: never = format;
       throw new Error(`Unknown report format: ${String(exhaustive)}`);

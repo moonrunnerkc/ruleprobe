@@ -1,0 +1,558 @@
+=== GitHub Action Verification Log ===
+Date: 2026-04-06T22:33:54+00:00
+Node: v24.12.0
+
+=== STEP 1: vitest run (all tests) ===
+
+ RUN  v2.1.9 /home/brad/projects/ruleprobe
+
+ ✓ tests/fixtures/case-study-output/agent-a/tests/utils/id.test.ts > createId > generates string IDs
+ ✓ tests/fixtures/case-study-output/agent-a/tests/utils/id.test.ts > createId > generates unique IDs
+ ✓ tests/fixtures/case-study-output/agent-a/tests/types.test.ts > Bookmark types > Bookmark interface has expected shape
+ ✓ tests/fixtures/case-study-output/agent-a/tests/types.test.ts > Bookmark types > CreateBookmarkRequest allows optional tags
+ ✓ tests/fixtures/case-study-output/agent-b/tests/types.test.ts > Bookmark types > Bookmark interface has expected shape
+ ✓ tests/fixtures/case-study-output/agent-b/tests/types.test.ts > Bookmark types > CreateBookmarkRequest allows optional tags
+ ✓ tests/fixtures/case-study-output/agent-b/tests/types.test.ts > Bookmark types > BookmarkListQuery has optional fields
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts > createBookmark > creates a bookmark with valid input
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts > createBookmark > rejects missing url
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts > createBookmark > rejects invalid url format
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts > listBookmarks > returns sorted bookmarks
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts > listBookmarks > filters by tag
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts > deleteBookmark > removes bookmark by id
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts > deleteBookmark > returns error for missing id
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > createBookmark > creates a bookmark with valid input
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > createBookmark > rejects missing url
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > createBookmark > normalizes tags to lowercase
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > listBookmarks > sorts by createdAt descending
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > listBookmarks > filters by tag
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > deleteBookmark > removes bookmark from array
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > deleteBookmark > returns -1 for missing id
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts > searchBookmarks > finds bookmarks by title substring
+ ✓ tests/fixtures/case-study-output/agent-b/tests/utils/id.test.ts > createId > generates string IDs with prefix
+ ✓ tests/fixtures/case-study-output/agent-b/tests/utils/id.test.ts > createId > generates unique IDs
+ ✓ tests/fixtures/sample-output/passing/tests/utils/validation.test.ts > validateEmail > validates correct email format
+ ✓ tests/fixtures/case-study-output/agent-b/tests/middleware/validation.test.ts > isNonEmptyString > returns true for non-empty string
+ ✓ tests/fixtures/case-study-output/agent-b/tests/middleware/validation.test.ts > isNonEmptyString > returns false for empty string
+ ✓ tests/fixtures/case-study-output/agent-b/tests/middleware/validation.test.ts > isValidUrl > accepts valid URLs
+ ✓ tests/fixtures/case-study-output/agent-b/tests/middleware/validation.test.ts > isValidUrl > rejects invalid URLs
+ ✓ tests/verifier/regex-verifier.test.ts > Regex verifier: passing fixtures > finds no line length violations with 120-char limit
+ ✓ tests/verifier/regex-verifier.test.ts > Regex verifier: passing fixtures > finds no file length violations with 300-line limit
+ ✓ tests/verifier/regex-verifier.test.ts > Regex verifier: max line length > detects lines exceeding 100-character limit
+ ✓ tests/verifier/regex-verifier.test.ts > Regex verifier: max line length > includes correct line numbers for violations
+ ✓ tests/verifier/regex-verifier.test.ts > Regex verifier: max line length > reports actual character count in evidence
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: passing fixtures > finds no kebab-case violations in passing directory
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: passing fixtures > finds no missing test files in passing directory
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: passing fixtures > finds no file length violations in passing directory (300 line max)
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: kebab-case file naming > detects PascalCase file name violations
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: kebab-case file naming > does not flag kebab-case file names
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: test file existence > detects missing test files in failing directory
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: max file length > detects files exceeding 300-line limit
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: max file length > reports correct line count in evidence
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: strict mode > finds tsconfig.json in ancestor directory
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: strict mode > fails when no tsconfig.json exists in any ancestor
+ ✓ tests/verifier/file-verifier.test.ts > File verifier: strict mode > fails when tsconfig.json lacks strict: true
+ ✓ tests/reporter/text.test.ts > Text reporter > includes the header with agent, model, and task
+ ✓ tests/reporter/text.test.ts > Text reporter > includes the date
+ ✓ tests/reporter/text.test.ts > Text reporter > shows correct pass/fail counts and score
+ ✓ tests/reporter/text.test.ts > Text reporter > shows PASS for passing rules
+ ✓ tests/reporter/text.test.ts > Text reporter > shows FAIL with evidence for failing rules
+ ✓ tests/reporter/text.test.ts > Text reporter > shows category summary with percentages
+ ✓ tests/reporter/text.test.ts > Text reporter > omits categories with zero rules
+ ✓ tests/reporter/text.test.ts > Text parse formatter > lists all extracted rules
+ ✓ tests/reporter/text.test.ts > Text parse formatter > shows unparseable lines when requested
+ ✓ tests/reporter/text.test.ts > Text parse formatter > hides unparseable lines by default
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > splits content into sections by headers
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > captures body content under each header
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > strips empty lines from the lines array but preserves them in body
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > captures content before first header as depth-0 section
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > handles deeply nested headers up to h6
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > handles empty document
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > handles document with only headers and no body
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > preserves list items with markers in lines array
+ ✓ tests/parsers/markdown-parser.test.ts > parseMarkdown > parses a realistic CLAUDE.md structure
+ ✓ tests/parsers/markdown-parser.test.ts > flattenSectionLines > returns all non-empty lines across all sections
+ ✓ tests/parsers/markdown-parser.test.ts > flattenSectionLines > returns empty array for empty document
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: single report > includes a top-level heading
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: single report > includes agent, model, and task metadata
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: single report > includes pass/fail counts and score
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: single report > shows PASS results
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: single report > shows FAIL results with evidence in code blocks
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: single report > includes a category summary table
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: comparison > includes comparison heading
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: comparison > includes rules source and metadata
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: comparison > produces a table with one column per agent
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: comparison > shows PASS/FAIL correctly per agent per rule
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: comparison > includes a score summary table
+ ✓ tests/reporter/markdown.test.ts > Markdown reporter: comparison > handles empty reports array
+Warning: skipping symlink /tmp/ruleprobe-walk-DkqQKm/src/linked-external.ts
+Warning: skipping symlink /tmp/ruleprobe-walk-DkqQKm/src/linked-internal.ts
+ ✓ tests/utils/safe-path.test.ts > resolveSafePath > accepts a path resolving inside cwd
+ ✓ tests/utils/safe-path.test.ts > resolveSafePath > accepts cwd itself as a valid path
+ ✓ tests/utils/safe-path.test.ts > resolveSafePath > throws for a path resolving outside cwd
+ ✓ tests/utils/safe-path.test.ts > resolveSafePath > rejects a symlink to a file outside cwd
+ ✓ tests/utils/safe-path.test.ts > resolveSafePath > follows a symlink to a file inside cwd
+ ✓ tests/utils/safe-path.test.ts > resolveSafePath > includes remedy suggestion in error message
+ ✓ tests/utils/safe-path.test.ts > walkDirectorySafe > skips symlinks and warns when allowSymlinks is false
+ ✓ tests/utils/safe-path.test.ts > walkDirectorySafe > follows symlinks when allowSymlinks is true
+ ✓ tests/utils/safe-path.test.ts > walkDirectorySafe > skips node_modules and hidden directories
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > produces valid JSON output
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > sets source field correctly
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > excludes passing rules from diagnostics
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > maps each evidence entry to a separate diagnostic
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > sets file path and line number correctly
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > includes rule description and found text in message
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > maps error severity to ERROR
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > maps warning severity to WARNING
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > sets code.value to the rule id
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > produces diagnostics for all failures in a fully-failing report
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > handles a file-level evidence entry without a line number
+ ✓ tests/reporter/rdjson.test.ts > formatRdjson > returns an empty diagnostics array when all rules pass
+ ✓ tests/reporter/json.test.ts > JSON reporter > produces valid JSON
+ ✓ tests/reporter/json.test.ts > JSON reporter > round-trips the report data
+ ✓ tests/reporter/json.test.ts > JSON reporter > includes all results
+ ✓ tests/reporter/json.test.ts > JSON reporter > includes evidence on failing results
+ ✓ tests/reporter/json.test.ts > JSON reporter > includes the full ruleset
+ ✓ tests/reporter/json.test.ts > JSON reporter > uses 2-space indentation
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: camelCase naming > extracts from "Use camelCase for variables"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: camelCase naming > extracts from "Variables should be camelCase"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: camelCase naming > extracts from "Variable and function names: camelCase"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: camelCase naming > extracts from "camelCase variables only"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: PascalCase naming > extracts from "Type and interface names: PascalCase"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: PascalCase naming > extracts from "PascalCase for types and interfaces"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: PascalCase naming > extracts from "Classes must use PascalCase"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: kebab-case files > extracts from "File names: kebab-case"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: kebab-case files > extracts from "File names must be kebab-case"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: kebab-case files > extracts from "Use kebab-case for file naming"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: no any type > extracts from "no any types"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: no any type > extracts from "Never use any type annotations"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: no any type > extracts from "Avoid any type"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: no any type > does not false-positive on "don't use any of these"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: no console.log > extracts from "No console.log in production code"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: no console.log > extracts from "Don't use console.log"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: no console.log > extracts from "Avoid console.log"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: named exports > extracts from "Named exports only, no default exports"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: named exports > extracts from "No default exports"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: named exports > extracts from "Use named exports"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: named exports > extracts from "Avoid default exports"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: max file length > extracts 300-line limit from "Maximum file length: 300 lines"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: max file length > extracts custom line limit
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: max line length > extracts from "Maximum line length: 120"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: max line length > extracts from "Lines should not exceed 100 characters"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: test file requirements > extracts from "All files must have tests"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: test file requirements > extracts from "Every source file must have a corresponding test"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: test file requirements > extracts test naming pattern from "named *.test.ts"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: import patterns > extracts from "No relative imports deeper than 2 levels"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: import patterns > extracts from "Avoid deep relative imports"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: import patterns > extracts from "Imports use relative paths, no path aliases"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: JSDoc requirement > extracts from "Every public function has a JSDoc comment"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: JSDoc requirement > extracts from "JSDoc required on all public functions"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: strict mode > extracts from "TypeScript strict mode"
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: unparseable lines > captures subjective statements as unparseable
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: unparseable lines > does not put extractable rules into unparseable
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: unparseable lines > skips structural markdown (code fences, tables, images)
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: deduplication > deduplicates rules matched by the same matcher
+ ✓ tests/parsers/rule-extractor.test.ts > extractRules: deduplication > keeps rules from different matchers
+ ✓ tests/parsers/rule-extractor.test.ts > parseInstructionFile: sample-claude.md fixture > produces a RuleSet with correctly categorized rules
+ ✓ tests/parsers/rule-extractor.test.ts > parseInstructionFile: sample-agents.md fixture > produces a RuleSet with correctly categorized rules
+ ✓ tests/parsers/rule-extractor.test.ts > detectFileType > detects CLAUDE.md
+ ✓ tests/parsers/rule-extractor.test.ts > detectFileType > detects AGENTS.md
+ ✓ tests/parsers/rule-extractor.test.ts > detectFileType > detects .cursorrules
+ ✓ tests/parsers/rule-extractor.test.ts > detectFileType > detects copilot-instructions.md
+ ✓ tests/parsers/rule-extractor.test.ts > detectFileType > detects GEMINI.md
+ ✓ tests/parsers/rule-extractor.test.ts > detectFileType > detects .windsurfrules
+ ✓ tests/parsers/rule-extractor.test.ts > detectFileType > returns unknown for unrecognized files
+ ✓ tests/parsers/rule-extractor.test.ts > parseInstructionContent > works with inline content instead of file reading
+ ✓ tests/fixtures/sample-output/passing/tests/types.test.ts > types > exports UserRecord type
+ ✓ tests/fixtures/sample-output/passing/tests/user-service.test.ts > createUser > creates a user with valid data
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: passing fixtures > finds no camelCase violations in passing code
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: passing fixtures > finds no PascalCase violations in passing code
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: passing fixtures > finds no any type usage in passing code
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: passing fixtures > finds no console.log in passing code
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: passing fixtures > finds no default exports in passing code 639ms
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: passing fixtures > finds no missing JSDoc on exported functions in passing code 399ms
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: camelCase violations > detects snake_case function names
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: camelCase violations > detects snake_case variable names
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: camelCase violations > includes correct line numbers in evidence
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: any type detection > detects all any type usages
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: any type detection > includes line numbers for any type violations
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: console.log detection > detects all console.log calls
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: console.log detection > includes correct line numbers for console.log calls
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: default export detection > detects default export 353ms
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: missing JSDoc detection > detects exported functions missing JSDoc 363ms
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: missing JSDoc detection > does not flag non-exported functions for missing JSDoc 378ms
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: deep relative imports > detects imports deeper than allowed
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: deep relative imports > includes the import path in evidence
+ ✓ tests/verifier/ast-verifier.test.ts > AST verifier: path alias detection > detects @-prefixed path alias imports
+ ✓ tests/verifier/index.test.ts > Verifier orchestrator: passing fixtures > returns all rules as passing 1339ms
+ ✓ tests/verifier/index.test.ts > Verifier orchestrator: passing fixtures > preserves rule order in results 1067ms
+ ✓ tests/verifier/index.test.ts > Verifier orchestrator: failing fixtures > flags multiple rules as failing 885ms
+ ✓ tests/verifier/index.test.ts > Verifier orchestrator: failing fixtures > routes rules to the correct verifiers 903ms
+ ✓ tests/verifier/index.test.ts > Verifier orchestrator: failing fixtures > each result contains evidence of failures 976ms
+ ✓ tests/verifier/index.test.ts > Verifier orchestrator: edge cases > returns empty results for empty rule set
+ ✓ tests/verifier/index.test.ts > Verifier orchestrator: edge cases > handles unknown verifier type gracefully
+ ✓ tests/cli/exit-codes.test.ts > CLI: verify exit codes > exits 0 when all rules pass 3283ms
+ ✓ tests/cli/exit-codes.test.ts > CLI: verify exit codes > exits 1 when violations are found 2840ms
+ ✓ tests/cli/exit-codes.test.ts > CLI: verify exit codes > exits 2 for a nonexistent instruction file 1584ms
+ ✓ tests/cli/exit-codes.test.ts > CLI: verify exit codes > exits 2 for a nonexistent output directory 1677ms
+ ✓ tests/cli/cli.test.ts > CLI: parse command > outputs JSON when --format json 1905ms
+ ✓ tests/cli/cli.test.ts > CLI: parse command > outputs text by default 1817ms
+ ✓ tests/cli/cli.test.ts > CLI: parse command > includes unparseable lines with --show-unparseable 1644ms
+ ✓ tests/cli/cli.test.ts > CLI: parse command > fails with actionable error for missing file 1585ms
+ ✓ tests/cli/cli.test.ts > CLI: verify command > produces text output for passing fixtures 3015ms
+ ✓ tests/cli/cli.test.ts > CLI: verify command > produces JSON output with --format json 2953ms
+ ✓ tests/cli/cli.test.ts > CLI: verify command > produces markdown output with --format markdown 2799ms
+ ✓ tests/cli/cli.test.ts > CLI: verify command > shows failures for failing fixtures 2606ms
+ ✓ tests/cli/cli.test.ts > CLI: verify command > fails with actionable error for missing instruction file 1522ms
+ ✓ tests/cli/cli.test.ts > CLI: verify command > fails with actionable error for missing output directory 1503ms
+ ✓ tests/cli/cli.test.ts > CLI: tasks command > lists available task templates 1388ms
+ ✓ tests/cli/cli.test.ts > CLI: tasks command > shows template descriptions 1350ms
+ ✓ tests/cli/cli.test.ts > CLI: task command > outputs the full prompt for a valid template 1356ms
+ ✓ tests/cli/cli.test.ts > CLI: task command > fails for unknown template 1390ms
+ ✓ tests/cli/cli.test.ts > CLI: compare command > produces markdown comparison table 3602ms
+ ✓ tests/cli/cli.test.ts > CLI: help > shows help text with --help 1417ms
+
+ Test Files  23 passed (23)
+      Tests  202 passed (202)
+   Start at  16:33:54
+   Duration  32.28s (transform 1.19s, setup 0ms, collect 3.09s, tests 48.78s, environment 6ms, prepare 2.58s)
+
+
+=== STEP 2: npm run build ===
+
+> ruleprobe@0.1.0 build
+> tsc && cp -r src/runner/task-templates dist/runner/task-templates
+
+
+=== STEP 3: rdjson output ===
+{
+  "source": {
+    "name": "ruleprobe",
+    "url": "https://github.com/moonrunnerkc/ruleprobe"
+  },
+  "diagnostics": [
+    {
+      "message": "The \"any\" type must not be used: body: any",
+      "location": {
+        "path": "src/routes/bookmarks.ts",
+        "range": {
+          "start": {
+            "line": 18
+          }
+        }
+      },
+      "severity": "ERROR",
+      "source": {
+        "name": "ruleprobe",
+        "url": "https://github.com/moonrunnerkc/ruleprobe"
+      },
+      "code": {
+        "value": "forbidden-no-any-type-4"
+      }
+    },
+    {
+      "message": "The \"any\" type must not be used: query: any",
+      "location": {
+        "path": "src/routes/bookmarks.ts",
+        "range": {
+          "start": {
+            "line": 49
+          }
+        }
+      },
+      "severity": "ERROR",
+      "source": {
+        "name": "ruleprobe",
+        "url": "https://github.com/moonrunnerkc/ruleprobe"
+      },
+      "code": {
+        "value": "forbidden-no-any-type-4"
+      }
+    },
+    {
+      "message": "console.log must not be used in production code: console.log(`Bookmark created: ${bookmark.id}`)",
+      "location": {
+        "path": "src/routes/bookmarks.ts",
+        "range": {
+          "start": {
+            "line": 40
+          }
+        }
+      },
+      "severity": "ERROR",
+      "source": {
+        "name": "ruleprobe",
+        "url": "https://github.com/moonrunnerkc/ruleprobe"
+      },
+      "code": {
+        "value": "forbidden-no-console-log-5"
+      }
+    },
+    {
+      "message": "Every source file must have a corresponding test file: no test file found",
+      "location": {
+        "path": "src/middleware/validation.ts"
+      },
+      "severity": "ERROR",
+      "source": {
+        "name": "ruleprobe",
+        "url": "https://github.com/moonrunnerkc/ruleprobe"
+      },
+      "code": {
+        "value": "test-files-exist-9"
+      }
+    }
+  ]
+}
+
+EXIT: 1
+
+=== STEP 4: passing fixtures, exit code 0 ===
+RuleProbe Adherence Report
+Agent: unknown | Model: unknown | Task: manual
+Date: 2026-04-06T22:34:30.710Z
+
+Rules: 10 total | 10 passed | 0 failed | Score: 100%
+
+PASS  naming/naming-camelcase-variables-1
+PASS  naming/naming-pascalcase-types-2
+PASS  naming/naming-kebab-case-files-3
+PASS  forbidden-pattern/forbidden-no-any-type-4
+PASS  forbidden-pattern/forbidden-no-console-log-5
+PASS  structure/structure-named-exports-only-6
+PASS  structure/structure-jsdoc-required-7
+PASS  structure/structure-max-file-length-8
+PASS  test-requirement/test-files-exist-9
+PASS  import-pattern/import-no-path-aliases-10
+
+By Category:
+  naming:             3/3 (100%)
+  forbidden-pattern:  2/2 (100%)
+  structure:          3/3 (100%)
+  import-pattern:     1/1 (100%)
+  test-requirement:   1/1 (100%)
+EXIT: 0
+
+=== STEP 5: violations, exit code 1 ===
+RuleProbe Adherence Report
+Agent: unknown | Model: unknown | Task: manual
+Date: 2026-04-06T22:34:32.037Z
+
+Rules: 10 total | 7 passed | 3 failed | Score: 70%
+
+PASS  naming/naming-camelcase-variables-1
+PASS  naming/naming-pascalcase-types-2
+PASS  naming/naming-kebab-case-files-3
+FAIL  forbidden-pattern/forbidden-no-any-type-4
+      src/routes/bookmarks.ts:18 - found: body: any
+      src/routes/bookmarks.ts:49 - found: query: any
+FAIL  forbidden-pattern/forbidden-no-console-log-5
+      src/routes/bookmarks.ts:40 - found: console.log(`Bookmark created: ${bookmark.id}`)
+PASS  structure/structure-named-exports-only-6
+PASS  structure/structure-jsdoc-required-7
+PASS  structure/structure-max-file-length-8
+FAIL  test-requirement/test-files-exist-9
+      src/middleware/validation.ts - found: no test file found
+PASS  import-pattern/import-no-path-aliases-10
+
+By Category:
+  naming:             3/3 (100%)
+  forbidden-pattern:  0/2 (0%)
+  structure:          3/3 (100%)
+  import-pattern:     1/1 (100%)
+  test-requirement:   0/1 (0%)
+EXIT: 1
+
+=== STEP 6: nonexistent file, exit code 2 ===
+Error: Instruction file not found: /home/brad/projects/ruleprobe/nonexistent.md
+EXIT: 2
+
+=== STEP 7: action.yml ===
+name: "RuleProbe: Verify Instruction Adherence"
+description: >
+  Verify whether AI coding agent output follows project instruction file rules.
+  Deterministic checks, no LLM calls, no API keys beyond GITHUB_TOKEN.
+
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  instruction-file:
+    description: "Path to instruction file (CLAUDE.md, AGENTS.md, .cursorrules, etc)"
+    required: true
+  output-dir:
+    description: "Directory containing code to verify"
+    required: true
+    default: "src"
+  agent:
+    description: "Agent identifier for the report"
+    required: false
+    default: "ci"
+  model:
+    description: "Model identifier for the report"
+    required: false
+    default: "unknown"
+  format:
+    description: "Report format: text, json, or markdown"
+    required: false
+    default: "text"
+  severity:
+    description: "Minimum severity to report: error, warning, or all"
+    required: false
+    default: "all"
+  fail-on-violation:
+    description: "Fail the action if any rule violations are found"
+    required: false
+    default: "true"
+  post-comment:
+    description: "Post results as a PR comment"
+    required: false
+    default: "true"
+  reviewdog-format:
+    description: "Also output in reviewdog rdjson format for annotation integration"
+    required: false
+    default: "false"
+
+outputs:
+  score:
+    description: "Adherence score as a percentage"
+    value: ${{ steps.verify.outputs.score }}
+  passed:
+    description: "Number of rules that passed"
+    value: ${{ steps.verify.outputs.passed }}
+  failed:
+    description: "Number of rules that failed"
+    value: ${{ steps.verify.outputs.failed }}
+  total:
+    description: "Total number of rules checked"
+    value: ${{ steps.verify.outputs.total }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Install ruleprobe
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}"
+        npm ci --ignore-scripts
+        npm run build
+
+    - name: Run ruleprobe verify
+      id: verify
+      shell: bash
+      env:
+        INPUT_INSTRUCTION_FILE: ${{ inputs.instruction-file }}
+        INPUT_OUTPUT_DIR: ${{ inputs.output-dir }}
+        INPUT_AGENT: ${{ inputs.agent }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_SEVERITY: ${{ inputs.severity }}
+        INPUT_FAIL_ON_VIOLATION: ${{ inputs.fail-on-violation }}
+        INPUT_REVIEWDOG_FORMAT: ${{ inputs.reviewdog-format }}
+        RULEPROBE_BIN: ${{ github.action_path }}/dist/cli.js
+      run: bash "${{ github.action_path }}/action-scripts/run-verify.sh"
+
+    - name: Post PR comment
+      if: inputs.post-comment == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        INPUT_FAIL_ON_VIOLATION: ${{ inputs.fail-on-violation }}
+        RULEPROBE_REPORT_FILE: ${{ github.workspace }}/.ruleprobe-report.txt
+      run: bash "${{ github.action_path }}/action-scripts/post-comment.sh"
+
+=== STEP 8: run-verify.sh (first 30 lines) ===
+#!/usr/bin/env bash
+# run-verify.sh
+#
+# Called by the RuleProbe composite GitHub Action. Runs ruleprobe verify
+# with inputs provided via environment variables, captures outputs, and
+# sets GitHub Actions output variables (score, passed, failed, total).
+#
+# Exit codes:
+#   0 - all rules passed (or fail-on-violation is false)
+#   1 - violations found and fail-on-violation is true
+#   2 - execution error (file not found, parse failure, etc)
+
+set -euo pipefail
+
+RULEPROBE="${RULEPROBE_BIN:-node dist/cli.js}"
+WORKSPACE="${GITHUB_WORKSPACE:-.}"
+REPORT_FILE="${WORKSPACE}/.ruleprobe-report.txt"
+JSON_FILE="${WORKSPACE}/.ruleprobe-report.json"
+RDJSON_FILE="${WORKSPACE}/.ruleprobe-report.rdjson"
+
+instruction_file="${INPUT_INSTRUCTION_FILE:?instruction-file input is required}"
+output_dir="${INPUT_OUTPUT_DIR:-src}"
+agent="${INPUT_AGENT:-ci}"
+model="${INPUT_MODEL:-unknown}"
+format="${INPUT_FORMAT:-text}"
+severity="${INPUT_SEVERITY:-all}"
+fail_on_violation="${INPUT_FAIL_ON_VIOLATION:-true}"
+reviewdog_format="${INPUT_REVIEWDOG_FORMAT:-false}"
+
+# ── Run the text report (saved for PR comments) ──
+
+=== STEP 9: self-check.yml ===
+name: RuleProbe Self-Check
+on: [pull_request]
+
+jobs:
+  self-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          instruction-file: .github/copilot-instructions.md
+          output-dir: src
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+=== STEP 10: post-comment.sh (first 30 lines) ===
+#!/usr/bin/env bash
+# post-comment.sh
+#
+# Posts or updates a RuleProbe report as a PR comment. Called by the
+# composite GitHub Action when post-comment is true and the trigger
+# is a pull_request event.
+#
+# Uses a hidden marker comment (<!-- ruleprobe-report -->) to find
+# and update existing comments instead of creating duplicates.
+#
+# Skips posting if there are zero violations and fail-on-violation
+# is false (no noise on clean PRs).
+
+set -euo pipefail
+
+REPORT_FILE="${RULEPROBE_REPORT_FILE:-.ruleprobe-report.txt}"
+FAIL_ON_VIOLATION="${INPUT_FAIL_ON_VIOLATION:-true}"
+
+if [[ ! -f "${REPORT_FILE}" ]]; then
+  echo "No report file found at ${REPORT_FILE}, skipping comment."
+  exit 0
+fi
+
+report_content=$(cat "${REPORT_FILE}")
+line_count=$(echo "${report_content}" | wc -l)
+
+# Skip comment if zero violations and fail-on-violation is false
+if [[ "${FAIL_ON_VIOLATION}" == "false" ]]; then
+  if echo "${report_content}" | grep -q "| 0 failed |"; then
+    echo "Zero violations and fail-on-violation is false. Skipping PR comment."
+
+=== VERIFICATION COMPLETE ===
+Tests: 202 passed, 0 failed
+Build: clean
+rdjson: valid JSON, 4 diagnostics
+Exit code 0 (pass): 0
+Exit code 1 (violations): 1
+Exit code 2 (error): 2

@@ -46,7 +46,7 @@ program
   .option('--agent <name>', 'agent identifier for report metadata', 'unknown')
   .option('--model <name>', 'model identifier for report metadata', 'unknown')
   .option('--task <template-id>', 'which task template was used', 'manual')
-  .option('--format <format>', 'report format (text|json|markdown)', 'text')
+  .option('--format <format>', 'report format (text|json|markdown|rdjson)', 'text')
   .option('--output <path>', 'write report to file instead of stdout')
   .option(
     '--severity <level>',
@@ -120,12 +120,12 @@ program
 // ── Error handling ──
 
 /**
- * Print an error message and exit with code 1.
+ * Print an error message and exit with code 2 (execution error).
  * Avoids stack traces; prints actionable messages only.
  */
 function exitWithError(message: string): never {
   process.stderr.write(`Error: ${message}\n`);
-  process.exit(1);
+  process.exit(2);
 }
 
 program.parse();
