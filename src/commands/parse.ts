@@ -6,9 +6,9 @@
  */
 
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { parseInstructionFile } from '../parsers/index.js';
 import { formatParseText } from '../reporter/index.js';
+import { resolveSafePath } from '../utils/safe-path.js';
 
 /**
  * Execute the parse command.
@@ -22,7 +22,12 @@ export function handleParse(
   opts: { format: string; showUnparseable: boolean },
   exitWithError: (msg: string) => never,
 ): void {
-  const filePath = resolve(file);
+  let filePath: string;
+  try {
+    filePath = resolveSafePath(file);
+  } catch (err) {
+    exitWithError((err as Error).message);
+  }
 
   if (!existsSync(filePath)) {
     exitWithError(`File not found: ${filePath}`);

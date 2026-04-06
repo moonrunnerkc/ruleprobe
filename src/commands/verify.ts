@@ -12,6 +12,7 @@ import { verifyOutput } from '../verifier/index.js';
 import { generateReport } from '../index.js';
 import { formatReport } from '../reporter/index.js';
 import { validateOutputDir, currentTimestamp } from '../runner/index.js';
+import { resolveSafePath } from '../utils/safe-path.js';
 import type { AgentRun } from '../types.js';
 
 /** Options accepted by the verify command. */
@@ -22,6 +23,7 @@ export interface VerifyOpts {
   format: string;
   output?: string;
   severity: string;
+  allowSymlinks: boolean;
 }
 
 /**
@@ -38,8 +40,14 @@ export function handleVerify(
   opts: VerifyOpts,
   exitWithError: (msg: string) => never,
 ): void {
-  const filePath = resolve(file);
-  const outDir = resolve(outputDir);
+  let filePath: string;
+  let outDir: string;
+  try {
+    filePath = resolveSafePath(file);
+    outDir = resolveSafePath(outputDir);
+  } catch (err) {
+    exitWithError((err as Error).message);
+  }
 
   if (!existsSync(filePath)) {
     exitWithError(`Instruction file not found: ${filePath}`);

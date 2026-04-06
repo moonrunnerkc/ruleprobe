@@ -53,6 +53,7 @@ program
     'filter results by severity (error|warning|all)',
     'all',
   )
+  .option('--allow-symlinks', 'follow symlinks outside the working directory', false)
   .action(
     (
       file: string,
@@ -64,6 +65,7 @@ program
         format: string;
         output?: string;
         severity: string;
+        allowSymlinks: boolean;
       },
     ) => {
       handleVerify(file, outputDir, opts, exitWithError);
@@ -104,11 +106,12 @@ program
   )
   .option('--format <format>', 'report format (text|json|markdown)', 'markdown')
   .option('--output <path>', 'write report to file instead of stdout')
+  .option('--allow-symlinks', 'follow symlinks outside the working directory', false)
   .action(
     (
       file: string,
       dirs: string[],
-      opts: { agents?: string; format: string; output?: string },
+      opts: { agents?: string; format: string; output?: string; allowSymlinks: boolean },
     ) => {
       handleCompare(file, dirs, opts, exitWithError);
     },

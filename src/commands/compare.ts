@@ -13,6 +13,7 @@ import { generateReport } from '../index.js';
 import { formatComparisonMarkdown } from '../reporter/markdown.js';
 import { formatTextPlain } from '../reporter/text.js';
 import { validateOutputDir, currentTimestamp } from '../runner/index.js';
+import { resolveSafePath } from '../utils/safe-path.js';
 import type { AgentRun, AdherenceReport } from '../types.js';
 
 /** Options accepted by the compare command. */
@@ -20,6 +21,7 @@ export interface CompareOpts {
   agents?: string;
   format: string;
   output?: string;
+  allowSymlinks: boolean;
 }
 
 /**
@@ -36,7 +38,12 @@ export function handleCompare(
   opts: CompareOpts,
   exitWithError: (msg: string) => never,
 ): void {
-  const filePath = resolve(file);
+  let filePath: string;
+  try {
+    filePath = resolveSafePath(file);
+  } catch (err) {
+    exitWithError((err as Error).message);
+  }
 
   if (!existsSync(filePath)) {
     exitWithError(`Instruction file not found: ${filePath}`);
@@ -68,7 +75,14 @@ export function handleCompare(
   const reports: AdherenceReport[] = [];
 
   for (let i = 0; i < dirs.length; i++) {
-    const outDir = resolve(dirs[i]!);
+    let outDir: string;
+    try {
+      outDir = resolveSafePath(dirs[i]!);
+    } catch (err) {
+      exitWithError(
+        `Directory ${i + 1} (${dirs[i]}): ${(err as Error).message}`,
+      );
+    }
 
     try {
       validateOutputDir(outDir);

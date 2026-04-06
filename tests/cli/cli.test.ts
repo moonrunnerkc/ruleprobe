@@ -116,7 +116,7 @@ describe('CLI: verify command', () => {
       `verify ${CLAUDE_FIXTURE} /tmp/ruleprobe-nonexistent-dir-xyz`,
     );
     expect(status).toBe(1);
-    expect(stderr).toContain('does not exist');
+    expect(stderr).toContain('outside the working directory');
   });
 });
 
