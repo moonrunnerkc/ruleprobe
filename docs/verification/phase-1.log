@@ -1,0 +1,11 @@
+
+ RUN  v2.1.9 /home/brad/projects/ruleprobe
+
+ ✓ tests/parsers/markdown-parser.test.ts (11 tests) 6ms
+ ✓ tests/parsers/rule-extractor.test.ts (49 tests) 18ms
+
+ Test Files  2 passed (2)
+      Tests  60 passed (60)
+   Start at  11:57:51
+   Duration  345ms (transform 75ms, setup 0ms, collect 103ms, tests 24ms, environment 0ms, prepare 151ms)
+
