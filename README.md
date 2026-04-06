@@ -1,140 +1,144 @@
-# RuleProbe
+<p align="center">
+  <h1 align="center">RuleProbe</h1>
+  <p align="center">
+    Verify whether AI coding agents actually follow the instruction files they're given.
+  </p>
+  <p align="center">
+    <a href="https://www.npmjs.com/package/ruleprobe"><img src="https://img.shields.io/npm/v/ruleprobe?style=flat-square" alt="npm version"></a>
+    <a href="https://github.com/moonrunnerkc/ruleprobe/actions/workflows/self-check.yml"><img src="https://img.shields.io/github/actions/workflow/status/moonrunnerkc/ruleprobe/self-check.yml?style=flat-square&label=build" alt="build status"></a>
+    <a href="https://github.com/moonrunnerkc/ruleprobe/blob/main/LICENSE"><img src="https://img.shields.io/github/license/moonrunnerkc/ruleprobe?style=flat-square" alt="license"></a>
+    <img src="https://img.shields.io/badge/language-TypeScript-3178c6?style=flat-square" alt="TypeScript">
+    <img src="https://img.shields.io/badge/node-%3E%3D18-339933?style=flat-square" alt="Node.js >= 18">
+    <a href="https://github.com/moonrunnerkc/ruleprobe/stargazers"><img src="https://img.shields.io/github/stars/moonrunnerkc/ruleprobe?style=flat-square" alt="GitHub stars"></a>
+  </p>
+</p>
 
-Verify whether AI coding agents follow the instruction files they're given.
+## Why
 
-RuleProbe parses AI coding agent instruction files (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules), extracts machine-verifiable rules, runs those rules against agent-generated code, and produces deterministic adherence reports.
+Every AI coding agent reads an instruction file. None of them prove they followed it.
 
-## Install
+You write `CLAUDE.md` or `AGENTS.md` with specific rules: camelCase variables, no `any` types, named exports only, test files for every source file. The agent says "Done." But did it actually follow them? Your code review catches some violations, misses others, and doesn't scale.
+
+RuleProbe reads the same instruction file, extracts the machine-verifiable rules, and checks agent output against each one. Binary pass/fail, with file paths and line numbers as evidence. No LLM evaluation, no judgment calls. Deterministic and reproducible.
+
+## Quick Start
 
 ```bash
 npm install -g ruleprobe
 ```
 
-Or use without installing:
+Or run it directly:
 
 ```bash
 npx ruleprobe --help
 ```
 
-Requires Node.js 18+.
-
-## Quick Start
+**Parse an instruction file** to see what rules RuleProbe can extract:
 
 ```bash
-# Parse an instruction file and see extracted rules
 ruleprobe parse CLAUDE.md
-
-# Verify agent output against an instruction file
-ruleprobe verify CLAUDE.md ./agent-output --format text
-
-# Compare multiple agents
-ruleprobe compare AGENTS.md ./claude-output ./copilot-output --agents claude,copilot --format markdown
-
-# List available task templates
-ruleprobe tasks
-
-# Get a task prompt to give an agent
-ruleprobe task rest-endpoint
 ```
+
+```
+Extracted 14 rules:
+
+  forbidden-no-any-type-1
+    Category: forbidden-pattern
+    Verifier: ast
+    Pattern:  no-any (*.ts)
+    Source:    "- TypeScript strict mode, no any types"
+
+  naming-kebab-case-files-4
+    Category: naming
+    Verifier: filesystem
+    Pattern:  kebab-case (*.ts)
+    Source:    "- File names: kebab-case"
+  ...
+```
+
+**Verify agent output** against those rules:
+
+```bash
+ruleprobe verify CLAUDE.md ./agent-output --format text
+```
+
+```
+RuleProbe Adherence Report
+Agent: unknown | Model: unknown | Task: manual
+
+Rules: 14 total | 11 passed | 3 failed | Score: 79%
+
+PASS  naming/naming-camelcase-variables-5
+PASS  naming/naming-pascalcase-types-7
+FAIL  forbidden-pattern/forbidden-no-any-type-1
+      src/handler.ts:12 - found: req: any
+      src/handler.ts:24 - found: data: any
+FAIL  forbidden-pattern/forbidden-no-console-log-10
+      src/handler.ts:18 - found: console.log("handling request")
+FAIL  test-requirement/test-files-exist-11
+      src/handler.ts - found: no test file found
+```
+
+Every failure includes the file, line number, and what was found. No ambiguity.
 
 ## What It Does
 
-RuleProbe works in three stages:
+**Parse.** Reads 6 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules) and extracts rules that can be checked mechanically. Subjective instructions like "write clean code" are reported as unparseable so you know what was skipped.
 
-1. **Parse**: reads an instruction file, identifies lines that express deterministic rules, and produces a structured rule set. Subjective instructions like "write clean code" are skipped and reported as unparseable for transparency.
+**Verify.** Runs each extracted rule against a directory of agent-generated code. Checks use AST parsing via ts-morph, file system inspection, and regex pattern matching. No LLM evaluation at any stage; results are deterministic and identical across runs.
 
-2. **Verify**: takes the rule set and a directory of agent-generated files, then runs each rule against the code using AST analysis (ts-morph), file system checks, and regex pattern matching. Every rule produces a binary pass/fail with evidence (file path, line number, what was found vs. what was expected).
+**Compare.** Point RuleProbe at outputs from two or more agents and get a side-by-side comparison table showing which rules each one followed. Useful for evaluating agents on the same task, or tracking adherence over time.
 
-3. **Report**: outputs results as terminal text, JSON (for CI), or markdown (for publishing).
+**GitHub Action.** Ships as a composite action you can drop into any repo. Runs `ruleprobe verify` on every PR, posts results as a comment, and optionally outputs reviewdog rdjson format for inline annotations. No API keys needed beyond `GITHUB_TOKEN`.
 
-No LLM evaluation is used. All verification is deterministic and reproducible.
-
-## Supported Rule Types
-
-RuleProbe extracts and verifies these categories of rules:
-
-| Category | Examples | Verifier |
-|----------|----------|----------|
-| naming | camelCase variables, PascalCase types, kebab-case files | AST, filesystem |
-| forbidden-pattern | no `any` type, no console.log | AST |
-| structure | named exports only, JSDoc required, max file length | AST, regex |
-| test-requirement | test files exist, test naming pattern | filesystem |
-| import-pattern | no path aliases, no deep relative imports | AST |
-
-## CLI Commands
+## CLI Reference
 
 ### `ruleprobe parse <instruction-file>`
 
-Parse an instruction file and output extracted rules.
+Extract rules from an instruction file.
 
 ```bash
 ruleprobe parse CLAUDE.md --format json
-ruleprobe parse AGENTS.md --format text --show-unparseable
+ruleprobe parse AGENTS.md --show-unparseable
 ```
+
+`--format json|text` controls output format. `--show-unparseable` includes lines that couldn't be converted to rules.
 
 ### `ruleprobe verify <instruction-file> <output-dir>`
 
-Verify agent output against extracted rules.
+Check agent output against extracted rules.
 
 ```bash
-ruleprobe verify CLAUDE.md ./output --agent claude-code --model opus-4 --format text
-ruleprobe verify AGENTS.md ./output --format json --output report.json
+ruleprobe verify CLAUDE.md ./output --format text
+ruleprobe verify AGENTS.md ./output --agent claude --model opus-4 --format json --output report.json
 ruleprobe verify AGENTS.md ./output --format markdown --severity error
+ruleprobe verify AGENTS.md ./output --format rdjson
 ```
 
-Options:
-- `--agent <name>`: agent identifier for report metadata
-- `--model <name>`: model identifier for report metadata
-- `--task <template-id>`: which task template was used
-- `--format text|json|markdown`: output format (default: text)
-- `--output <path>`: write report to file instead of stdout
-- `--severity error|warning|all`: filter by severity (default: all)
+`--agent` and `--model` tag the report metadata. `--severity error|warning|all` filters results. `--output` writes to a file instead of stdout. `--format rdjson` produces reviewdog-compatible diagnostics.
+
+Exit codes: `0` all rules passed, `1` violations found, `2` execution error.
 
 ### `ruleprobe compare <instruction-file> <dirs...>`
 
-Compare verification results across multiple agent outputs.
+Compare multiple agent outputs against the same rules.
 
 ```bash
 ruleprobe compare AGENTS.md ./claude-output ./copilot-output --agents claude,copilot --format markdown
 ```
 
-### `ruleprobe tasks`
+### `ruleprobe tasks` / `ruleprobe task <id>`
 
-List available task templates with descriptions.
+List available task templates or output a specific task prompt. Three templates ship with v0.1.0: `rest-endpoint`, `utility-module`, `react-component`.
 
-### `ruleprobe task <template-id>`
-
-Output the full task prompt for a template. Copy and paste it into your AI coding agent.
-
-Available templates: `rest-endpoint`, `utility-module`, `react-component`.
-
-## Programmatic API
-
-```typescript
-import {
-  parseInstructionFile,
-  verifyOutput,
-  generateReport,
-  formatReport,
-} from 'ruleprobe';
-
-const ruleSet = parseInstructionFile('CLAUDE.md');
-const results = verifyOutput(ruleSet, './agent-output');
-const report = generateReport(
-  { agent: 'claude-code', model: 'opus-4', taskTemplateId: 'rest-endpoint',
-    outputDir: './agent-output', timestamp: new Date().toISOString(), durationSeconds: null },
-  ruleSet,
-  results,
-);
-const text = formatReport(report, 'markdown');
-console.log(text);
+```bash
+ruleprobe tasks
+ruleprobe task rest-endpoint
 ```
 
 ## GitHub Action
 
-Run RuleProbe on every pull request. No API keys required beyond `GITHUB_TOKEN`. No LLM calls. Deterministic results. Runs in seconds.
-
-### Minimal Setup
+Drop this into `.github/workflows/ruleprobe.yml`:
 
 ```yaml
 name: RuleProbe
@@ -155,75 +159,126 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### Full Input Reference
+That's it. No API keys, no LLM calls, deterministic results, runs in seconds.
 
-| Input | Required | Default | Description |
-|-------|----------|---------|-------------|
-| `instruction-file` | yes | | Path to instruction file (CLAUDE.md, AGENTS.md, .cursorrules, etc) |
-| `output-dir` | yes | `src` | Directory containing code to verify |
-| `agent` | no | `ci` | Agent identifier for the report |
-| `model` | no | `unknown` | Model identifier for the report |
-| `format` | no | `text` | Report format: text, json, or markdown |
-| `severity` | no | `all` | Minimum severity to report: error, warning, or all |
-| `fail-on-violation` | no | `true` | Fail the action if any rule violations are found |
-| `post-comment` | no | `true` | Post results as a PR comment |
-| `reviewdog-format` | no | `false` | Also output in reviewdog rdjson format |
-
-### Outputs
-
-The action sets these outputs for downstream steps: `score`, `passed`, `failed`, `total`.
-
-### Reviewdog Integration
+<details>
+<summary>Full options</summary>
 
 ```yaml
 - uses: moonrunnerkc/ruleprobe@v0.1.0
   with:
     instruction-file: AGENTS.md
     output-dir: src
-    reviewdog-format: "true"
+    agent: ci
+    model: unknown
+    format: text
+    severity: all
     fail-on-violation: "true"
     post-comment: "true"
+    reviewdog-format: "false"
 ```
 
-### Exit Codes
+| Input | Default | Description |
+|-------|---------|-------------|
+| `instruction-file` | (required) | Path to instruction file |
+| `output-dir` | `src` | Directory containing code to verify |
+| `agent` | `ci` | Agent identifier for report metadata |
+| `model` | `unknown` | Model identifier for report metadata |
+| `format` | `text` | Report format: text, json, or markdown |
+| `severity` | `all` | Filter: error, warning, or all |
+| `fail-on-violation` | `true` | Fail the check on any violation |
+| `post-comment` | `true` | Post results as a PR comment |
+| `reviewdog-format` | `false` | Also output rdjson for reviewdog |
 
-The verify command returns structured exit codes for CI consumption:
+Outputs: `score`, `passed`, `failed`, `total` (available to downstream steps).
 
-- `0`: all rules passed
-- `1`: one or more rule violations found
-- `2`: execution error (file not found, parse failure, etc)
+</details>
 
-## Supported Instruction Files
+## Programmatic API
 
-- CLAUDE.md
-- AGENTS.md
-- .cursorrules
-- copilot-instructions.md
-- GEMINI.md
-- .windsurfrules
+Five functions cover the full pipeline:
 
-All formats are parsed as markdown. The parser auto-detects the file type from the filename.
+| Function | Purpose |
+|----------|---------|
+| `parseInstructionFile(path)` | Parse an instruction file into a `RuleSet` |
+| `verifyOutput(ruleSet, dir)` | Run rules against a code directory |
+| `generateReport(run, ruleSet, results)` | Build an `AdherenceReport` with summary stats |
+| `formatReport(report, format)` | Render as text, JSON, markdown, or rdjson |
+| `extractRules(markdown, fileType)` | Extract rules from raw markdown content |
 
-## Known Limitations
+```typescript
+import { parseInstructionFile, verifyOutput, generateReport, formatReport } from 'ruleprobe';
 
-- **TypeScript only.** AST verification uses ts-morph and only analyzes TypeScript and JavaScript files. Other languages are not supported.
-- **No LLM evaluation.** Subjective rules ("write clean code", "follow best practices") cannot be verified. They show up in the unparseable array.
-- **No automated agent invocation.** You run agents externally and point RuleProbe at the output directory. Automated invocation is planned for v0.2.0.
-- **Conservative extraction.** The parser intentionally misses rules it cannot confidently interpret rather than misclassifying them. Check the unparseable array to see what was skipped.
-- **No compilation required.** ts-morph parses files in isolation, which means it can analyze code that would not compile. This is by design (agent output often has errors), but it also means some type-level checks are limited.
+const ruleSet = parseInstructionFile('CLAUDE.md');
+const results = verifyOutput(ruleSet, './agent-output');
+const report = generateReport(
+  { agent: 'claude-code', model: 'opus-4', taskTemplateId: 'rest-endpoint',
+    outputDir: './agent-output', timestamp: new Date().toISOString(), durationSeconds: null },
+  ruleSet,
+  results,
+);
+console.log(formatReport(report, 'text'));
+```
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A[Instruction File] --> B[Rule Parser]
+    B --> C[RuleSet]
+    D[Agent Output] --> E[Verifier]
+    C --> E
+    E --> F[Adherence Report]
+```
+
+The parser reads your instruction file and identifies lines that map to deterministic checks (naming conventions, forbidden patterns, structural requirements). Each rule gets a category, a verifier type, and a pattern. The verifier walks the agent's output directory, runs AST checks via ts-morph for code structure rules, file system checks for naming and test file requirements, and regex checks for line length and content patterns. The report collects pass/fail results with evidence for every rule.
+
+## Supported Rule Types
+
+| Category | Example instruction | What gets checked | Verifier |
+|----------|-------------------|-------------------|----------|
+| naming | "camelCase for variables" | Variable and function names in AST | AST |
+| naming | "PascalCase for types" | Interface and type alias names | AST |
+| naming | "kebab-case file names" | File names on disk | Filesystem |
+| forbidden-pattern | "no any types" | Type annotations in AST | AST |
+| forbidden-pattern | "no console.log" | Call expressions in AST | AST |
+| structure | "named exports only" | Export declarations | AST |
+| structure | "JSDoc on public functions" | JSDoc presence | AST |
+| structure | "max 300 lines per file" | File length | Regex |
+| test-requirement | "test file for every source file" | Matching test files exist | Filesystem |
+| import-pattern | "no path aliases" | Import specifiers | AST |
+| import-pattern | "no deep relative imports" | Import depth | AST |
+
+15 matchers across 5 categories. The parser is conservative: if it can't confidently map an instruction to a check, it skips it and reports the line as unparseable.
 
 ## Security
 
-RuleProbe never executes scanned code, never makes network calls, and never modifies files in the scanned directory. User-supplied paths are resolved and bounded to the working directory by default; symlinks outside the project are skipped unless you pass `--allow-symlinks`. All dependencies are pinned to exact versions. See [SECURITY.md](SECURITY.md) for the full security model, path traversal details, and reporting instructions.
+RuleProbe never executes scanned code, never makes network calls, and never modifies files in the scanned directory. User-supplied paths are resolved and bounded to the working directory; symlinks outside the project are skipped unless you pass `--allow-symlinks`. All dependencies are pinned to exact versions. See [SECURITY.md](SECURITY.md) for the full model.
+
+## Limitations
+
+These are things v0.1.0 doesn't do. Stated plainly so you know before installing.
+
+- **TypeScript and JavaScript only.** AST checks use ts-morph. Other languages aren't supported.
+- **No subjective evaluation.** "Write clean code" can't be verified mechanically. Those lines show up in the unparseable array.
+- **No automated agent invocation.** You run the agent yourself and point RuleProbe at the output directory. Automated invocation is planned for v0.2.0.
+- **Conservative extraction.** The parser would rather skip a rule than misclassify it. Check `--show-unparseable` to see what was missed.
+- **No compilation required.** ts-morph parses files in isolation, so it can analyze code that wouldn't compile. This is intentional (agent output often has errors), but it means some type-level checks are limited.
 
 ## Case Study
 
-See [docs/case-study-v0.1.0.md](docs/case-study-v0.1.0.md) for a demonstration comparing two agents on the rest-endpoint task template against 10 rules.
+See [docs/case-study-v0.1.0.md](docs/case-study-v0.1.0.md) for a comparison of two agents on the rest-endpoint task template against 10 rules.
 
 ## Contributing
+
+```bash
+git clone https://github.com/moonrunnerkc/ruleprobe.git
+cd ruleprobe && npm install
+npm test
+```
 
 Issues and pull requests welcome at [github.com/moonrunnerkc/ruleprobe](https://github.com/moonrunnerkc/ruleprobe).
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[MIT](LICENSE)
