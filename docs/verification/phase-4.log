@@ -1,0 +1,449 @@
+============================================================
+RuleProbe Phase 4 Verification Log
+Date: 2026-04-06T20:47:14Z
+============================================================
+
+--- TEST SUITE ---
+ Test Files  20 passed (20)
+      Tests  176 passed (176)
+   Duration  37.54s (transform 1.16s, setup 0ms, collect 2.98s, tests 46.64s, environment 6ms, prepare 2.18s)
+ Test Files  20 passed (20)
+      Tests  176 passed (176)
+   Duration  36.10s (transform 1.03s, setup 0ms, collect 2.94s, tests 45.70s, environment 6ms, prepare 2.34s)
+
+--- CMD 1: parse case-study-rules.md --format json ---
+{
+  "sourceFile": "/home/brad/projects/ruleprobe/tests/fixtures/case-study-rules.md",
+  "sourceType": "unknown",
+  "rules": [
+    {
+      "id": "naming-camelcase-variables-1",
+      "category": "naming",
+      "source": "- Use camelCase for all variable and function names",
+      "description": "Variables and functions must use camelCase naming",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "camelCase",
+        "target": "variables",
+        "expected": "camelCase",
+        "scope": "file"
+      }
+    },
+    {
+      "id": "naming-pascalcase-types-2",
+      "category": "naming",
+      "source": "- Use PascalCase for types, interfaces, and classes",
+      "description": "Types, interfaces, and classes must use PascalCase naming",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "PascalCase",
+        "target": "types",
+        "expected": "PascalCase",
+        "scope": "file"
+      }
+    },
+    {
+      "id": "naming-kebab-case-files-3",
+      "category": "naming",
+      "source": "- File names must use kebab-case",
+      "description": "File names must use kebab-case",
+      "severity": "error",
+      "verifier": "filesystem",
+      "pattern": {
+        "type": "kebab-case",
+        "target": "filenames",
+        "expected": "kebab-case",
+        "scope": "project"
+      }
+    },
+    {
+      "id": "forbidden-no-any-type-4",
+      "category": "forbidden-pattern",
+      "source": "- Never use any type in TypeScript code",
+      "description": "The \"any\" type must not be used",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "no-any",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "forbidden-no-console-log-5",
+      "category": "forbidden-pattern",
+      "source": "- No console.log in production code",
+      "description": "console.log must not be used in production code",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "no-console-log",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "structure-named-exports-only-6",
+      "category": "structure",
+      "source": "- Use named exports only, no default exports",
+      "description": "Only named exports are allowed, no default exports",
+      "severity": "error",
+      "verifier": "ast",
+      "pattern": {
+        "type": "named-exports-only",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "structure-jsdoc-required-7",
+      "category": "structure",
+      "source": "- Every public function must have a JSDoc comment",
+      "description": "Every public function must have a JSDoc comment",
+      "severity": "warning",
+      "verifier": "ast",
+      "pattern": {
+        "type": "jsdoc-required",
+        "target": "*.ts",
+        "expected": true,
+        "scope": "file"
+      }
+    },
+    {
+      "id": "structure-max-file-length-8",
+      "category": "structure",
+      "source": "- Files must not exceed 300 lines",
+      "description": "Files must not exceed the maximum line count",
+      "severity": "warning",
+      "verifier": "regex",
+      "pattern": {
+        "type": "max-file-length",
+        "target": "*.ts",
+        "expected": "300",
+        "scope": "file"
+      }
+    },
+    {
+      "id": "test-files-exist-9",
+      "category": "test-requirement",
+      "source": "- Every source file must have a corresponding test file",
+      "description": "Every source file must have a corresponding test file",
+      "severity": "error",
+      "verifier": "filesystem",
+      "pattern": {
+        "type": "test-files-exist",
+        "target": "src/**/*.ts",
+        "expected": true,
+        "scope": "project"
+      }
+    },
+    {
+      "id": "import-no-path-aliases-10",
+      "category": "import-pattern",
+      "source": "- Imports must use relative paths, no path aliases",
+      "description": "Imports must use relative paths, not path aliases",
+      "severity": "warning",
+      "verifier": "ast",
+      "pattern": {
+        "type": "no-path-aliases",
+        "target": "*.ts",
+        "expected": false,
+        "scope": "file"
+      }
+    }
+  ]
+}
+
+--- CMD 2: verify agent-a --format text ---
+RuleProbe Adherence Report
+Agent: agent-a | Model: claude-4 | Task: rest-endpoint
+Date: 2026-04-06T20:48:54.703Z
+
+Rules: 10 total | 7 passed | 3 failed | Score: 70%
+
+PASS  naming/naming-camelcase-variables-1
+PASS  naming/naming-pascalcase-types-2
+PASS  naming/naming-kebab-case-files-3
+FAIL  forbidden-pattern/forbidden-no-any-type-4
+      src/routes/bookmarks.ts:18 - found: body: any
+      src/routes/bookmarks.ts:49 - found: query: any
+FAIL  forbidden-pattern/forbidden-no-console-log-5
+      src/routes/bookmarks.ts:40 - found: console.log(`Bookmark created: ${bookmark.id}`)
+PASS  structure/structure-named-exports-only-6
+PASS  structure/structure-jsdoc-required-7
+PASS  structure/structure-max-file-length-8
+FAIL  test-requirement/test-files-exist-9
+      src/middleware/validation.ts - found: no test file found
+PASS  import-pattern/import-no-path-aliases-10
+
+By Category:
+  naming:             3/3 (100%)
+  forbidden-pattern:  0/2 (0%)
+  structure:          3/3 (100%)
+  import-pattern:     1/1 (100%)
+  test-requirement:   0/1 (0%)
+
+--- CMD 3: verify agent-b --format text ---
+RuleProbe Adherence Report
+Agent: agent-b | Model: gpt-5 | Task: rest-endpoint
+Date: 2026-04-06T20:48:57.257Z
+
+Rules: 10 total | 7 passed | 3 failed | Score: 70%
+
+FAIL  naming/naming-camelcase-variables-1
+      src/routes/bookmarks.ts:14 - found: max_bookmarks_per_page
+PASS  naming/naming-pascalcase-types-2
+PASS  naming/naming-kebab-case-files-3
+PASS  forbidden-pattern/forbidden-no-any-type-4
+PASS  forbidden-pattern/forbidden-no-console-log-5
+FAIL  structure/structure-named-exports-only-6
+      src/routes/bookmarks.ts:335 - found: default export
+PASS  structure/structure-jsdoc-required-7
+FAIL  structure/structure-max-file-length-8
+      src/routes/bookmarks.ts - found: 338 lines
+PASS  test-requirement/test-files-exist-9
+PASS  import-pattern/import-no-path-aliases-10
+
+By Category:
+  naming:             2/3 (67%)
+  forbidden-pattern:  2/2 (100%)
+  structure:          1/3 (33%)
+  import-pattern:     1/1 (100%)
+  test-requirement:   1/1 (100%)
+
+]633;E;mkdir ruleprobe;b919a25e-40fc-4813-a951-a3f9bdafbf64]633;C--- CMD 4: compare --format markdown ---
+# RuleProbe: Agent Instruction Adherence Comparison
+
+Rules source: /home/brad/projects/ruleprobe/tests/fixtures/case-study-rules.md (10 rules extracted, 0 unparseable)
+Task: manual
+Date: 2026-04-06
+
+| Rule | agent-a | agent-b |
+| ------ | :------: | :------: |
+| Variables and functions must use camelCase naming | PASS | FAIL |
+| Types, interfaces, and classes must use PascalCase naming | PASS | PASS |
+| File names must use kebab-case | PASS | PASS |
+| The "any" type must not be used | FAIL | PASS |
+| console.log must not be used in production code | FAIL | PASS |
+| Only named exports are allowed, no default exports | PASS | FAIL |
+| Every public function must have a JSDoc comment | PASS | PASS |
+| Files must not exceed the maximum line count | PASS | FAIL |
+| Every source file must have a corresponding test file | FAIL | PASS |
+| Imports must use relative paths, not path aliases | PASS | PASS |
+
+| Agent | Score |
+|-------|-------|
+| agent-a (unknown) | 70% |
+| agent-b (unknown) | 70% |
+
+--- CMD 5: tasks ---
+Available task templates:
+
+  rest-endpoint
+    REST API Endpoint
+    Build a REST API endpoint for managing user bookmarks (POST, GET, DELETE).
+    Exercises: naming, forbidden-pattern, structure, test-requirement
+
+  utility-module
+    Utility Module with Tests
+    Build a string utility module with validation, formatting, and full test coverage.
+    Exercises: naming, forbidden-pattern, structure, test-requirement, import-pattern
+
+  react-component
+    React Component
+    Build a reusable data table component with sorting, filtering, and pagination.
+    Exercises: naming, forbidden-pattern, structure, test-requirement
+
+
+--- CMD 6: task rest-endpoint (first 10 lines) ---
+# Task: REST API for User Bookmarks
+
+Build a REST API for managing user bookmarks using TypeScript and Express.
+
+## Endpoints
+
+### POST /bookmarks
+
+Create a new bookmark.
+
+
+--- CMD 7: task utility-module (first 5 lines) ---
+# Task: String Utility Module
+
+Build a TypeScript utility module with three string manipulation functions and full test coverage.
+
+## Functions
+
+--- CMD 8: task react-component (first 5 lines) ---
+# Task: SearchFilter React Component
+
+Build a reusable SearchFilter component in TypeScript with React.
+
+## Component: SearchFilter
+
+--- CMD 9: --help ---
+Usage: ruleprobe [options] [command]
+
+Verify whether AI coding agents follow the instruction files they're given
+
+Options:
+  -V, --version                                     output the version number
+  -h, --help                                        display help for command
+
+Commands:
+  parse [options] <instruction-file>                Parse an instruction file and output extracted rules
+  verify [options] <instruction-file> <output-dir>  Parse rules from instruction file, verify agent output against them
+  tasks                                             List available task templates
+  task <template-id>                                Output the full task prompt for a given template
+  compare [options] <instruction-file> <dirs...>    Run verification against multiple agent outputs and produce a comparison
+  help [command]                                    display help for command
+
+--- CMD 10: --version ---
+0.1.0
+
+--- BUILD ---
+
+> ruleprobe@0.1.0 build
+> tsc && cp -r src/runner/task-templates dist/runner/task-templates
+
+
+--- COMPILED CLI: node dist/cli.js --help ---
+Usage: ruleprobe [options] [command]
+
+Verify whether AI coding agents follow the instruction files they're given
+
+Options:
+  -V, --version                                     output the version number
+  -h, --help                                        display help for command
+
+Commands:
+  parse [options] <instruction-file>                Parse an instruction file and output extracted rules
+  verify [options] <instruction-file> <output-dir>  Parse rules from instruction file, verify agent output against them
+  tasks                                             List available task templates
+  task <template-id>                                Output the full task prompt for a given template
+  compare [options] <instruction-file> <dirs...>    Run verification against multiple agent outputs and produce a comparison
+  help [command]                                    display help for command
+
+]633;E;mkdir ruleprobe;b919a25e-40fc-4813-a951-a3f9bdafbf64]633;C--- COMPILED CLI: node dist/cli.js parse (JSON validation) ---
+10 rules parsed successfully
+
+--- NPM PUBLISH DRY-RUN ---
+npm warn publish "repository.url" was normalized to "git+https://github.com/moonrunnerkc/ruleprobe.git"
+npm notice name: ruleprobe
+npm notice version: 0.1.0
+npm notice filename: ruleprobe-0.1.0.tgz
+npm notice package size: 44.3 kB
+npm notice total files: 74
+npm notice Publishing to https://registry.npmjs.org/ with tag latest and default access (dry-run)
++ ruleprobe@0.1.0
+
+--- DOGFOOD: verify own codebase ---
+RuleProbe Adherence Report
+Agent: ruleprobe | Model: self | Task: manual
+Date: 2026-04-06T20:49:47.676Z
+
+Rules: 13 total | 11 passed | 2 failed | Score: 85%
+
+PASS  forbidden-pattern/forbidden-no-any-type-1
+FAIL  structure/structure-strict-mode-2
+      tsconfig.json - found: tsconfig.json not found
+PASS  structure/structure-named-exports-only-3
+PASS  naming/naming-kebab-case-files-4
+PASS  naming/naming-camelcase-variables-5
+PASS  naming/naming-camelcase-general-6
+PASS  naming/naming-pascalcase-types-7
+PASS  test-requirement/test-files-exist-8
+PASS  test-requirement/test-named-pattern-9
+PASS  import-pattern/import-no-path-aliases-10
+PASS  forbidden-pattern/forbidden-no-console-log-11
+FAIL  structure/structure-max-file-length-12
+      cli.ts - found: 353 lines
+      parsers/rule-extractor.ts - found: 558 lines
+      verifier/ast-verifier.ts - found: 464 lines
+PASS  structure/structure-jsdoc-required-13
+
+By Category:
+  naming:             4/4 (100%)
+  forbidden-pattern:  2/2 (100%)
+  structure:          2/4 (50%)
+  import-pattern:     1/1 (100%)
+  test-requirement:   2/2 (100%)
+
+--- CASE STUDY DATA FILES ---
+total 36
+drwxrwxr-x 2 brad brad  4096 Apr  6 12:37 .
+drwxrwxr-x 4 brad brad  4096 Apr  6 12:38 ..
+-rw-rw-r-- 1 brad brad 11887 Apr  6 12:37 agent-a-report.json
+-rw-rw-r-- 1 brad brad 11446 Apr  6 12:37 agent-b-report.json
+-rw-rw-r-- 1 brad brad  1001 Apr  6 12:37 comparison.md
+
+--- SOURCE FILE STRUCTURE ---
+src/cli.ts
+src/index.ts
+src/parsers/index.ts
+src/parsers/markdown-parser.ts
+src/parsers/rule-extractor.ts
+src/reporter/index.ts
+src/reporter/json.ts
+src/reporter/markdown.ts
+src/reporter/text.ts
+src/runner/index.ts
+src/runner/task-templates/react-component.md
+src/runner/task-templates/rest-endpoint.md
+src/runner/task-templates.ts
+src/runner/task-templates/utility-module.md
+src/types.ts
+src/verifier/ast-verifier.ts
+src/verifier/file-verifier.ts
+src/verifier/index.ts
+src/verifier/regex-verifier.ts
+
+--- TEST FILE STRUCTURE ---
+tests/cli/cli.test.ts
+tests/fixtures/case-study-output/agent-a/src/middleware/validation.ts
+tests/fixtures/case-study-output/agent-a/src/routes/bookmarks.ts
+tests/fixtures/case-study-output/agent-a/src/types.ts
+tests/fixtures/case-study-output/agent-a/src/utils/id.ts
+tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts
+tests/fixtures/case-study-output/agent-a/tests/types.test.ts
+tests/fixtures/case-study-output/agent-a/tests/utils/id.test.ts
+tests/fixtures/case-study-output/agent-b/src/middleware/validation.ts
+tests/fixtures/case-study-output/agent-b/src/routes/bookmarks.ts
+tests/fixtures/case-study-output/agent-b/src/types.ts
+tests/fixtures/case-study-output/agent-b/src/utils/id.ts
+tests/fixtures/case-study-output/agent-b/tests/middleware/validation.test.ts
+tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts
+tests/fixtures/case-study-output/agent-b/tests/types.test.ts
+tests/fixtures/case-study-output/agent-b/tests/utils/id.test.ts
+tests/fixtures/case-study-rules.md
+tests/fixtures/sample-agents.md
+tests/fixtures/sample-claude.md
+tests/fixtures/sample-output/failing/src/helpers.ts
+tests/fixtures/sample-output/failing/src/line-length.ts
+tests/fixtures/sample-output/failing/src/long-file.ts
+tests/fixtures/sample-output/failing/src/UserService.ts
+tests/fixtures/sample-output/passing/src/types.ts
+tests/fixtures/sample-output/passing/src/user-service.ts
+tests/fixtures/sample-output/passing/src/utils/validation.ts
+tests/fixtures/sample-output/passing/tests/types.test.ts
+tests/fixtures/sample-output/passing/tests/user-service.test.ts
+tests/fixtures/sample-output/passing/tests/utils/validation.test.ts
+tests/parsers/markdown-parser.test.ts
+tests/parsers/rule-extractor.test.ts
+tests/reporter/json.test.ts
+tests/reporter/markdown.test.ts
+tests/reporter/report-fixture.ts
+tests/reporter/text.test.ts
+tests/verifier/ast-verifier.test.ts
+tests/verifier/file-verifier.test.ts
+tests/verifier/index.test.ts
+tests/verifier/regex-verifier.test.ts
+
+============================================================
+Phase 4 verification complete.
+============================================================

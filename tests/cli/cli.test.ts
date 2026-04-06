@@ -139,9 +139,10 @@ describe('CLI: tasks command', () => {
 // ── task command ───────────────────────────────────────────────
 
 describe('CLI: task command', () => {
-  it('shows template info for a valid template', () => {
+  it('outputs the full prompt for a valid template', () => {
     const output = run('task rest-endpoint');
-    expect(output).toContain('rest-endpoint');
+    expect(output).toContain('REST API');
+    expect(output).toContain('bookmarks');
   });
 
   it('fails for unknown template', () => {
