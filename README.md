@@ -149,6 +149,10 @@ All formats are parsed as markdown. The parser auto-detects the file type from t
 - **Conservative extraction.** The parser intentionally misses rules it cannot confidently interpret rather than misclassifying them. Check the unparseable array to see what was skipped.
 - **No compilation required.** ts-morph parses files in isolation, which means it can analyze code that would not compile. This is by design (agent output often has errors), but it also means some type-level checks are limited.
 
+## Security
+
+RuleProbe never executes scanned code, never makes network calls, and never modifies files in the scanned directory. User-supplied paths are resolved and bounded to the working directory by default; symlinks outside the project are skipped unless you pass `--allow-symlinks`. All dependencies are pinned to exact versions. See [SECURITY.md](SECURITY.md) for the full security model, path traversal details, and reporting instructions.
+
 ## Case Study
 
 See [docs/case-study-v0.1.0.md](docs/case-study-v0.1.0.md) for a demonstration comparing two agents on the rest-endpoint task template against 10 rules.
