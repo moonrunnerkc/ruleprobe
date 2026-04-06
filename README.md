@@ -4,7 +4,7 @@
     Verify whether AI coding agents actually follow the instruction files they're given.
   </p>
   <p align="center">
-    <a href="https://www.npmjs.com/package/ruleprobe"><img src="https://img.shields.io/npm/v/ruleprobe?style=flat-square" alt="npm version"></a>
+    <img src="https://img.shields.io/badge/version-0.1.0-blue?style=flat-square" alt="version 0.1.0">
     <a href="https://github.com/moonrunnerkc/ruleprobe/actions/workflows/self-check.yml"><img src="https://img.shields.io/github/actions/workflow/status/moonrunnerkc/ruleprobe/self-check.yml?style=flat-square&label=build" alt="build status"></a>
     <a href="https://github.com/moonrunnerkc/ruleprobe/blob/main/LICENSE"><img src="https://img.shields.io/github/license/moonrunnerkc/ruleprobe?style=flat-square" alt="license"></a>
     <img src="https://img.shields.io/badge/language-TypeScript-3178c6?style=flat-square" alt="TypeScript">
