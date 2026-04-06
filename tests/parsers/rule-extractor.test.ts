@@ -372,8 +372,8 @@ describe('parseInstructionFile: sample-claude.md fixture', () => {
     const ruleSet = parseInstructionFile(filePath);
 
     expect(ruleSet.sourceFile).toBe(filePath);
-    // Not a recognized instruction file name, so type is unknown
-    expect(ruleSet.sourceType).toBe('unknown');
+    // Not a recognized instruction file name, but .md with rules -> generic-markdown
+    expect(ruleSet.sourceType).toBe('generic-markdown');
     expect(ruleSet.rules.length).toBeGreaterThan(0);
 
     // Verify specific rules were extracted
