@@ -1,0 +1,166 @@
+=== RuleProbe Post-Fix Verification ===
+Date: 2026-04-06T21:54:05Z
+
+=== 1. vitest run ===
+
+ RUN  v2.1.9 /home/brad/projects/ruleprobe
+
+ ✓ tests/parsers/markdown-parser.test.ts (11 tests) 8ms
+ ✓ tests/fixtures/case-study-output/agent-b/tests/utils/id.test.ts (2 tests) 2ms
+ ✓ tests/fixtures/case-study-output/agent-b/tests/middleware/validation.test.ts (4 tests) 4ms
+ ✓ tests/fixtures/case-study-output/agent-a/tests/utils/id.test.ts (2 tests) 4ms
+ ✓ tests/fixtures/case-study-output/agent-b/tests/types.test.ts (3 tests) 5ms
+ ✓ tests/fixtures/case-study-output/agent-a/tests/types.test.ts (2 tests) 7ms
+ ✓ tests/fixtures/case-study-output/agent-b/tests/routes/bookmarks.test.ts (8 tests) 5ms
+ ✓ tests/fixtures/sample-output/passing/tests/user-service.test.ts (1 test) 2ms
+ ✓ tests/fixtures/case-study-output/agent-a/tests/routes/bookmarks.test.ts (7 tests) 6ms
+ ✓ tests/fixtures/sample-output/passing/tests/utils/validation.test.ts (1 test) 2ms
+ ✓ tests/verifier/regex-verifier.test.ts (5 tests) 7ms
+ ✓ tests/fixtures/sample-output/passing/tests/types.test.ts (1 test) 4ms
+ ✓ tests/reporter/markdown.test.ts (12 tests) 8ms
+ ✓ tests/reporter/json.test.ts (6 tests) 14ms
+ ✓ tests/verifier/file-verifier.test.ts (11 tests) 28ms
+ ✓ tests/reporter/text.test.ts (10 tests) 8ms
+ ✓ tests/parsers/rule-extractor.test.ts (49 tests) 46ms
+ ✓ tests/verifier/ast-verifier.test.ts (19 tests) 2170ms
+   ✓ AST verifier: passing fixtures > finds no default exports in passing code 624ms
+   ✓ AST verifier: passing fixtures > finds no missing JSDoc on exported functions in passing code 418ms
+   ✓ AST verifier: default export detection > detects default export 369ms
+   ✓ AST verifier: missing JSDoc detection > detects exported functions missing JSDoc 364ms
+   ✓ AST verifier: missing JSDoc detection > does not flag non-exported functions for missing JSDoc 345ms
+ ✓ tests/verifier/index.test.ts (7 tests) 5100ms
+   ✓ Verifier orchestrator: passing fixtures > returns all rules as passing 1402ms
+   ✓ Verifier orchestrator: passing fixtures > preserves rule order in results 1099ms
+   ✓ Verifier orchestrator: failing fixtures > flags multiple rules as failing 851ms
+   ✓ Verifier orchestrator: failing fixtures > routes rules to the correct verifiers 882ms
+   ✓ Verifier orchestrator: failing fixtures > each result contains evidence of failures 864ms
+ ✓ tests/cli/cli.test.ts (16 tests) 31019ms
+   ✓ CLI: parse command > outputs JSON when --format json 1765ms
+   ✓ CLI: parse command > outputs text by default 1688ms
+   ✓ CLI: parse command > includes unparseable lines with --show-unparseable 1491ms
+   ✓ CLI: parse command > fails with actionable error for missing file 1437ms
+   ✓ CLI: verify command > produces text output for passing fixtures 2742ms
+   ✓ CLI: verify command > produces JSON output with --format json 2767ms
+   ✓ CLI: verify command > produces markdown output with --format markdown 3302ms
+   ✓ CLI: verify command > shows failures for failing fixtures 2668ms
+   ✓ CLI: verify command > fails with actionable error for missing instruction file 1447ms
+   ✓ CLI: verify command > fails with actionable error for missing output directory 1421ms
+   ✓ CLI: tasks command > lists available task templates 1354ms
+   ✓ CLI: tasks command > shows template descriptions 1418ms
+   ✓ CLI: task command > outputs the full prompt for a valid template 1346ms
+   ✓ CLI: task command > fails for unknown template 1371ms
+   ✓ CLI: compare command > produces markdown comparison table 3354ms
+   ✓ CLI: help > shows help text with --help 1443ms
+
+ Test Files  20 passed (20)
+      Tests  177 passed (177)
+   Start at  15:54:05
+   Duration  31.42s (transform 830ms, setup 0ms, collect 2.37s, tests 38.45s, environment 5ms, prepare 2.28s)
+
+
+=== 2. npm run build ===
+
+> ruleprobe@0.1.0 build
+> tsc && cp -r src/runner/task-templates dist/runner/task-templates
+
+
+=== 3. Dogfood: verify copilot-instructions.md against src ===
+RuleProbe Adherence Report
+Agent: dogfood | Model: self | Task: manual
+Date: 2026-04-06T21:54:39.941Z
+
+Rules: 13 total | 13 passed | 0 failed | Score: 100%
+
+PASS  forbidden-pattern/forbidden-no-any-type-1
+PASS  structure/structure-strict-mode-2
+PASS  structure/structure-named-exports-only-3
+PASS  naming/naming-kebab-case-files-4
+PASS  naming/naming-camelcase-variables-5
+PASS  naming/naming-camelcase-general-6
+PASS  naming/naming-pascalcase-types-7
+PASS  test-requirement/test-files-exist-8
+PASS  test-requirement/test-named-pattern-9
+PASS  import-pattern/import-no-path-aliases-10
+PASS  forbidden-pattern/forbidden-no-console-log-11
+PASS  structure/structure-max-file-length-12
+PASS  structure/structure-jsdoc-required-13
+
+By Category:
+  naming:             4/4 (100%)
+  forbidden-pattern:  2/2 (100%)
+  structure:          4/4 (100%)
+  import-pattern:     1/1 (100%)
+  test-requirement:   2/2 (100%)
+
+=== 4. Verify passing fixtures ===
+RuleProbe Adherence Report
+Agent: unknown | Model: unknown | Task: manual
+Date: 2026-04-06T21:54:41.792Z
+
+Rules: 10 total | 10 passed | 0 failed | Score: 100%
+
+PASS  naming/naming-camelcase-variables-1
+PASS  naming/naming-pascalcase-types-2
+PASS  naming/naming-kebab-case-files-3
+PASS  forbidden-pattern/forbidden-no-any-type-4
+PASS  forbidden-pattern/forbidden-no-console-log-5
+PASS  structure/structure-named-exports-only-6
+PASS  structure/structure-jsdoc-required-7
+PASS  structure/structure-max-file-length-8
+PASS  test-requirement/test-files-exist-9
+PASS  import-pattern/import-no-path-aliases-10
+
+By Category:
+  naming:             3/3 (100%)
+  forbidden-pattern:  2/2 (100%)
+  structure:          3/3 (100%)
+  import-pattern:     1/1 (100%)
+  test-requirement:   1/1 (100%)
+
+=== 5. Parse case-study-rules.md (sourceType check) ===
+{
+  "sourceFile": "/home/brad/projects/ruleprobe/tests/fixtures/case-study-rules.md",
+  "sourceType": "generic-markdown",
+  "rules": [
+    {
+
+=== 6. File line counts ===
+   33 src/ast-checks/exports.ts
+   52 src/ast-checks/forbidden-patterns.ts
+   47 src/ast-checks/helpers.ts
+   89 src/ast-checks/imports.ts
+    9 src/ast-checks/index.ts
+   39 src/ast-checks/jsdoc.ts
+  102 src/ast-checks/naming.ts
+  116 src/commands/compare.ts
+   58 src/commands/parse.ts
+   75 src/commands/tasks.ts
+   98 src/commands/verify.ts
+   90 src/parsers/index.ts
+   78 src/parsers/markdown-parser.ts
+  228 src/parsers/rule-extractor.ts
+  263 src/parsers/rule-patterns.ts
+   41 src/reporter/index.ts
+   21 src/reporter/json.ts
+  174 src/reporter/markdown.ts
+  194 src/reporter/text.ts
+   84 src/runner/index.ts
+  106 src/runner/task-templates.ts
+  111 src/verifier/ast-verifier.ts
+  299 src/verifier/file-verifier.ts
+   78 src/verifier/index.ts
+   91 src/verifier/regex-verifier.ts
+  116 src/commands/compare.ts
+   58 src/commands/parse.ts
+   75 src/commands/tasks.ts
+   98 src/commands/verify.ts
+   33 src/ast-checks/exports.ts
+   52 src/ast-checks/forbidden-patterns.ts
+   47 src/ast-checks/helpers.ts
+   89 src/ast-checks/imports.ts
+    9 src/ast-checks/index.ts
+   39 src/ast-checks/jsdoc.ts
+  102 src/ast-checks/naming.ts
+ 3294 total
+
+=== Verification complete ===
