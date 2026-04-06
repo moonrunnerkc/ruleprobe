@@ -73,9 +73,13 @@ export function parseInstructionContent(
   content: string,
   filePath: string,
 ): RuleSet {
-  const sourceType = detectFileType(filePath);
+  let sourceType = detectFileType(filePath);
   const sections = parseMarkdown(content);
   const { rules, unparseable } = extractRules(sections);
+
+  if (sourceType === 'unknown' && filePath.endsWith('.md') && rules.length > 0) {
+    sourceType = 'generic-markdown';
+  }
 
   return {
     sourceFile: filePath,

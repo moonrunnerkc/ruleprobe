@@ -24,6 +24,7 @@ export type InstructionFileType =
   | 'copilot-instructions'
   | 'gemini.md'
   | 'windsurfrules'
+  | 'generic-markdown'
   | 'unknown';
 
 /** Describes the specific check a verifier runs for a rule. */
