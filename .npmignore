@@ -10,6 +10,8 @@ SECURITY.md
 *.tsbuildinfo
 vitest.config.ts
 tsconfig.json
+.env
+.env.*
 
 # Git
 .git/

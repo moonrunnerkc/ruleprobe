@@ -4,6 +4,9 @@ coverage/
 *.tsbuildinfo
 .DS_Store
 
+# Environment variables
+.env
+
 # Private project docs (keep local only)
 .github/copilot-instructions.md
 docs/ruleprobe-build-guide.md
