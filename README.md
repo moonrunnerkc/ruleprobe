@@ -84,7 +84,7 @@ Rules: 32 total | 23 passed | 9 failed | Score: 72%
 
 FAIL  error-handling/error-no-empty-catch-6
       commands/run.ts:148 - found: empty catch block
-      utils/safe-path.ts:103 - found: empty catch block
+      utils/safe-path.ts:116 - found: empty catch block
       verifier/ast-verifier.ts:248 - found: empty catch block
 PASS  forbidden-pattern/forbidden-no-any-type-2
 PASS  structure/structure-strict-mode-1

@@ -59,9 +59,10 @@ export async function handleVerify(
 ): Promise<void> {
   let filePath: string;
   let outDir: string;
+  const safePathOpts = { allowExternal: opts.allowSymlinks };
   try {
-    filePath = resolveSafePath(file);
-    outDir = resolveSafePath(outputDir);
+    filePath = resolveSafePath(file, undefined, safePathOpts);
+    outDir = resolveSafePath(outputDir, undefined, safePathOpts);
   } catch (err) {
     exitWithError((err as Error).message);
   }

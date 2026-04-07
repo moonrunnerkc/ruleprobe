@@ -42,7 +42,7 @@ export async function handleCompare(
 ): Promise<void> {
   let filePath: string;
   try {
-    filePath = resolveSafePath(file);
+    filePath = resolveSafePath(file, undefined, { allowExternal: opts.allowSymlinks });
   } catch (err) {
     exitWithError((err as Error).message);
   }
@@ -90,7 +90,7 @@ export async function handleCompare(
   for (let i = 0; i < dirs.length; i++) {
     let outDir: string;
     try {
-      outDir = resolveSafePath(dirs[i]!);
+      outDir = resolveSafePath(dirs[i]!, undefined, { allowExternal: opts.allowSymlinks });
     } catch (err) {
       exitWithError(
         `Directory ${i + 1} (${dirs[i]}): ${(err as Error).message}`,

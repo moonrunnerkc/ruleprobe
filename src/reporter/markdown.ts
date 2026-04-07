@@ -20,6 +20,10 @@ const CATEGORY_ORDER: RuleCategory[] = [
   'structure',
   'import-pattern',
   'test-requirement',
+  'error-handling',
+  'type-safety',
+  'code-style',
+  'dependency',
 ];
 
 /**

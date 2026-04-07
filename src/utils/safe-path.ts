@@ -8,19 +8,30 @@
 import { realpathSync, readdirSync, lstatSync, statSync } from 'node:fs';
 import { resolve, join, sep } from 'node:path';
 
+/** Options for resolveSafePath. */
+export interface SafePathOptions {
+  /** When true, skip the boundary check and allow paths outside cwd. */
+  allowExternal?: boolean;
+}
+
 /**
  * Resolve a user-supplied path and verify it stays within the working directory.
  *
  * Resolves the path with path.resolve, then calls fs.realpathSync to follow
  * symlinks, then checks the result is a descendant of cwd. Throws if the
- * resolved path escapes cwd.
+ * resolved path escapes cwd (unless allowExternal is set).
  *
  * @param userPath - The raw path from user input
  * @param cwd - The boundary directory (defaults to process.cwd())
+ * @param options - Optional settings (e.g. allowExternal)
  * @returns The resolved, real absolute path
- * @throws Error if the resolved path is outside cwd
+ * @throws Error if the resolved path is outside cwd and allowExternal is false
  */
-export function resolveSafePath(userPath: string, cwd?: string): string {
+export function resolveSafePath(
+  userPath: string,
+  cwd?: string,
+  options?: SafePathOptions,
+): string {
   const boundary = cwd ?? process.cwd();
   const resolved = resolve(boundary, userPath);
 
@@ -33,13 +44,15 @@ export function resolveSafePath(userPath: string, cwd?: string): string {
     real = resolved;
   }
 
-  const normalizedBoundary = boundary.endsWith(sep) ? boundary : boundary + sep;
+  if (!options?.allowExternal) {
+    const normalizedBoundary = boundary.endsWith(sep) ? boundary : boundary + sep;
 
-  if (real !== boundary && !real.startsWith(normalizedBoundary)) {
-    throw new Error(
-      `Path ${real} is outside the working directory ${boundary}. ` +
-      'Use --allow-symlinks if this is intentional.',
-    );
+    if (real !== boundary && !real.startsWith(normalizedBoundary)) {
+      throw new Error(
+        `Path ${real} is outside the working directory ${boundary}. ` +
+        'Use --allow-symlinks if this is intentional.',
+      );
+    }
   }
 
   return real;
