@@ -8,7 +8,7 @@ coverage/
 .env
 
 # Scripts (local utilities, not shipped)
-src/scripts/
+scripts/
 
 # Private project docs (keep local only)
 .github/copilot-instructions.md

@@ -1,6 +1,7 @@
 # Source files (compiled output in dist/ is what gets published)
 src/
 tests/
+scripts/
 
 # Development files
 .vscode/
