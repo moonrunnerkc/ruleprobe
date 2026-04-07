@@ -9,6 +9,11 @@
 
 import type { Rule, MarkdownSection } from '../types.js';
 import { RULE_MATCHERS } from './rule-patterns.js';
+import { EXTENDED_RULE_MATCHERS } from './rule-patterns-extended.js';
+import { PROJECT_RULE_MATCHERS } from './rule-patterns-project.js';
+
+/** Combined matcher list: base matchers checked first, then extended, then project. */
+const ALL_MATCHERS = [...RULE_MATCHERS, ...EXTENDED_RULE_MATCHERS, ...PROJECT_RULE_MATCHERS];
 
 /** Counter for generating unique rule IDs across extraction runs. */
 let ruleCounter = 0;
@@ -57,7 +62,7 @@ function isInstructionCandidate(line: string): boolean {
     /^\d+\.\s+/,                     // ordered list item
     /\b(must|should|always|never|no|don'?t|avoid|use|require|ensure)\b/i,
     /\b(camel|pascal|kebab|snake)[\s-]*case\b/i,
-    /\bconsole\.?log\b/i,
+    /\bconsole\.?\w*\b/i,
     /\bdefault\s+export/i,
     /\bany\s+type/i,
     /\bJSDoc\b/i,
@@ -65,9 +70,40 @@ function isInstructionCandidate(line: string): boolean {
     /\btest\s+file/i,
     /\brelative\s+import/i,
     /\bpath\s+alias/i,
-    /\bmax(?:imum)?\s+(?:line|file)\b/i,
+    /\bmax(?:imum)?\s+(?:line|file|function|param(?:eter)?s?)\b/i,
     /\b(?:line|file)\s+length\b/i,
     /\bnamed\s+export/i,
+    /\bempty\s+catch\b/i,
+    /\benums?\b/i,
+    /\btype\s+assertions?\b/i,
+    /\bnon[\s-]null\s+assertion/i,
+    /\bthrow\b/i,
+    /\bternary\b/i,
+    /\bmagic\s+numbers?\b/i,
+    /\belse\s+after\s+return\b/i,
+    /\bearly\s+returns?\b/i,
+    /\bnamespace\s+imports?\b/i,
+    /\bimport\s+\*/i,
+    /\bbarrel\s+(?:files?|exports?)\b/i,
+    /\bsetTimeout\b/i,
+    /\b@?ts[\s-](?:ignore|nocheck|expect)/i,
+    /\b\.only\s*\(/i,
+    /\b\.skip\s*\(/i,
+    /\bfocused\s+tests?\b/i,
+    /\bskipped\s+tests?\b/i,
+    /\bsingle\s+quotes?\b/i,
+    /\bbanned?\s+(?:package|import|library)\b/i,
+    /\bREADME\b/i,
+    /\bCHANGELOG\b/i,
+    /\bformatter\b/i,
+    /\bprettier\b/i,
+    /\beslint\b/i,
+    /\bbiome\b/i,
+    /\bpin(?:ned)?\s+(?:dependenc|version)/i,
+    /\bexact\s+versions?\b/i,
+    /\bswallow(?:ed)?\s+(?:error|exception)/i,
+    /\bsilent\s+(?:failure|catch)\b/i,
+    /\bwildcard\s+imports?\b/i,
   ];
 
   return instructionPatterns.some((p) => p.test(line));
@@ -134,7 +170,7 @@ function matchLine(line: string, stripped: string): Rule[] {
   const matched: Rule[] = [];
   const seenMatchers = new Set<string>();
 
-  for (const matcher of RULE_MATCHERS) {
+  for (const matcher of ALL_MATCHERS) {
     if (seenMatchers.has(matcher.id)) {
       continue;
     }
@@ -150,6 +186,8 @@ function matchLine(line: string, stripped: string): Rule[] {
           severity: matcher.severity,
           verifier: matcher.verifier,
           pattern: matcher.buildPattern(stripped, match),
+          confidence: matcher.confidence ?? 'high',
+          extractionMethod: 'static',
         });
         seenMatchers.add(matcher.id);
         break;

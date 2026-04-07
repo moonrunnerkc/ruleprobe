@@ -243,17 +243,40 @@ The parser reads your instruction file and identifies lines that map to determin
 | naming | "kebab-case file names" | File names on disk | Filesystem |
 | forbidden-pattern | "no any types" | Type annotations in AST | AST |
 | forbidden-pattern | "no console.log" | Call expressions in AST | AST |
+| forbidden-pattern | "no console.warn/error" | Extended console method calls | AST |
 | forbidden-pattern | "max line length" | Line character count | Regex |
 | structure | "named exports only" | Export declarations | AST |
 | structure | "JSDoc on public functions" | JSDoc presence | AST |
 | structure | "max 300 lines per file" | File line count | Filesystem |
 | structure | "strict mode" | tsconfig.json compilerOptions.strict | Filesystem |
+| structure | "no barrel files" | Index re-export detection | AST |
+| structure | "README must exist" | File existence on disk | Filesystem |
+| structure | "CHANGELOG must exist" | File existence on disk | Filesystem |
+| structure | "formatter config required" | .prettierrc / .eslintrc detection | Filesystem |
 | test-requirement | "test file for every source file" | Matching test files exist | Filesystem |
 | test-requirement | "test files named *.test.ts" | Test file naming convention | Filesystem |
+| test-requirement | "no .only in tests" | Focused test detection | Regex |
+| test-requirement | "no .skip in tests" | Skipped test detection | Regex |
+| test-requirement | "no setTimeout in tests" | Timer usage in test files | AST |
 | import-pattern | "no path aliases" | Import specifiers | AST |
 | import-pattern | "no deep relative imports" | Import depth | AST |
+| import-pattern | "no namespace imports" | Star import detection | AST |
+| import-pattern | "ban specific packages" | Forbidden import sources | Regex |
+| error-handling | "no empty catch blocks" | Catch clause body inspection | AST |
+| error-handling | "throw Error instances only" | Throw expression types | AST |
+| type-safety | "no enums" | Enum declaration detection | AST |
+| type-safety | "no type assertions" | `as` keyword / angle bracket casts | AST |
+| type-safety | "no non-null assertions" | `!` postfix operator | AST |
+| type-safety | "no @ts-ignore / @ts-nocheck" | Directive comment detection | Regex |
+| code-style | "no nested ternary" | Ternary depth analysis | AST |
+| code-style | "no magic numbers" | Numeric literal usage | AST |
+| code-style | "no else after return" | Redundant else branches | AST |
+| code-style | "max function length" | Function body line count | AST |
+| code-style | "max parameters per function" | Parameter count | AST |
+| code-style | "single/double quote style" | Quote consistency in imports | Regex |
+| dependency | "pin dependency versions" | Exact version strings in package.json | Filesystem |
 
-15 matchers across 5 categories. The parser is conservative: if it can't confidently map an instruction to a check, it skips it and reports the line as unparseable.
+38 matchers across 9 categories. The parser is conservative: if it can't confidently map an instruction to a check, it skips it and reports the line as unparseable.
 
 ## Security
 
@@ -266,7 +289,7 @@ These are things v0.1.0 doesn't do. Stated plainly so you know before installing
 - **TypeScript and JavaScript only.** AST checks use ts-morph. Other languages aren't supported.
 - **No subjective evaluation.** "Write clean code" can't be verified mechanically. Those lines show up in the unparseable array.
 - **No automated agent invocation.** You run the agent yourself and point RuleProbe at the output directory. Automated invocation is planned for v0.2.0.
-- **Conservative extraction.** The parser would rather skip a rule than misclassify it. Check `--show-unparseable` to see what was missed.
+- **Conservative extraction.** The parser would rather skip a rule than misclassify it. 38 matchers cover the most common instruction patterns. Check `--show-unparseable` to see what was missed.
 - **No compilation required.** ts-morph parses files in isolation, so it can analyze code that wouldn't compile. This is intentional (agent output often has errors), but it means some type-level checks are limited.
 
 ## Case Study

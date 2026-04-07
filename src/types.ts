@@ -14,7 +14,11 @@ export type RuleCategory =
   | 'forbidden-pattern'
   | 'structure'
   | 'test-requirement'
-  | 'import-pattern';
+  | 'import-pattern'
+  | 'error-handling'
+  | 'type-safety'
+  | 'code-style'
+  | 'dependency';
 
 /** Which verification engine handles a given rule. */
 export type VerifierType = 'ast' | 'regex' | 'filesystem';
@@ -58,6 +62,10 @@ export interface Rule {
   verifier: VerifierType;
   /** The specific check to run. */
   pattern: VerificationPattern;
+  /** Confidence level of the extraction (high = exact keyword match). */
+  confidence?: 'high' | 'medium' | 'low';
+  /** How this rule was extracted. */
+  extractionMethod?: 'static' | 'llm' | 'custom';
 }
 
 /** A complete set of rules extracted from a single instruction file. */
@@ -189,6 +197,8 @@ export interface RuleMatcher {
   description: string;
   /** Default severity. */
   severity: 'error' | 'warning';
+  /** Confidence level for rules produced by this matcher. */
+  confidence?: 'high' | 'medium' | 'low';
   /** Build the verification pattern from the matched line. */
   buildPattern: (line: string, match: RegExpMatchArray) => VerificationPattern;
 }

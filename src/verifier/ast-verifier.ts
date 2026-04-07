@@ -16,6 +16,20 @@ import {
   checkJsDocRequired,
   checkNoDeepRelativeImports,
   checkNoPathAliases,
+  checkEmptyCatch,
+  checkNoEnum,
+  checkNoTypeAssertions,
+  checkNoNonNullAssertions,
+  checkThrowTypes,
+  checkNoConsoleExtended,
+  checkNoNestedTernary,
+  checkNoMagicNumbers,
+  checkNoElseAfterReturn,
+  checkMaxFunctionLength,
+  checkMaxParams,
+  checkNoNamespaceImports,
+  checkNoBarrelFiles,
+  checkNoSetTimeoutInTests,
 } from '../ast-checks/index.js';
 
 /**
@@ -67,6 +81,42 @@ function runAstCheck(rule: Rule, filePath: string, sourceFile: SourceFile): Evid
     }
     case 'no-path-aliases':
       return checkNoPathAliases(sourceFile, filePath);
+    case 'no-empty-catch':
+      return checkEmptyCatch(sourceFile, filePath);
+    case 'no-enum':
+      return checkNoEnum(sourceFile, filePath);
+    case 'no-type-assertions':
+      return checkNoTypeAssertions(sourceFile, filePath);
+    case 'no-non-null-assertions':
+      return checkNoNonNullAssertions(sourceFile, filePath);
+    case 'throw-error-only':
+      return checkThrowTypes(sourceFile, filePath);
+    case 'no-console-extended':
+      return checkNoConsoleExtended(sourceFile, filePath);
+    case 'no-nested-ternary':
+      return checkNoNestedTernary(sourceFile, filePath);
+    case 'no-magic-numbers':
+      return checkNoMagicNumbers(sourceFile, filePath);
+    case 'no-else-after-return':
+      return checkNoElseAfterReturn(sourceFile, filePath);
+    case 'max-function-length': {
+      const maxLines = typeof rule.pattern.expected === 'string'
+        ? parseInt(rule.pattern.expected, 10)
+        : 50;
+      return checkMaxFunctionLength(sourceFile, filePath, maxLines);
+    }
+    case 'max-params': {
+      const maxParams = typeof rule.pattern.expected === 'string'
+        ? parseInt(rule.pattern.expected, 10)
+        : 4;
+      return checkMaxParams(sourceFile, filePath, maxParams);
+    }
+    case 'no-namespace-imports':
+      return checkNoNamespaceImports(sourceFile, filePath);
+    case 'no-barrel-files':
+      return checkNoBarrelFiles(sourceFile, filePath);
+    case 'no-setTimeout-in-tests':
+      return checkNoSetTimeoutInTests(sourceFile, filePath);
     default:
       return [];
   }
