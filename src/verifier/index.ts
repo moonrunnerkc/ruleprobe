@@ -13,6 +13,12 @@ import { verifyAstRule } from './ast-verifier.js';
 import { verifyFileSystemRule, collectFiles, filterSourceFiles } from './file-verifier.js';
 import { verifyRegexRule } from './regex-verifier.js';
 
+/** Options for output verification. */
+export interface VerifyOptions {
+  /** Whether to follow symlinks during directory traversal. Defaults to false. */
+  allowSymlinks?: boolean;
+}
+
 /**
  * Verify all rules in a RuleSet against files in an output directory.
  *
@@ -22,10 +28,16 @@ import { verifyRegexRule } from './regex-verifier.js';
  *
  * @param ruleSet - The set of rules to verify
  * @param outputDir - Root directory containing agent-generated output
+ * @param options - Verification options (allowSymlinks, etc.)
  * @returns Array of RuleResults, one per rule, in the same order as ruleSet.rules
  */
-export function verifyOutput(ruleSet: RuleSet, outputDir: string): RuleResult[] {
-  const allFiles = collectFiles(outputDir);
+export function verifyOutput(
+  ruleSet: RuleSet,
+  outputDir: string,
+  options: VerifyOptions = {},
+): RuleResult[] {
+  const allowSymlinks = options.allowSymlinks ?? false;
+  const allFiles = collectFiles(outputDir, allowSymlinks);
   const sourceFiles = filterSourceFiles(allFiles);
 
   // Filter to TypeScript/JavaScript files for AST and regex checks
@@ -35,7 +47,7 @@ export function verifyOutput(ruleSet: RuleSet, outputDir: string): RuleResult[] 
   const results: RuleResult[] = [];
 
   for (const rule of ruleSet.rules) {
-    const result = verifyRule(rule, outputDir, codeFiles, sourceFiles);
+    const result = verifyRule(rule, outputDir, codeFiles, sourceFiles, allowSymlinks);
     results.push(result);
   }
 
@@ -56,12 +68,13 @@ function verifyRule(
   outputDir: string,
   codeFiles: string[],
   sourceFiles: string[],
+  allowSymlinks: boolean,
 ): RuleResult {
   switch (rule.verifier) {
     case 'ast':
       return verifyAstRule(rule, codeFiles);
     case 'filesystem':
-      return verifyFileSystemRule(rule, outputDir);
+      return verifyFileSystemRule(rule, outputDir, allowSymlinks);
     case 'regex':
       return verifyRegexRule(rule, sourceFiles, outputDir);
     default:

@@ -86,7 +86,7 @@ export function handleVerify(
   }
 
   const ruleSet = parseInstructionFile(filePath);
-  let results = verifyOutput(ruleSet, outDir);
+  let results = verifyOutput(ruleSet, outDir, { allowSymlinks: opts.allowSymlinks });
 
   if (opts.severity !== 'all') {
     results = results.filter(

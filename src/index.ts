@@ -23,6 +23,7 @@ import { parseInstructionFile, parseInstructionContent } from './parsers/index.j
 import { parseMarkdown } from './parsers/markdown-parser.js';
 import { extractRules as extractRulesFromSections } from './parsers/rule-extractor.js';
 import { verifyOutput } from './verifier/index.js';
+import type { VerifyOptions } from './verifier/index.js';
 import { formatReport } from './reporter/index.js';
 
 // Re-export types for consumers
@@ -37,6 +38,7 @@ export type {
   CategoryScore,
   InstructionFileType,
   ReportFormat,
+  VerifyOptions,
 };
 
 // Re-export core functions

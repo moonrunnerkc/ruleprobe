@@ -92,7 +92,7 @@ export function handleCompare(
       );
     }
 
-    const results = verifyOutput(ruleSet, outDir);
+    const results = verifyOutput(ruleSet, outDir, { allowSymlinks: opts.allowSymlinks });
     const run: AgentRun = {
       agent: agentLabels[i]!,
       model: 'unknown',

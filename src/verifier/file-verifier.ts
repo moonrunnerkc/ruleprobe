@@ -6,49 +6,25 @@
  * file length limits.
  */
 
-import { readdirSync, statSync, readFileSync, existsSync } from 'node:fs';
-import { join, basename, relative, extname, resolve, dirname } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { basename, relative, extname, resolve, dirname, join } from 'node:path';
 import type { Rule, RuleResult, Evidence } from '../types.js';
+import { walkDirectorySafe } from '../utils/safe-path.js';
 
 const KEBAB_CASE_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 /**
- * Recursively collect all file paths under a directory.
+ * Collect all file paths under a directory with symlink awareness.
  *
- * Skips node_modules and hidden directories (starting with .).
+ * Delegates to walkDirectorySafe, which uses lstatSync to detect
+ * symlinks and skips them when allowSymlinks is false.
  *
  * @param dir - Root directory to scan
+ * @param allowSymlinks - Whether to follow symlinks (default: false)
  * @returns Array of absolute file paths
  */
-function collectFiles(dir: string): string[] {
-  const results: string[] = [];
-
-  let entries: string[];
-  try {
-    entries = readdirSync(dir);
-  } catch {
-    return results;
-  }
-
-  for (const entry of entries) {
-    if (entry === 'node_modules' || entry.startsWith('.')) {
-      continue;
-    }
-
-    const fullPath = join(dir, entry);
-    try {
-      const stat = statSync(fullPath);
-      if (stat.isDirectory()) {
-        results.push(...collectFiles(fullPath));
-      } else {
-        results.push(fullPath);
-      }
-    } catch {
-      // Skip files we can't stat
-    }
-  }
-
-  return results;
+function collectFiles(dir: string, allowSymlinks: boolean = false): string[] {
+  return walkDirectorySafe(dir, allowSymlinks);
 }
 
 /**
@@ -258,8 +234,12 @@ function checkStrictMode(outputDir: string): Evidence[] {
  * @param outputDir - Root directory of agent output
  * @returns A RuleResult with pass/fail and evidence
  */
-export function verifyFileSystemRule(rule: Rule, outputDir: string): RuleResult {
-  const allFiles = collectFiles(outputDir);
+export function verifyFileSystemRule(
+  rule: Rule,
+  outputDir: string,
+  allowSymlinks: boolean = false,
+): RuleResult {
+  const allFiles = collectFiles(outputDir, allowSymlinks);
   const patternType = rule.pattern.type;
   let evidence: Evidence[];
 
@@ -297,3 +277,4 @@ export function verifyFileSystemRule(rule: Rule, outputDir: string): RuleResult 
 }
 
 export { collectFiles, filterSourceFiles };
+export type { Evidence };
