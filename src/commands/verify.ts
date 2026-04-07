@@ -15,7 +15,7 @@ import { formatReport } from '../reporter/index.js';
 import { validateOutputDir, currentTimestamp } from '../runner/index.js';
 import { resolveSafePath } from '../utils/safe-path.js';
 import { loadConfig, applyConfig } from '../config/index.js';
-import type { AgentRun, ReportFormat } from '../types.js';
+import type { AgentRun, ReportFormat, RuleSet } from '../types.js';
 
 /** Options accepted by the verify command. */
 export interface VerifyOpts {
@@ -27,6 +27,7 @@ export interface VerifyOpts {
   severity: string;
   allowSymlinks: boolean;
   config?: string;
+  llmExtract?: boolean;
 }
 
 /**
@@ -89,7 +90,7 @@ export async function handleVerify(
 
   const ruleSet = parseInstructionFile(filePath);
 
-  let effectiveRuleSet = ruleSet;
+  let effectiveRuleSet: RuleSet = ruleSet;
   try {
     const config = await loadConfig(opts.config, outDir);
     if (config) {
@@ -97,6 +98,16 @@ export async function handleVerify(
     }
   } catch (err) {
     exitWithError(`Config error: ${(err as Error).message}`);
+  }
+
+  if (opts.llmExtract) {
+    try {
+      const { extractWithLlm, createOpenAiProvider } = await import('../llm/index.js');
+      const provider = createOpenAiProvider();
+      effectiveRuleSet = await extractWithLlm(effectiveRuleSet, { provider });
+    } catch (err) {
+      exitWithError(`LLM extraction failed: ${(err as Error).message}`);
+    }
   }
 
   let results = verifyOutput(effectiveRuleSet, outDir, { allowSymlinks: opts.allowSymlinks });

@@ -20,6 +20,11 @@ All notable changes to this project will be documented in this file.
 - `--config` flag on verify and compare commands
 - Auto-discovery of config files in the working directory tree
 - Programmatic API exports: `defineConfig`, `loadConfig`, `applyConfig`
+- Opt-in LLM-assisted rule extraction via `--llm-extract` flag
+- OpenAI-compatible LLM provider using native fetch (no SDK dependency)
+- LLM provider interface (`LlmProvider`) for pluggable providers
+- LLM-extracted rules labeled with `extractionMethod: 'llm'` and `confidence: 'medium'`
+- Programmatic API exports: `extractWithLlm`, `createOpenAiProvider`
 
 ### Changed
 

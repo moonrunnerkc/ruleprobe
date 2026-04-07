@@ -85,7 +85,9 @@ Every failure includes the file, line number, and what was found. No ambiguity.
 
 **Parse.** Reads 6 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules) and extracts rules that can be checked mechanically. Subjective instructions like "write clean code" are reported as unparseable so you know what was skipped.
 
-**Verify.** Runs each extracted rule against a directory of agent-generated code. Checks use AST parsing via ts-morph, file system inspection, and regex pattern matching. No LLM evaluation at any stage; results are deterministic and identical across runs.
+**Verify.** Runs each extracted rule against a directory of agent-generated code. Checks use AST parsing via ts-morph, file system inspection, and regex pattern matching. No LLM evaluation at any stage by default; results are deterministic and identical across runs.
+
+**LLM Extract (opt-in).** Pass `--llm-extract` to send unparseable lines through an OpenAI-compatible API for a second extraction pass. LLM-extracted rules are labeled with `extractionMethod: 'llm'` and `confidence: 'medium'`, and default to warning severity. Requires `OPENAI_API_KEY` env var. No LLM dependency is installed by default.
 
 **Compare.** Point RuleProbe at outputs from two or more agents and get a side-by-side comparison table showing which rules each one followed. Useful for evaluating agents on the same task, or tracking adherence over time.
 
@@ -142,9 +144,10 @@ Extract rules from an instruction file.
 ```bash
 ruleprobe parse CLAUDE.md --format json
 ruleprobe parse AGENTS.md --show-unparseable
+ruleprobe parse AGENTS.md --llm-extract --show-unparseable
 ```
 
-`--format json|text` controls output format. `--show-unparseable` includes lines that couldn't be converted to rules.
+`--format json|text` controls output format. `--show-unparseable` includes lines that couldn't be converted to rules. `--llm-extract` sends unparseable lines to an OpenAI-compatible API for additional extraction (requires `OPENAI_API_KEY`).
 
 ### `ruleprobe verify <instruction-file> <output-dir>`
 
@@ -156,9 +159,10 @@ ruleprobe verify AGENTS.md ./output --agent claude --model opus-4 --format json 
 ruleprobe verify AGENTS.md ./output --format markdown --severity error
 ruleprobe verify AGENTS.md ./output --format rdjson
 ruleprobe verify AGENTS.md ./output --config ruleprobe.config.ts
+ruleprobe verify AGENTS.md ./output --llm-extract
 ```
 
-`--agent` and `--model` tag the report metadata. `--severity error|warning|all` filters results. `--output` writes to a file instead of stdout. `--format rdjson` produces reviewdog-compatible diagnostics. `--config` loads a specific config file (otherwise auto-discovered).
+`--agent` and `--model` tag the report metadata. `--severity error|warning|all` filters results. `--output` writes to a file instead of stdout. `--format rdjson` produces reviewdog-compatible diagnostics. `--config` loads a specific config file (otherwise auto-discovered). `--llm-extract` runs unparseable lines through an LLM for additional rule extraction.
 
 Exit codes: `0` all rules passed, `1` violations found, `2` execution error.
 
@@ -251,6 +255,8 @@ Five functions cover the full pipeline:
 | `defineConfig(config)` | Type-safe config helper for ruleprobe.config.ts |
 | `loadConfig(path?, searchDir?)` | Load and validate a config file |
 | `applyConfig(ruleSet, config)` | Merge custom rules, overrides, and exclusions into a RuleSet |
+| `extractWithLlm(ruleSet, options)` | Run LLM extraction on unparseable lines |
+| `createOpenAiProvider(config?)` | Create an OpenAI-compatible LLM provider |
 
 ```typescript
 import { parseInstructionFile, verifyOutput, generateReport, formatReport } from 'ruleprobe';
@@ -264,6 +270,17 @@ const report = generateReport(
   results,
 );
 console.log(formatReport(report, 'text'));
+```
+
+**LLM-assisted extraction** (opt-in):
+
+```typescript
+import { parseInstructionFile, extractWithLlm, createOpenAiProvider } from 'ruleprobe';
+
+const ruleSet = parseInstructionFile('CLAUDE.md');
+const provider = createOpenAiProvider({ model: 'gpt-4o-mini' });
+const enhanced = await extractWithLlm(ruleSet, { provider });
+// enhanced.rules now includes LLM-extracted rules with extractionMethod: 'llm'
 ```
 
 ## How It Works
@@ -333,7 +350,7 @@ RuleProbe never executes scanned code, never makes network calls, and never modi
 These are things v0.1.0 doesn't do. Stated plainly so you know before installing.
 
 - **TypeScript and JavaScript only.** AST checks use ts-morph. Other languages aren't supported.
-- **No subjective evaluation.** "Write clean code" can't be verified mechanically. Those lines show up in the unparseable array.
+- **No subjective evaluation.** "Write clean code" can't be verified mechanically. Those lines show up in the unparseable array. `--llm-extract` can attempt to map some of them to existing checks, but subjective instructions remain unparseable.
 - **No automated agent invocation.** You run the agent yourself and point RuleProbe at the output directory. Automated invocation is planned for v0.2.0.
 - **Conservative extraction.** The parser would rather skip a rule than misclassify it. 38 matchers cover the most common instruction patterns. Check `--show-unparseable` to see what was missed.
 - **No compilation required.** ts-morph parses files in isolation, so it can analyze code that wouldn't compile. This is intentional (agent output often has errors), but it means some type-level checks are limited.

@@ -50,6 +50,14 @@ export { parseInstructionFile } from './parsers/index.js';
 export { verifyOutput } from './verifier/index.js';
 export { formatReport } from './reporter/index.js';
 export { defineConfig, loadConfig, applyConfig } from './config/index.js';
+export { extractWithLlm, createOpenAiProvider } from './llm/index.js';
+export type {
+  LlmProvider,
+  LlmRuleCandidate,
+  LlmExtractionResult,
+  LlmExtractOptions,
+} from './llm/index.js';
+export type { OpenAiProviderConfig } from './llm/index.js';
 
 /**
  * Extract rules from raw markdown content.

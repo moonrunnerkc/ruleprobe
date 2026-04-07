@@ -30,8 +30,9 @@ program
   .argument('<instruction-file>', 'path to instruction file')
   .option('--format <format>', 'output format (json|text)', 'text')
   .option('--show-unparseable', 'include lines that could not be extracted', false)
-  .action((file: string, opts: { format: string; showUnparseable: boolean }) => {
-    handleParse(file, opts, exitWithError);
+  .option('--llm-extract', 'use LLM to extract rules from unparseable lines', false)
+  .action(async (file: string, opts: { format: string; showUnparseable: boolean; llmExtract: boolean }) => {
+    await handleParse(file, opts, exitWithError);
   });
 
 // ── verify ──
@@ -55,6 +56,7 @@ program
   )
   .option('--allow-symlinks', 'follow symlinks outside the working directory', false)
   .option('--config <path>', 'path to ruleprobe config file')
+  .option('--llm-extract', 'use LLM to extract rules from unparseable lines', false)
   .action(
     async (
       file: string,
@@ -68,6 +70,7 @@ program
         severity: string;
         allowSymlinks: boolean;
         config?: string;
+        llmExtract: boolean;
       },
     ) => {
       await handleVerify(file, outputDir, opts, exitWithError);
