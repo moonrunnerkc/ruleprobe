@@ -7,6 +7,9 @@ coverage/
 # Environment variables
 .env
 
+# Scripts (local utilities, not shipped)
+src/scripts/
+
 # Private project docs (keep local only)
 .github/copilot-instructions.md
 docs/ruleprobe-build-guide.md
