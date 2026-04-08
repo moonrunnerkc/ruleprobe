@@ -21,7 +21,7 @@ program
   .description(
     'Verify whether AI coding agents follow the instruction files they\'re given',
   )
-  .version('0.1.0');
+  .version('1.0.0');
 
 // ── parse ──
 

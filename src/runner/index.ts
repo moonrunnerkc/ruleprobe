@@ -1,9 +1,9 @@
 /**
  * Agent run metadata capture and validation.
  *
- * In v0.1.0 this is manual: the user passes --agent and --model flags,
- * and this module records them alongside a timestamp. Validates that the
- * output directory exists and contains at least one code file.
+ * The user passes --agent and --model flags; this module records them
+ * alongside a timestamp. Validates that the output directory exists
+ * and contains at least one code file.
  */
 
 import { existsSync, readdirSync, statSync } from 'node:fs';

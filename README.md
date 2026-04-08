@@ -33,7 +33,7 @@ Or run it directly:
 npx ruleprobe --help
 ```
 
-> **Note:** The examples below reflect the current development HEAD (53 matchers, 9 categories). The published npm v0.1.0 shipped with 15 matchers. A new release will follow.
+> **Note:** The examples below reflect the current HEAD (53 matchers, 9 categories).
 
 **Parse an instruction file** to see what rules RuleProbe can extract. This is real output from parsing the repo's included example instruction file:
 
@@ -218,7 +218,7 @@ ruleprobe compare AGENTS.md ./claude-output ./copilot-output --agents claude,cop
 
 ### `ruleprobe tasks` / `ruleprobe task <id>`
 
-List available task templates or output a specific task prompt. Three templates ship with v0.1.0: `rest-endpoint`, `utility-module`, `react-component`.
+List available task templates or output a specific task prompt. Three templates ship with v1.0.0: `rest-endpoint`, `utility-module`, `react-component`.
 
 ```bash
 ruleprobe tasks
@@ -395,7 +395,7 @@ RuleProbe never executes scanned code, never makes network calls (unless you opt
 
 ## Limitations
 
-What v0.1.0 doesn't do, stated plainly.
+What v1.0.0 doesn't do, stated plainly.
 
 - **TypeScript gets the deepest coverage.** ts-morph gives full AST analysis for TypeScript and JavaScript: naming, forbidden patterns, structure, imports, type-safety, and code-style checks. Python and Go get naming and function-length checks via tree-sitter WASM grammars (grammar packages ship as regular dependencies; see the Tree-sitter Support section). Everything else falls back to regex (line length, comments, semicolons). No Rust, Java, or C# AST support yet.
 - **Subjective rules stay subjective.** "Write clean code" has no deterministic check. The `--rubric-decompose` flag on the `verify` command uses an LLM to break subjective instructions into weighted concrete checks (max function length, no magic numbers, etc.), tagged with `extractionMethod: 'rubric'` and `confidence: 'low'`. This is a proxy, not a direct evaluation. Lines with no measurable proxy stay in the unparseable array. Requires `OPENAI_API_KEY`.

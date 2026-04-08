@@ -4,28 +4,28 @@
     "sessionStart": [
       {
         "type": "command",
-        "bash": "node -e \"const entry={timestamp:new Date().toISOString(),event:'sessionStart',tool:'session',filePath:'swarm/swarm-2026-04-08T23-12-28-704Z/step-3-integratorfinalizer'};try{require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-12-28-701Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}\"",
+        "bash": "node -e \"const entry={timestamp:new Date().toISOString(),event:'sessionStart',tool:'session',filePath:'swarm/swarm-2026-04-08T23-28-09-826Z/step-3-integratorfinalizer'};try{require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-28-09-823Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}\"",
         "timeoutSec": 10
       }
     ],
     "preToolUse": [
       {
         "type": "command",
-        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const rules={\\\"allow\\\":[\\\"src/components\\\",\\\"src/pages\\\",\\\"src/views\\\",\\\"public\\\",\\\"styles\\\",\\\".css\\\",\\\".scss\\\",\\\".html\\\",\\\"test\\\",\\\"tests\\\",\\\"__tests__\\\",\\\"spec\\\",\\\".test.\\\",\\\".spec.\\\"],\\\"deny\\\":[]};const p=(ctx.toolArgs||{}).path||(ctx.toolArgs||{}).filePath||'';if(p&&rules.deny.length>0){const denied=rules.deny.some(r=>p.includes(r));if(denied){const allowed=rules.allow.some(r=>p.includes(r));if(!allowed){const rule=rules.deny.find(r=>p.includes(r));const entry={timestamp:new Date().toISOString(),event:'scope_violation',tool:ctx.toolName||'unknown',filePath:p,agentName:'IntegratorFinalizer',boundaryRule:rule};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-12-28-701Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n');process.stdout.write(JSON.stringify({permissionDecision:'deny',permissionDecisionReason:'Scope violation: '+p+' is outside agent boundary ('+rule+')'}));return}}}process.stdout.write(JSON.stringify({permissionDecision:'approve'}))}catch(e){process.stdout.write(JSON.stringify({permissionDecision:'approve'}))}})\"",
+        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const rules={\\\"allow\\\":[\\\"src/components\\\",\\\"src/pages\\\",\\\"src/views\\\",\\\"public\\\",\\\"styles\\\",\\\".css\\\",\\\".scss\\\",\\\".html\\\",\\\"test\\\",\\\"tests\\\",\\\"__tests__\\\",\\\"spec\\\",\\\".test.\\\",\\\".spec.\\\"],\\\"deny\\\":[]};const p=(ctx.toolArgs||{}).path||(ctx.toolArgs||{}).filePath||'';if(p&&rules.deny.length>0){const denied=rules.deny.some(r=>p.includes(r));if(denied){const allowed=rules.allow.some(r=>p.includes(r));if(!allowed){const rule=rules.deny.find(r=>p.includes(r));const entry={timestamp:new Date().toISOString(),event:'scope_violation',tool:ctx.toolName||'unknown',filePath:p,agentName:'IntegratorFinalizer',boundaryRule:rule};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-28-09-823Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n');process.stdout.write(JSON.stringify({permissionDecision:'deny',permissionDecisionReason:'Scope violation: '+p+' is outside agent boundary ('+rule+')'}));return}}}process.stdout.write(JSON.stringify({permissionDecision:'approve'}))}catch(e){process.stdout.write(JSON.stringify({permissionDecision:'approve'}))}})\"",
         "timeoutSec": 10
       }
     ],
     "postToolUse": [
       {
         "type": "command",
-        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const entry={timestamp:new Date().toISOString(),event:'postToolUse',tool:ctx.toolName||'unknown',filePath:(ctx.toolArgs||{}).path||(ctx.toolArgs||{}).filePath,exitCode:ctx.toolResult?ctx.toolResult.exitCode:undefined};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-12-28-701Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}})\"",
+        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const entry={timestamp:new Date().toISOString(),event:'postToolUse',tool:ctx.toolName||'unknown',filePath:(ctx.toolArgs||{}).path||(ctx.toolArgs||{}).filePath,exitCode:ctx.toolResult?ctx.toolResult.exitCode:undefined};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-28-09-823Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}})\"",
         "timeoutSec": 10
       }
     ],
     "errorOccurred": [
       {
         "type": "command",
-        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const entry={timestamp:new Date().toISOString(),event:'errorOccurred',tool:'error',exitCode:1};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-12-28-701Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}})\"",
+        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const entry={timestamp:new Date().toISOString(),event:'errorOccurred',tool:'error',exitCode:1};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-28-09-823Z/evidence/step-3.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}})\"",
         "timeoutSec": 10
       }
     ]

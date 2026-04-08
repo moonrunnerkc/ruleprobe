@@ -2,13 +2,9 @@
  * Task template registry.
  *
  * Contains metadata for standardized coding tasks that exercise
- * common rule categories. In v0.1.0 the prompt text lives in
- * markdown files under src/runner/task-templates/. This module
- * provides the registry for listing and looking up templates.
- *
- * Template markdown files are created in Phase 4. Until then,
- * the registry returns metadata only; prompt loading returns
- * a "not yet available" message.
+ * common rule categories. Prompt text lives in markdown files
+ * under src/runner/task-templates/. This module provides the
+ * registry for listing and looking up templates.
  */
 
 import { readFileSync, existsSync } from 'node:fs';
