@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "node -e \"const entry={timestamp:new Date().toISOString(),event:'sessionStart',tool:'session',filePath:'swarm/swarm-2026-04-08T23-05-33-689Z/step-1-testerelite'};try{require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-05-33-686Z/evidence/step-1.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}\"",
+        "timeoutSec": 10
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const rules={\\\"allow\\\":[\\\"test\\\",\\\"tests\\\",\\\"__tests__\\\",\\\"spec\\\",\\\".test.\\\",\\\".spec.\\\"],\\\"deny\\\":[\\\"src/components\\\",\\\"src/pages\\\",\\\"src/views\\\",\\\".css\\\",\\\".scss\\\"]};const p=(ctx.toolArgs||{}).path||(ctx.toolArgs||{}).filePath||'';if(p&&rules.deny.length>0){const denied=rules.deny.some(r=>p.includes(r));if(denied){const allowed=rules.allow.some(r=>p.includes(r));if(!allowed){const rule=rules.deny.find(r=>p.includes(r));const entry={timestamp:new Date().toISOString(),event:'scope_violation',tool:ctx.toolName||'unknown',filePath:p,agentName:'TesterElite',boundaryRule:rule};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-05-33-686Z/evidence/step-1.jsonl',JSON.stringify(entry)+'\\n');process.stdout.write(JSON.stringify({permissionDecision:'deny',permissionDecisionReason:'Scope violation: '+p+' is outside agent boundary ('+rule+')'}));return}}}process.stdout.write(JSON.stringify({permissionDecision:'approve'}))}catch(e){process.stdout.write(JSON.stringify({permissionDecision:'approve'}))}})\"",
+        "timeoutSec": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const entry={timestamp:new Date().toISOString(),event:'postToolUse',tool:ctx.toolName||'unknown',filePath:(ctx.toolArgs||{}).path||(ctx.toolArgs||{}).filePath,exitCode:ctx.toolResult?ctx.toolResult.exitCode:undefined};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-05-33-686Z/evidence/step-1.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}})\"",
+        "timeoutSec": 10
+      }
+    ],
+    "errorOccurred": [
+      {
+        "type": "command",
+        "bash": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ctx=JSON.parse(d);const entry={timestamp:new Date().toISOString(),event:'errorOccurred',tool:'error',exitCode:1};require('fs').appendFileSync('/home/brad/projects/runs/swarm-2026-04-08T23-05-33-686Z/evidence/step-1.jsonl',JSON.stringify(entry)+'\\n')}catch(e){}})\"",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

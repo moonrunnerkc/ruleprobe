@@ -96,6 +96,7 @@ export const testReport: AdherenceReport = {
     totalRules: 3,
     passed: 2,
     failed: 1,
+    skipped: 0,
     warnings: 0,
     adherenceScore: (2 / 3) * 100,
     byCategory: {
@@ -123,6 +124,7 @@ export const testReportFailing: AdherenceReport = {
     totalRules: 3,
     passed: 0,
     failed: 3,
+    skipped: 0,
     warnings: 0,
     adherenceScore: 0,
     byCategory: {

@@ -100,6 +100,7 @@ export function generateReport(
   results: RuleResult[],
 ): AdherenceReport {
   const totalRules = results.length;
+  const skipped = ruleSet.rules.length - totalRules;
   const passed = results.filter((r) => r.passed).length;
   const failed = totalRules - passed;
   const warnings = results.filter(
@@ -138,6 +139,7 @@ export function generateReport(
     totalRules,
     passed,
     failed,
+    skipped,
     warnings,
     adherenceScore,
     byCategory,

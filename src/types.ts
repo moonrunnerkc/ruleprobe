@@ -150,6 +150,8 @@ export interface ReportSummary {
   passed: number;
   /** Number of rules that failed. */
   failed: number;
+  /** Number of rules skipped (present in ruleset but excluded from verification, e.g. by severity filter). */
+  skipped: number;
   /** Number of warnings (failed rules with severity "warning"). */
   warnings: number;
   /** Adherence score as a percentage (passed / totalRules * 100). */

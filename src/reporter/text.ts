@@ -99,6 +99,15 @@ export function formatText(report: AdherenceReport): string {
     lines.push(`  ${label}${counts}`);
   }
 
+  // Summary statistics line at end
+  lines.push('');
+  lines.push(
+    `Summary: ${summary.totalRules} checked | ` +
+    `${summary.passed} passed | ` +
+    `${summary.failed} failed | ` +
+    `${summary.skipped} skipped`,
+  );
+
   return lines.join('\n');
 }
 
@@ -157,6 +166,14 @@ export function formatTextPlain(report: AdherenceReport): string {
     const counts = `${score.passed}/${score.total} (${pct}%)`;
     lines.push(`  ${label}${counts}`);
   }
+
+  lines.push('');
+  lines.push(
+    `Summary: ${summary.totalRules} checked | ` +
+    `${summary.passed} passed | ` +
+    `${summary.failed} failed | ` +
+    `${summary.skipped} skipped`,
+  );
 
   return lines.join('\n');
 }

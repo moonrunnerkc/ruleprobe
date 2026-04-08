@@ -39,6 +39,18 @@ describe('Text reporter', () => {
     expect(output).toContain('found: data: any');
   });
 
+  it('shows summary statistics line at the end', () => {
+    const output = formatTextPlain(testReport);
+    expect(output).toContain('Summary: 3 checked | 2 passed | 1 failed | 0 skipped');
+  });
+
+  it('summary line appears after the category section', () => {
+    const output = formatTextPlain(testReport);
+    const categoryPos = output.indexOf('By Category:');
+    const summaryPos = output.indexOf('Summary:');
+    expect(summaryPos).toBeGreaterThan(categoryPos);
+  });
+
   it('shows category summary with percentages', () => {
     const output = formatTextPlain(testReport);
     expect(output).toContain('By Category:');
