@@ -1,3 +1,6 @@
+// Tests for the agent invoker: SDK availability detection, output directory checks,
+// and invokeAgent execution (mocked subprocess).
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { isAgentSdkAvailable, hasAgentOutput, invokeAgent } from '../../src/runner/agent-invoker.js';
 import { mkdtempSync, rmSync } from 'node:fs';

@@ -1,3 +1,6 @@
+// Tests for the filesystem-based rule verifier and file collection utilities.
+// Covers required-file, forbidden-file, required-directory, and file-pattern checks.
+
 import { describe, it, expect } from 'vitest';
 import { resolve, join } from 'node:path';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';

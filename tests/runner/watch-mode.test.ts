@@ -1,3 +1,5 @@
+// Tests for watch-mode utilities: file completion polling and code-file counting.
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';

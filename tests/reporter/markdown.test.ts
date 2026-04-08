@@ -1,3 +1,5 @@
+// Tests for the Markdown report formatter (single report and comparison table).
+
 import { describe, it, expect } from 'vitest';
 import { formatMarkdown, formatComparisonMarkdown } from '../../src/reporter/markdown.js';
 import { testReport, testReportFailing } from './report-fixture.js';

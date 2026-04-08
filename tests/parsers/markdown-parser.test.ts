@@ -1,3 +1,6 @@
+// Tests for the Markdown instruction file parser.
+// Covers section splitting, header detection, and flattenSectionLines.
+
 import { describe, it, expect } from 'vitest';
 import { parseMarkdown, flattenSectionLines } from '../../src/parsers/markdown-parser.js';
 

@@ -1,3 +1,6 @@
+// Tests for the regex-based rule verifier.
+// Covers passing fixtures, max-line-length violations, and negation patterns.
+
 import { describe, it, expect } from 'vitest';
 import { resolve } from 'node:path';
 import { verifyRegexRule } from '../../src/verifier/regex-verifier.js';

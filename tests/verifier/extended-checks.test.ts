@@ -1,3 +1,6 @@
+// Extended verifier checks: regex and filesystem verifiers on generated temp fixtures.
+// Covers forbidden-pattern detection and file-structure requirements.
+
 import { describe, it, expect } from 'vitest';
 import { resolve, join } from 'node:path';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';

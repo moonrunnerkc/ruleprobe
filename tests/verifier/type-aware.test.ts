@@ -1,3 +1,6 @@
+// Tests for type-aware AST checks using ts-morph type resolution.
+// Covers implicit-any, unused-variables, and type-assertion detection.
+
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';

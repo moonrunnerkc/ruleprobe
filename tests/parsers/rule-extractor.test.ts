@@ -1,3 +1,6 @@
+// Tests for the rule extractor: pattern recognition across all verifier types,
+// instruction file parsing (CLAUDE.md, AGENTS.md, .cursorrules), and rule counter resets.
+
 import { describe, it, expect, beforeEach } from 'vitest';
 import { extractRules, resetRuleCounter } from '../../src/parsers/rule-extractor.js';
 import { parseMarkdown } from '../../src/parsers/markdown-parser.js';

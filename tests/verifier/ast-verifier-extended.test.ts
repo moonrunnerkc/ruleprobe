@@ -1,3 +1,5 @@
+// Extended AST verifier tests covering kebab-case directories and concise-conditionals checks.
+
 import { describe, it, expect } from 'vitest';
 import { resolve } from 'node:path';
 import { verifyAstRule } from '../../src/verifier/ast-verifier.js';

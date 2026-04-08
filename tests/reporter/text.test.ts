@@ -1,3 +1,7 @@
+// Tests for the text and plain-text report formatters.
+// Covers report header, rule pass/fail lines, category summary,
+// parse output formatting, and the summary statistics line.
+
 import { describe, it, expect } from 'vitest';
 import { formatTextPlain, formatParseText } from '../../src/reporter/text.js';
 import { testReport } from './report-fixture.js';

@@ -1,3 +1,6 @@
+// Integration tests for the verifier orchestrator (verifyOutput).
+// Covers passing/failing fixture routing, multi-verifier dispatch, and edge cases.
+
 import { describe, it, expect } from 'vitest';
 import { resolve } from 'node:path';
 import { verifyOutput } from '../../src/verifier/index.js';

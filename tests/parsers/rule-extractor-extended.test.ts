@@ -1,3 +1,6 @@
+// Extended rule extractor tests covering additional pattern types, edge cases,
+// and rule severity/category assignment.
+
 import { describe, it, expect, beforeEach } from 'vitest';
 import { extractRules, resetRuleCounter } from '../../src/parsers/rule-extractor.js';
 import { parseMarkdown } from '../../src/parsers/markdown-parser.js';

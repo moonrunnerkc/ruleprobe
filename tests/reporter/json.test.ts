@@ -1,3 +1,6 @@
+// Tests for the JSON report formatter (formatJson).
+// Verifies the structure and field values of the serialized AdherenceReport.
+
 import { describe, it, expect } from 'vitest';
 import { formatJson } from '../../src/reporter/json.js';
 import { testReport } from './report-fixture.js';

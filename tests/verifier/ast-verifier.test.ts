@@ -1,3 +1,7 @@
+// Tests for the AST-based rule verifier (ts-morph).
+// Covers camelCase, any-type, console.log, default-export, JSDoc, deep-relative-import,
+// and path-alias checks on both passing and failing TypeScript fixtures.
+
 import { describe, it, expect } from 'vitest';
 import { resolve } from 'node:path';
 import { verifyAstRule } from '../../src/verifier/ast-verifier.js';

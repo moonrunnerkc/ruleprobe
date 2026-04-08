@@ -1,3 +1,5 @@
+// Tests for safe path resolution and directory walking with symlink protection.
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtempSync, writeFileSync, symlinkSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';

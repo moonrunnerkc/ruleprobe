@@ -1,3 +1,6 @@
+// Tests for symlink handling in file walking and safe-path utilities.
+// Verifies that symlinks are skipped or flagged appropriately.
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   mkdtempSync, writeFileSync, symlinkSync, mkdirSync, rmSync,

@@ -1,3 +1,5 @@
+// Tests for agent configuration builders (buildAgentConfig).
+
 import { describe, it, expect } from 'vitest';
 import { buildAgentConfig } from '../../src/runner/agent-configs.js';
 
