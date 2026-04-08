@@ -1,3 +1,7 @@
+// Integration tests for the ruleprobe CLI. Spawns the real CLI via tsx
+// and verifies parse, verify, tasks, task, compare, and help commands,
+// including the summary statistics line in verification output.
+
 import { describe, it, expect } from 'vitest';
 import { execSync, type ExecSyncOptionsWithStringEncoding } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -101,6 +105,43 @@ describe('CLI: verify command', () => {
       `verify ${CLAUDE_FIXTURE} ${FAILING_DIR} --agent bad-agent --model bad-model`,
     );
     expect(status).toBe(1);
+  });
+
+  it('includes summary statistics line at the end of text output', () => {
+    const output = run(
+      `verify ${CLAUDE_FIXTURE} ${PASSING_DIR} --agent test-agent --model test-model`,
+    );
+    expect(output).toMatch(/Summary: \d+ checked \| \d+ passed \| \d+ failed \| \d+ skipped/);
+    // Summary line must appear after By Category section
+    const categoryIdx = output.indexOf('By Category:');
+    const summaryIdx = output.indexOf('Summary:');
+    expect(summaryIdx).toBeGreaterThan(categoryIdx);
+  });
+
+  it('summary statistics line reflects correct counts for passing output', () => {
+    const output = run(
+      `verify ${CLAUDE_FIXTURE} ${PASSING_DIR} --agent test-agent --model test-model`,
+    );
+    // All rules pass, none fail, none skipped
+    expect(output).toMatch(/Summary: \d+ checked \| \d+ passed \| 0 failed \| 0 skipped/);
+    const match = output.match(/Summary: (\d+) checked \| (\d+) passed/);
+    expect(match).not.toBeNull();
+    const checked = parseInt(match![1], 10);
+    const passed = parseInt(match![2], 10);
+    expect(checked).toBeGreaterThan(0);
+    expect(passed).toBe(checked);
+  });
+
+  it('summary statistics line in JSON output has skipped field', () => {
+    const output = run(
+      `verify ${CLAUDE_FIXTURE} ${PASSING_DIR} --format json`,
+    );
+    const parsed = JSON.parse(output);
+    expect(parsed.summary.skipped).toBeDefined();
+    expect(typeof parsed.summary.skipped).toBe('number');
+    expect(parsed.summary.totalRules).toBeGreaterThan(0);
+    expect(parsed.summary.passed).toBe(parsed.summary.totalRules);
+    expect(parsed.summary.failed).toBe(0);
   });
 
   it('fails with actionable error for missing instruction file', () => {
