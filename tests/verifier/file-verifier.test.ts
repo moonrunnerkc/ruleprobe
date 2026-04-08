@@ -1,5 +1,6 @@
 // Tests for the filesystem-based rule verifier and file collection utilities.
-// Covers required-file, forbidden-file, required-directory, and file-pattern checks.
+// Covers required-file, forbidden-file, required-directory, file-pattern checks,
+// changelog-exists, test-file-naming, and the default (unknown pattern) case.
 
 import { describe, it, expect } from 'vitest';
 import { resolve, join } from 'node:path';
@@ -224,6 +225,106 @@ describe('File verifier: kebab-case directories', () => {
       const files = collectFiles(isolated);
       const result = verifyFileSystemRule(rule, isolated, files);
       expect(result.passed).toBe(true);
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
+  });
+});
+
+// -- changelog-exists --
+
+describe('File verifier: changelog-exists', () => {
+  it('fails when CHANGELOG.md is absent', () => {
+    const rule = makeRule('changelog-exists', true);
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      writeFileSync(join(isolated, 'README.md'), '# Project');
+      const files = collectFiles(isolated);
+      const result = verifyFileSystemRule(rule, isolated, files);
+      expect(result.passed).toBe(false);
+      expect(result.evidence[0]!.found).toBe('file not found');
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
+  });
+
+  it('passes when CHANGELOG.md exists', () => {
+    const rule = makeRule('changelog-exists', true);
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      writeFileSync(join(isolated, 'CHANGELOG.md'), '# Changelog');
+      const files = collectFiles(isolated);
+      const result = verifyFileSystemRule(rule, isolated, files);
+      expect(result.passed).toBe(true);
+      expect(result.evidence).toHaveLength(0);
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
+  });
+});
+
+// -- test-file-naming --
+
+describe('File verifier: test-file-naming', () => {
+  it('detects test files not following *.test.ts pattern', () => {
+    const rule = makeRule('test-file-naming', '*.test.ts');
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      mkdirSync(join(isolated, 'tests'), { recursive: true });
+      writeFileSync(join(isolated, 'tests', 'helpers.ts'), 'export {};');
+      const files = collectFiles(isolated);
+      const result = verifyFileSystemRule(rule, isolated, files);
+      expect(result.passed).toBe(false);
+      expect(result.evidence[0]!.found).toBe('helpers.ts');
+      expect(result.evidence[0]!.expected).toBe('*.test.ts or *.spec.ts');
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
+  });
+
+  it('passes when all test files follow *.test.ts pattern', () => {
+    const rule = makeRule('test-file-naming', '*.test.ts');
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      mkdirSync(join(isolated, 'tests'), { recursive: true });
+      writeFileSync(join(isolated, 'tests', 'auth.test.ts'), 'export {};');
+      writeFileSync(join(isolated, 'tests', 'utils.spec.ts'), 'export {};');
+      const files = collectFiles(isolated);
+      const result = verifyFileSystemRule(rule, isolated, files);
+      expect(result.passed).toBe(true);
+      expect(result.evidence).toHaveLength(0);
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
+  });
+
+  it('does not flag source files outside the tests/ directory', () => {
+    const rule = makeRule('test-file-naming', '*.test.ts');
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      mkdirSync(join(isolated, 'src'), { recursive: true });
+      writeFileSync(join(isolated, 'src', 'helpers.ts'), 'export {};');
+      const files = collectFiles(isolated);
+      const result = verifyFileSystemRule(rule, isolated, files);
+      expect(result.passed).toBe(true);
+    } finally {
+      rmSync(isolated, { recursive: true, force: true });
+    }
+  });
+});
+
+// -- default (unknown pattern type) --
+
+describe('File verifier: unknown pattern type', () => {
+  it('returns a passing result with no evidence for an unrecognised pattern', () => {
+    const rule = makeRule('totally-unknown-pattern-xyz', true);
+    const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
+    try {
+      writeFileSync(join(isolated, 'index.ts'), 'export {};');
+      const files = collectFiles(isolated);
+      const result = verifyFileSystemRule(rule, isolated, files);
+      expect(result.passed).toBe(true);
+      expect(result.evidence).toHaveLength(0);
     } finally {
       rmSync(isolated, { recursive: true, force: true });
     }
