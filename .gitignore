@@ -13,6 +13,15 @@ scripts/
 # Scraped instruction files (local analysis data, not shipped)
 scraped-instructions/
 
+# Calibration fixture repos (large clones, not shipped)
+tests/fixtures/calibration/excalidraw/
+tests/fixtures/calibration/posthog/
+tests/fixtures/calibration/payloads/*-payload.json
+
+# Test run artifacts
+.ruleprobe/
+
 # Private project docs (keep local only)
 .github/copilot-instructions.md
+.github/ruleprobe-e2e-verification-guide.md
 docs/ruleprobe-build-guide.md

@@ -19,7 +19,7 @@ Every AI coding agent reads an instruction file. None of them prove they followe
 
 You write `CLAUDE.md` or `AGENTS.md` with specific rules: camelCase variables, no `any` types, named exports only, test files for every source file. The agent says "Done." But did it actually follow them? Your code review catches some violations, misses others, and doesn't scale.
 
-RuleProbe reads the same instruction file, extracts the machine-verifiable rules, and checks agent output against each one. Binary pass/fail, with file paths and line numbers as evidence. No LLM evaluation, no judgment calls. Deterministic and reproducible.
+RuleProbe reads the same instruction file, extracts the machine-verifiable rules, and checks agent output against each one. Compliance scores with file paths and line numbers as evidence. No LLM evaluation, no judgment calls. Deterministic and reproducible.
 
 ## Quick Start
 
@@ -33,105 +33,41 @@ Or run it directly:
 npx ruleprobe --help
 ```
 
-> **Note:** The examples below reflect the current HEAD (53 matchers, 9 categories).
-
-**Parse an instruction file** to see what rules RuleProbe can extract. This is real output from parsing the repo's included example instruction file:
+**Parse an instruction file** to see what rules RuleProbe can extract:
 
 ```bash
-ruleprobe parse docs/example-instructions.md
+ruleprobe parse CLAUDE.md
+ruleprobe parse AGENTS.md --show-unparseable
 ```
 
-```
-Extracted 32 rules:
-
-  forbidden-no-any-type-2
-    Category: forbidden-pattern
-    Verifier: ast
-    Pattern:  no-any (*.ts)
-    Source:    "- No any types anywhere in the codebase"
-
-  error-no-empty-catch-6
-    Category: error-handling
-    Verifier: ast
-    Pattern:  no-empty-catch (*.ts)
-    Source:    "- No empty catch blocks; always handle or rethrow errors"
-
-  naming-kebab-case-files-17
-    Category: naming
-    Verifier: filesystem
-    Pattern:  kebab-case (filenames)
-    Source:    "- File names: kebab-case (e.g., user-service.ts, api-handler.ts)"
-
-  dependency-pinned-versions-34
-    Category: dependency
-    Verifier: filesystem
-    Pattern:  pinned-dependencies (package.json)
-    Source:    "- All dependencies pinned to exact versions, no ^ or ~ ranges"
-  ...
-```
-
-**Verify agent output** against those rules. This is ruleprobe verifying its own source code:
+**Verify agent output** against those rules:
 
 ```bash
-ruleprobe verify docs/example-instructions.md ./src --format text
+ruleprobe verify CLAUDE.md ./agent-output --format text
+ruleprobe verify AGENTS.md ./src --format summary --threshold 0.9
 ```
 
-```
-RuleProbe Adherence Report
-Agent: unknown | Model: unknown | Task: manual
+**Analyze a whole project** across all instruction files:
 
-Rules: 32 total | 23 passed | 9 failed | Score: 72%
-
-FAIL  error-handling/error-no-empty-catch-6
-      commands/run.ts:148 - found: empty catch block
-      utils/safe-path.ts:116 - found: empty catch block
-      verifier/ast-verifier.ts:248 - found: empty catch block
-PASS  forbidden-pattern/forbidden-no-any-type-2
-PASS  structure/structure-strict-mode-1
-PASS  structure/structure-named-exports-only-3
-PASS  naming/naming-kebab-case-files-17
-FAIL  naming/naming-camelcase-variables-18
-      verifier/treesitter-loader.ts:75 - found: ParserCtor
-      verifier/treesitter-loader.ts:76 - found: LanguageRef
-PASS  naming/naming-pascalcase-types-20
-PASS  test-requirement/test-files-exist-25
-FAIL  structure/structure-no-barrel-files-24
-      ast-checks/index.ts:5 - found: barrel file with 24 re-exports
-      llm/index.ts:7 - found: barrel file with 9 re-exports
-PASS  import-pattern/import-no-path-aliases-28
-PASS  forbidden-pattern/forbidden-no-console-log-4
-PASS  structure/structure-max-file-length-22
-PASS  structure/structure-jsdoc-required-21
-PASS  dependency/dependency-pinned-versions-34
-...
-
-By Category:
-  naming:             2/4 (50%)
-  forbidden-pattern:  4/4 (100%)
-  structure:          4/5 (80%)
-  import-pattern:     4/4 (100%)
-  test-requirement:   2/2 (100%)
-  error-handling:     1/2 (50%)
-  type-safety:        2/4 (50%)
-  code-style:         2/5 (40%)
-  dependency:         2/2 (100%)
-
-Summary: 32 checked | 23 passed | 9 failed | 0 skipped
+```bash
+ruleprobe analyze ./my-project
 ```
 
-Every failure includes the file, line number, and what was found. No ambiguity.
+Every failure includes the file, line number, and what was found. Preference rules return compliance ratios instead of binary pass/fail.
 
 ## What It Does
 
-**Parse.** Reads 6 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules) and extracts rules that can be checked mechanically. Subjective instructions like "write clean code" are reported as unparseable so you know what was skipped.
+**Parse.** Reads 6 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules) and extracts rules that can be checked mechanically. Each rule gets a qualifier (`always`, `prefer`, `when-possible`, `avoid-unless`, `try-to`, `never`) detected from the instruction text, and the markdown section it came from. Subjective instructions like "write clean code" are reported as unparseable so you know what was skipped.
 
-**Verify.** Runs each extracted rule against a directory of agent-generated code. Checks use AST parsing via ts-morph, file system inspection, and regex pattern matching. No LLM evaluation at any stage by default; results are deterministic and identical across runs.
+**Verify.** Runs each extracted rule against a directory of agent-generated code. Six verifier engines: AST (ts-morph), filesystem, regex, tree-sitter (Python/Go), preference (compliance ratios for "prefer X over Y" patterns), and tooling (package.json/lockfile/config checks). No LLM evaluation by default; results are deterministic.
 
-**LLM Extract (opt-in).** Pass `--llm-extract` to send unparseable lines through an OpenAI-compatible API for a second extraction pass. LLM-extracted rules are labeled with `extractionMethod: 'llm'` and `confidence: 'medium'`, and default to warning severity. Requires `OPENAI_API_KEY` env var. No LLM dependency is installed by default.
+**Analyze.** Discovers all instruction files in a project, parses each, and cross-references them. Detects conflicts (same topic, contradictory rules across files) and redundancies (same rule in multiple files). Returns a coverage map showing which categories each file addresses.
 
-**Compare.** Point RuleProbe at outputs from two or more agents and get a side-by-side comparison table showing which rules each one followed. Useful for evaluating agents on the same task, or tracking adherence over time.
+**LLM Extract (opt-in).** Pass `--llm-extract` to send unparseable lines through an OpenAI-compatible API. LLM-extracted rules are labeled with `extractionMethod: 'llm'` and `confidence: 'medium'`. Requires `OPENAI_API_KEY`.
 
-**GitHub Action.** Ships as a composite action you can drop into any repo. Runs `ruleprobe verify` on every PR, posts results as a comment, and optionally outputs reviewdog rdjson format for inline annotations. No API keys needed beyond `GITHUB_TOKEN`.
+**Compare.** Point RuleProbe at outputs from two or more agents and get a side-by-side comparison table showing which rules each one followed.
+
+**GitHub Action.** Composite action for any repo. Runs `ruleprobe verify` on every PR, posts results as a comment, and optionally outputs reviewdog rdjson format for inline annotations.
 
 ## Configuration
 
@@ -173,7 +109,7 @@ export default defineConfig({
 
 `defineConfig()` is a no-op passthrough that provides type checking in TypeScript configs. JSON configs work without it.
 
-Custom rules use the same verifier types (`ast`, `regex`, `filesystem`) and pattern types as extracted rules. Any pattern type listed in the Supported Rule Types table works as a custom rule pattern.
+Custom rules use the same verifier types (`ast`, `regex`, `filesystem`, `preference`, `tooling`) and pattern types as extracted rules. Any pattern type listed in the Supported Rule Types table works as a custom rule pattern.
 
 ## CLI Reference
 
@@ -195,8 +131,10 @@ Check agent output against extracted rules.
 
 ```bash
 ruleprobe verify CLAUDE.md ./output --format text
+ruleprobe verify AGENTS.md ./output --format summary --threshold 0.9
 ruleprobe verify AGENTS.md ./output --agent claude --model opus-4 --format json --output report.json
-ruleprobe verify AGENTS.md ./output --format markdown --severity error
+ruleprobe verify AGENTS.md ./output --format detailed --severity error
+ruleprobe verify AGENTS.md ./output --format ci
 ruleprobe verify AGENTS.md ./output --format rdjson
 ruleprobe verify AGENTS.md ./output --config ruleprobe.config.ts
 ruleprobe verify AGENTS.md ./output --llm-extract
@@ -204,7 +142,19 @@ ruleprobe verify AGENTS.md ./output --rubric-decompose
 ruleprobe verify AGENTS.md ./output --project tsconfig.json
 ```
 
-`--agent` and `--model` tag the report metadata. `--severity error|warning|all` filters results. `--output` writes to a file instead of stdout. `--format rdjson` produces reviewdog-compatible diagnostics. `--config` loads a specific config file (otherwise auto-discovered). `--llm-extract` runs unparseable lines through an LLM for additional rule extraction. `--rubric-decompose` uses an LLM to break subjective instructions into weighted concrete checks (tagged with `extractionMethod: 'rubric'` and `confidence: 'low'`). Both `--llm-extract` and `--rubric-decompose` require `OPENAI_API_KEY`. `--project` enables type-aware AST checks (implicit any, unused exports, unresolved imports) using the specified tsconfig.json.
+| Option | Description |
+|--------|-------------|
+| `--format` | `text`, `json`, `markdown`, `rdjson`, `summary`, `detailed`, or `ci` |
+| `--threshold` | Compliance threshold (0-1) for pass/fail determination (default: 0.8) |
+| `--agent`, `--model` | Tag report metadata |
+| `--severity` | Filter: `error`, `warning`, or `all` |
+| `--output` | Write report to file instead of stdout |
+| `--config` | Path to config file (otherwise auto-discovered) |
+| `--llm-extract` | Run LLM extraction on unparseable lines (requires `OPENAI_API_KEY`) |
+| `--rubric-decompose` | Decompose subjective rules via LLM (requires `OPENAI_API_KEY`) |
+| `--project` | tsconfig.json path for type-aware checks |
+
+Format highlights: `summary` outputs a compact per-category table. `detailed` shows per-rule compliance percentages with evidence. `ci` produces key=value output with GitHub Actions `::error` annotations.
 
 Exit codes: `0` all rules passed, `1` violations found, `2` execution error.
 
@@ -216,9 +166,20 @@ Compare multiple agent outputs against the same rules.
 ruleprobe compare AGENTS.md ./claude-output ./copilot-output --agents claude,copilot --format markdown
 ```
 
+### `ruleprobe analyze <project-dir>`
+
+Discover all instruction files in a project, parse each, and report cross-file conflicts and redundancies.
+
+```bash
+ruleprobe analyze ./my-project --format text
+ruleprobe analyze ./my-project --format json --output analysis.json
+```
+
+Checks for `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.github/copilot-instructions.md`, `GEMINI.md`, and `.windsurfrules` at the project root. Reports per-file rule counts, cross-file conflicts (same topic, contradictory instructions), redundancies (same rule in multiple files), and a category coverage map.
+
 ### `ruleprobe tasks` / `ruleprobe task <id>`
 
-List available task templates or output a specific task prompt. Three templates ship with v1.0.0: `rest-endpoint`, `utility-module`, `react-component`.
+List available task templates or output a specific task prompt. Three templates ship: `rest-endpoint`, `utility-module`, `react-component`.
 
 ```bash
 ruleprobe tasks
@@ -254,7 +215,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: moonrunnerkc/ruleprobe@v1
+      - uses: moonrunnerkc/ruleprobe@v2
         with:
           instruction-file: AGENTS.md
           output-dir: src
@@ -264,13 +225,13 @@ jobs:
 
 That's it. No API keys, no LLM calls, deterministic results, runs in seconds.
 
-> **Note:** `@v1` tracks the latest v1.x release. Pin to a specific tag (e.g., `@v1.0.0`) for reproducible builds.
+> **Note:** `@v2` tracks the latest v2.x release. Pin to a specific tag (e.g., `@v2.0.0`) for reproducible builds.
 
 <details>
 <summary>Full options</summary>
 
 ```yaml
-- uses: moonrunnerkc/ruleprobe@v1
+- uses: moonrunnerkc/ruleprobe@v2
   with:
     instruction-file: AGENTS.md
     output-dir: src
@@ -301,15 +262,17 @@ Outputs: `score`, `passed`, `failed`, `total` (available to downstream steps).
 
 ## Programmatic API
 
-Five core functions cover the parse-verify-report pipeline. Config, LLM extraction, and agent invocation are additive:
+Core pipeline functions, plus project analysis, config, and LLM extraction:
 
 | Function | Purpose |
 |----------|---------|
 | `parseInstructionFile(path)` | Parse an instruction file into a `RuleSet` |
-| `verifyOutput(ruleSet, dir)` | Run rules against a code directory |
+| `verifyOutput(ruleSet, dir, options?)` | Run rules against a code directory (returns `Promise<RuleResult[]>`) |
 | `generateReport(run, ruleSet, results)` | Build an `AdherenceReport` with summary stats |
-| `formatReport(report, format)` | Render as text, JSON, markdown, or rdjson |
+| `formatReport(report, format)` | Render as text, JSON, markdown, rdjson, summary, detailed, or ci |
 | `extractRules(markdown, fileType)` | Extract rules from raw markdown content |
+| `analyzeProject(projectDir)` | Discover all instruction files, parse, detect conflicts/redundancies |
+| `discoverInstructionFiles(projectDir)` | Find instruction files in a project directory |
 | `defineConfig(config)` | Type-safe config helper for ruleprobe.config.ts |
 | `loadConfig(path?, searchDir?)` | Load and validate a config file |
 | `applyConfig(ruleSet, config)` | Merge custom rules, overrides, and exclusions into a RuleSet |
@@ -320,14 +283,25 @@ Five core functions cover the parse-verify-report pipeline. Config, LLM extracti
 import { parseInstructionFile, verifyOutput, generateReport, formatReport } from 'ruleprobe';
 
 const ruleSet = parseInstructionFile('CLAUDE.md');
-const results = verifyOutput(ruleSet, './agent-output');
+const results = await verifyOutput(ruleSet, './agent-output');
 const report = generateReport(
   { agent: 'claude-code', model: 'opus-4', taskTemplateId: 'rest-endpoint',
     outputDir: './agent-output', timestamp: new Date().toISOString(), durationSeconds: null },
   ruleSet,
   results,
 );
-console.log(formatReport(report, 'text'));
+console.log(formatReport(report, 'summary'));
+```
+
+**Project-level analysis:**
+
+```typescript
+import { analyzeProject } from 'ruleprobe';
+
+const analysis = analyzeProject('./my-project');
+console.log(`${analysis.files.length} instruction files found`);
+console.log(`${analysis.conflicts.length} cross-file conflicts`);
+console.log(`${analysis.redundancies.length} redundancies`);
 ```
 
 **LLM-assisted extraction** (opt-in):
@@ -352,25 +326,40 @@ flowchart LR
     E --> F[Adherence Report]
 ```
 
-The parser reads your instruction file and identifies lines that map to deterministic checks (naming conventions, forbidden patterns, structural requirements). Each rule gets a category, a verifier type, and a pattern. The verifier walks the agent's output directory, runs AST checks via ts-morph for code structure rules, file system checks for naming and test file requirements, and regex checks for line length and content patterns. The report collects pass/fail results with evidence for every rule.
+The parser reads your instruction file and identifies lines that map to deterministic checks. Each rule gets a category, a verifier type, a pattern, and a qualifier (how strictly the instruction is worded). Six verifier engines handle different rule types: ts-morph AST analysis for code structure, filesystem checks for naming and directory structure, regex for content patterns, tree-sitter for Python/Go, a preference engine that counts "prefer X over Y" compliance ratios, and a tooling engine that checks package.json/lockfiles/configs. The report collects compliance scores with evidence for every rule.
 
 ## Supported Rule Types
 
-53 built-in matchers across 9 categories:
+78 built-in matchers across 13 categories:
 
-| Category | Count | Verifier(s) |
-|----------|------:|-------------|
-| naming | 7 | AST, Filesystem, Tree-sitter |
-| forbidden-pattern | 5 | AST, Regex |
-| structure | 9 | AST, Filesystem |
-| test-requirement | 5 | AST, Filesystem, Regex |
-| import-pattern | 6 | AST, Regex |
-| error-handling | 2 | AST |
-| type-safety | 5 | AST, Regex |
-| code-style | 10 | AST, Regex, Tree-sitter |
-| dependency | 1 | Filesystem |
+| Category | Count | Verifier(s) | Examples |
+|----------|------:|-------------|----------|
+| naming | 7 | AST, Filesystem, Tree-sitter | camelCase variables, PascalCase types, kebab-case files |
+| forbidden-pattern | 5 | AST, Regex | no `any`, no `console.log`, no `eval` |
+| structure | 9 | AST, Filesystem | strict mode, named exports, JSDoc, max file length |
+| test-requirement | 5 | AST, Filesystem, Regex | test file existence, test naming conventions |
+| import-pattern | 6 | AST, Regex | no path aliases, no barrel imports, no wildcard imports |
+| error-handling | 2 | AST | no empty catch, no swallowed errors |
+| type-safety | 5 | AST, Regex | no type assertions, no non-null assertions, no enums |
+| code-style | 10 | AST, Regex, Tree-sitter | early returns, no magic numbers, no nested ternaries |
+| dependency | 1 | Filesystem | pinned dependency versions |
+| preference | 8 | Preference | const over let, named over default exports, interface over type, async/await over .then() |
+| file-structure | 5 | Filesystem | tests directory, components directory, .env file, module index files |
+| tooling | 9 | Tooling | pnpm/yarn/bun, vitest/jest/pytest, eslint/prettier/biome |
+| testing | 3 | Filesystem, Regex | test colocation, describe/it blocks, no console in tests |
 
 Full table with example instructions and check details: [docs/matchers.md](docs/matchers.md)
+
+### Compliance scoring
+
+Every rule result includes a `compliance` field (0 to 1):
+
+- **Deterministic checks** (file exists, no `any` types): compliance is 0 or 1
+- **Preference checks** (prefer const over let): compliance is the ratio (0.85 = 85% const usage)
+- **Coverage checks** (test colocation): compliance is the percentage of source files with tests
+- **Tooling checks**: compliance is 1 if present, 0.5 if present with a competitor, 0 if absent
+
+The `--threshold` option (default 0.8) controls what compliance level counts as passing.
 
 ## Authentication
 
@@ -381,9 +370,9 @@ Most of RuleProbe works offline with no API keys. Two opt-in features use extern
 | LLM rule extraction | `--llm-extract` | `OPENAI_API_KEY` | Extracting rules from unparseable instruction lines |
 | Rubric decomposition | `--rubric-decompose` | `OPENAI_API_KEY` | Breaking subjective rules into concrete checks |
 | Agent invocation (SDK mode) | `ruleprobe run --agent claude-code` | `ANTHROPIC_API_KEY` | Invoking Claude to generate code, then verifying |
-| GitHub Action | `uses: moonrunnerkc/ruleprobe@v1` | `GITHUB_TOKEN` | CI, PR comments |
+| GitHub Action | `uses: moonrunnerkc/ruleprobe@v2` | `GITHUB_TOKEN` | CI, PR comments |
 
-`parse`, `verify`, `compare`, `tasks`, and `task` work entirely offline. No key needed.
+`parse`, `verify`, `compare`, `analyze`, `tasks`, and `task` work entirely offline. No key needed.
 
 ## Tree-sitter Support
 
@@ -395,13 +384,14 @@ RuleProbe never executes scanned code, never makes network calls (unless you opt
 
 ## Limitations
 
-What v1.0.0 doesn't do, stated plainly.
+What v2.0.0 doesn't do, stated plainly.
 
-- **TypeScript gets the deepest coverage.** ts-morph gives full AST analysis for TypeScript and JavaScript: naming, forbidden patterns, structure, imports, type-safety, and code-style checks. Python and Go get naming and function-length checks via tree-sitter WASM grammars (grammar packages ship as regular dependencies; see the Tree-sitter Support section). Everything else falls back to regex (line length, comments, semicolons). No Rust, Java, or C# AST support yet.
-- **Subjective rules stay subjective.** "Write clean code" has no deterministic check. The `--rubric-decompose` flag on the `verify` command uses an LLM to break subjective instructions into weighted concrete checks (max function length, no magic numbers, etc.), tagged with `extractionMethod: 'rubric'` and `confidence: 'low'`. This is a proxy, not a direct evaluation. Lines with no measurable proxy stay in the unparseable array. Requires `OPENAI_API_KEY`.
-- **Agent invocation covers Claude SDK and watch mode only.** The `run` command invokes agents via the Claude Agent SDK (requires `ANTHROPIC_API_KEY`) or watches a directory for output. Copilot, Cursor, and other agent SDKs are not integrated; use `--watch` mode for those.
-- **Type-aware checks require --project.** Three checks (implicit any, unused exports, unresolved imports) need the TypeChecker, which requires a `tsconfig.json`. Without `--project`, ts-morph parses files in isolation and these checks are skipped.
-- **53 matchers, not infinite.** The parser skips lines it can't confidently map to a check. Use `--show-unparseable` to see what was missed, and `--llm-extract` or `--rubric-decompose` to handle the remainder.
+- **TypeScript gets the deepest coverage.** ts-morph gives full AST analysis for TypeScript and JavaScript across all 13 categories. Python and Go get naming and function-length checks via tree-sitter WASM grammars. No Rust, Java, or C# AST support yet.
+- **Subjective rules stay subjective.** "Write clean code" has no deterministic check. `--rubric-decompose` uses an LLM to break subjective instructions into weighted concrete checks, tagged with `confidence: 'low'`. Lines with no measurable proxy stay in the unparseable array. Requires `OPENAI_API_KEY`.
+- **Agent invocation covers Claude SDK and watch mode only.** The `run` command invokes agents via the Claude Agent SDK or watches a directory for output. Copilot, Cursor, and other agent SDKs are not integrated; use `--watch` mode for those.
+- **Type-aware checks require --project.** Three checks (implicit any, unused exports, unresolved imports) need a `tsconfig.json`. Without `--project`, ts-morph parses files in isolation and these checks are skipped.
+- **78 matchers, not infinite.** The parser skips lines it can't confidently map to a check. Use `--show-unparseable` to see what was missed, and `--llm-extract` or `--rubric-decompose` to handle the remainder.
+- **Preference pairs are TypeScript-focused.** The 8 built-in prefer-pairs (const vs let, named vs default exports, etc.) use ts-morph AST queries. Adding pairs for other languages requires new counting functions.
 
 ## Troubleshooting
 

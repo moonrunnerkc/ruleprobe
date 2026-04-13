@@ -1,0 +1,17 @@
+{
+  "repoName": "excalidraw",
+  "weights": {
+    "jaccard": 0.4,
+    "cosine": 0.6
+  },
+  "rulesAnalyzed": 39,
+  "fastPathResolutions": 39,
+  "llmResolutions": 0,
+  "complianceStats": {
+    "min": 0.5,
+    "max": 1,
+    "mean": 0.7973897591875116,
+    "median": 0.9760465032745509
+  },
+  "verdictCount": 39
+}

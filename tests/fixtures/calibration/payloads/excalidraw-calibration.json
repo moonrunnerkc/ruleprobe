@@ -1,0 +1,56 @@
+[
+  {
+    "threshold": 0.7,
+    "fastPathRate": 1,
+    "fastPathCount": 39,
+    "llmCount": 0,
+    "unresolvedCount": 0,
+    "avgCompliance": 0.7973897591875116,
+    "avgFastPathCompliance": 0.7973897591875116
+  },
+  {
+    "threshold": 0.75,
+    "fastPathRate": 1,
+    "fastPathCount": 39,
+    "llmCount": 0,
+    "unresolvedCount": 0,
+    "avgCompliance": 0.7973897591875116,
+    "avgFastPathCompliance": 0.7973897591875116
+  },
+  {
+    "threshold": 0.8,
+    "fastPathRate": 1,
+    "fastPathCount": 39,
+    "llmCount": 0,
+    "unresolvedCount": 0,
+    "avgCompliance": 0.7973897591875116,
+    "avgFastPathCompliance": 0.7973897591875116
+  },
+  {
+    "threshold": 0.85,
+    "fastPathRate": 1,
+    "fastPathCount": 39,
+    "llmCount": 0,
+    "unresolvedCount": 0,
+    "avgCompliance": 0.7973897591875116,
+    "avgFastPathCompliance": 0.7973897591875116
+  },
+  {
+    "threshold": 0.9,
+    "fastPathRate": 1,
+    "fastPathCount": 39,
+    "llmCount": 0,
+    "unresolvedCount": 0,
+    "avgCompliance": 0.7973897591875116,
+    "avgFastPathCompliance": 0.7973897591875116
+  },
+  {
+    "threshold": 0.95,
+    "fastPathRate": 1,
+    "fastPathCount": 39,
+    "llmCount": 0,
+    "unresolvedCount": 0,
+    "avgCompliance": 0.7973897591875116,
+    "avgFastPathCompliance": 0.7973897591875116
+  }
+]

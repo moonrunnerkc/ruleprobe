@@ -1,10 +1,8 @@
 /**
- * AST-based verifier using ts-morph.
- *
- * Loads TypeScript/JavaScript files into a ts-morph Project and
- * routes each rule to the correct check function in ast-checks/.
- * Supports two modes: per-file parsing (default) and project-aware
- * analysis (when a tsconfig path is provided via --project).
+ * AST-based verifier using ts-morph. Loads TypeScript/JavaScript files
+ * into a ts-morph Project and routes each rule to the correct check
+ * function in ast-checks/. Supports per-file parsing (default) and
+ * project-aware analysis (when a tsconfig path is provided via --project).
  */
 
 import { Project, type SourceFile } from 'ts-morph';

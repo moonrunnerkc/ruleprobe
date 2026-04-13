@@ -182,12 +182,27 @@ program
   .argument('<project-dir>', 'root directory to scan for instruction files')
   .option('--format <format>', 'output format (text|json)', 'text')
   .option('--output <path>', 'write report to file instead of stdout')
+  .option('--semantic', 'enable semantic analysis (requires license key)', false)
+  .option('--license-key <key>', 'license key for semantic tier')
+  .option('--max-llm-calls <n>', 'maximum LLM calls per analysis (default: 20)')
+  .option('--no-cache', 'disable profile caching')
+  .option('--semantic-log', 'print semantic analysis log to stdout after results', false)
+  .option('--cost-report', 'show estimated cost breakdown for semantic analysis', false)
   .action(
-    (
+    async (
       projectDir: string,
-      opts: { format: string; output?: string },
+      opts: {
+        format: string;
+        output?: string;
+        semantic: boolean;
+        licenseKey?: string;
+        maxLlmCalls?: string;
+        cache: boolean;
+        semanticLog: boolean;
+        costReport: boolean;
+      },
     ) => {
-      handleAnalyze(projectDir, opts, exitWithError);
+      await handleAnalyze(projectDir, opts, exitWithError);
     },
   );
 

@@ -1,0 +1,17 @@
+{
+  "repoName": "posthog",
+  "weights": {
+    "jaccard": 0.4,
+    "cosine": 0.6
+  },
+  "rulesAnalyzed": 129,
+  "fastPathResolutions": 129,
+  "llmResolutions": 0,
+  "complianceStats": {
+    "min": 0.5,
+    "max": 1,
+    "mean": 0.6686322007900444,
+    "median": 0.5
+  },
+  "verdictCount": 129
+}
