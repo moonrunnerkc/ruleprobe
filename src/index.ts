@@ -17,6 +17,11 @@ import type {
   CategoryScore,
   InstructionFileType,
   ReportFormat,
+  QualifierType,
+  ProjectAnalysis,
+  FileAnalysis,
+  CrossFileConflict,
+  CrossFileRedundancy,
 } from './types.js';
 
 import { parseInstructionFile } from './parsers/index.js';
@@ -39,6 +44,11 @@ export type {
   CategoryScore,
   InstructionFileType,
   ReportFormat,
+  QualifierType,
+  ProjectAnalysis,
+  FileAnalysis,
+  CrossFileConflict,
+  CrossFileRedundancy,
   VerifyOptions,
   RuleProbeConfig,
   CustomRule,
@@ -51,6 +61,7 @@ export { verifyOutput } from './verifier/index.js';
 export { formatReport } from './reporter/index.js';
 export { defineConfig, loadConfig, applyConfig } from './config/index.js';
 export { extractWithLlm, createOpenAiProvider } from './llm/index.js';
+export { analyzeProject, discoverInstructionFiles } from './analyzers/index.js';
 export type {
   LlmProvider,
   LlmRuleCandidate,
@@ -129,6 +140,10 @@ export function generateReport(
     'type-safety',
     'code-style',
     'dependency',
+    'preference',
+    'file-structure',
+    'tooling',
+    'testing',
   ];
   const byCategory = {} as Record<RuleCategory, CategoryScore>;
   for (const cat of allCategories) {

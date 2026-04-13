@@ -40,18 +40,21 @@ const failingRule: Rule = {
 const passingResult1: RuleResult = {
   rule: passingRule1,
   passed: true,
+  compliance: 1,
   evidence: [],
 };
 
 const passingResult2: RuleResult = {
   rule: passingRule2,
   passed: true,
+  compliance: 1,
   evidence: [],
 };
 
 const failingResult: RuleResult = {
   rule: failingRule,
   passed: false,
+  compliance: 0,
   evidence: [
     {
       file: '/output/src/handler.ts',
@@ -116,8 +119,8 @@ export const testReportFailing: AdherenceReport = {
   run: { ...run, agent: 'bad-agent', model: 'bad-model-v1', outputDir: '/output-bad' },
   ruleset: ruleSet,
   results: [
-    { ...passingResult1, passed: false, evidence: [{ file: '/output-bad/src/main.ts', line: 5, found: 'Bad_Name', expected: 'camelCase', context: 'const Bad_Name = 1;' }] },
-    { ...passingResult2, passed: false, evidence: [{ file: '/output-bad/src/main.ts', line: 10, found: 'console.log("x")', expected: 'no console.log', context: 'console.log("x");' }] },
+    { ...passingResult1, passed: false, compliance: 0, evidence: [{ file: '/output-bad/src/main.ts', line: 5, found: 'Bad_Name', expected: 'camelCase', context: 'const Bad_Name = 1;' }] },
+    { ...passingResult2, passed: false, compliance: 0, evidence: [{ file: '/output-bad/src/main.ts', line: 10, found: 'console.log("x")', expected: 'no console.log', context: 'console.log("x");' }] },
     { ...failingResult },
   ],
   summary: {

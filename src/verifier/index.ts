@@ -14,6 +14,8 @@ import { verifyFileSystemRule, collectFiles, filterSourceFiles } from './file-ve
 export { verifyFileSystemRule } from './file-verifier.js';
 import { verifyRegexRule } from './regex-verifier.js';
 import { verifyTreeSitterRule } from './treesitter-verifier.js';
+import { verifyPreferenceRule } from './preference-verifier.js';
+import { verifyToolingRule } from './tooling-verifier.js';
 
 /** Options for output verification. */
 export interface VerifyOptions {
@@ -86,10 +88,15 @@ async function verifyRule(
       return verifyRegexRule(rule, sourceFiles, outputDir);
     case 'treesitter':
       return verifyTreeSitterRule(rule, treeSitterFiles);
+    case 'preference':
+      return verifyPreferenceRule(rule, codeFiles);
+    case 'tooling':
+      return verifyToolingRule(rule, outputDir, allFiles);
     default:
       return {
         rule,
         passed: true,
+        compliance: 1,
         evidence: [],
       };
   }

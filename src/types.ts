@@ -6,7 +6,7 @@
  */
 
 /** Valid output format for adherence reports. */
-export type ReportFormat = 'text' | 'json' | 'markdown' | 'rdjson';
+export type ReportFormat = 'text' | 'json' | 'markdown' | 'rdjson' | 'summary' | 'detailed' | 'ci';
 
 /** Categories of machine-verifiable rules extracted from instruction files. */
 export type RuleCategory =
@@ -18,10 +18,28 @@ export type RuleCategory =
   | 'error-handling'
   | 'type-safety'
   | 'code-style'
-  | 'dependency';
+  | 'dependency'
+  | 'preference'
+  | 'file-structure'
+  | 'tooling'
+  | 'testing';
 
 /** Which verification engine handles a given rule. */
-export type VerifierType = 'ast' | 'regex' | 'filesystem' | 'treesitter';
+export type VerifierType = 'ast' | 'regex' | 'filesystem' | 'treesitter' | 'preference' | 'tooling';
+
+/**
+ * Qualifier describing the strength of an instruction.
+ *
+ * Detected via deterministic keyword/phrase matching on the rule text
+ * during extraction. Rules with no qualifier keyword default to 'always'.
+ */
+export type QualifierType =
+  | 'always'
+  | 'prefer'
+  | 'when-possible'
+  | 'avoid-unless'
+  | 'try-to'
+  | 'never';
 
 /** Instruction file format detected from the file path. */
 export type InstructionFileType =
@@ -68,6 +86,10 @@ export interface Rule {
   extractionMethod?: 'static' | 'llm' | 'rubric' | 'custom';
   /** Weight within a rubric (0-1). Only set for rubric-decomposed rules. */
   rubricWeight?: number;
+  /** The markdown section header this rule was found under. */
+  section?: string;
+  /** Qualifier strength detected from the instruction text. */
+  qualifier?: QualifierType;
 }
 
 /** A complete set of rules extracted from a single instruction file. */
@@ -132,6 +154,8 @@ export interface RuleResult {
   rule: Rule;
   /** Whether the agent output conformed to this rule. */
   passed: boolean;
+  /** Compliance ratio from 0 to 1. Binary checks return 0 or 1. Pattern checks return the ratio. */
+  compliance: number;
   /** Evidence of what was checked and found. */
   evidence: Evidence[];
 }
@@ -206,3 +230,65 @@ export interface RuleMatcher {
   /** Build the verification pattern from the matched line. */
   buildPattern: (line: string, match: RegExpMatchArray) => VerificationPattern;
 }
+
+/**
+ * Recognized instruction file names.
+ * Used by project-level discovery to find all instruction files in a repo.
+ */
+export const INSTRUCTION_FILE_NAMES = [
+  'CLAUDE.md',
+  'AGENTS.md',
+  '.cursorrules',
+  '.github/copilot-instructions.md',
+  'GEMINI.md',
+  '.windsurfrules',
+] as const;
+
+/** A conflict between rules in different instruction files. */
+export interface CrossFileConflict {
+  /** Topic or pattern category the conflict relates to. */
+  topic: string;
+  /** Rules from different files that contradict each other. */
+  rules: Array<{ file: string; rule: Rule }>;
+  /** Description of the conflict. */
+  description: string;
+}
+
+/** A redundancy: the same instruction appearing in multiple files. */
+export interface CrossFileRedundancy {
+  /** Normalized text of the redundant instruction. */
+  normalizedText: string;
+  /** Occurrences across files. */
+  occurrences: Array<{ file: string; originalText: string }>;
+}
+
+/** Per-file analysis result within a project. */
+export interface FileAnalysis {
+  /** Path to the instruction file. */
+  filePath: string;
+  /** Detected file format. */
+  fileType: InstructionFileType;
+  /** Rules extracted from this file. */
+  ruleSet: RuleSet;
+  /** Verification results (populated after verification). */
+  results: RuleResult[];
+}
+
+/** Complete project-level analysis across all instruction files. */
+export interface ProjectAnalysis {
+  /** Root directory of the project. */
+  projectDir: string;
+  /** Per-file analysis results. */
+  files: FileAnalysis[];
+  /** Cross-file conflicts (same topic, different instructions). */
+  conflicts: CrossFileConflict[];
+  /** Cross-file redundancies (same instruction, different wording). */
+  redundancies: CrossFileRedundancy[];
+  /** Map of rule categories to which files contain rules in that category. */
+  coverageMap: Record<string, string[]>;
+  /** Aggregate summary across all files. */
+  summary: ReportSummary;
+}
+
+/** Default compliance threshold for determining pass/fail from compliance ratios. */
+export const DEFAULT_COMPLIANCE_THRESHOLD = 0.8;

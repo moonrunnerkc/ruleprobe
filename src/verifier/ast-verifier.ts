@@ -185,6 +185,7 @@ export function verifyAstRule(
     return {
       rule,
       passed: true,
+      compliance: 1,
       evidence: [{
         file: '',
         line: null,
@@ -221,6 +222,7 @@ export function verifyAstRule(
   return {
     rule,
     passed: allEvidence.length === 0,
+    compliance: allEvidence.length === 0 ? 1 : 0,
     evidence: allEvidence,
   };
 }
@@ -272,6 +274,7 @@ function verifyTypeAwareRule(
   return {
     rule,
     passed: allEvidence.length === 0,
+    compliance: allEvidence.length === 0 ? 1 : 0,
     evidence: allEvidence,
   };
 }

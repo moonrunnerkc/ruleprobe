@@ -12,9 +12,24 @@ import { RULE_MATCHERS } from './rule-patterns.js';
 import { EXTENDED_RULE_MATCHERS } from './rule-patterns-extended.js';
 import { PROJECT_RULE_MATCHERS } from './rule-patterns-project.js';
 import { ADVANCED_RULE_MATCHERS } from './rule-patterns-advanced.js';
+import { PREFERENCE_MATCHERS } from './rule-patterns-preference.js';
+import { FILE_STRUCTURE_MATCHERS } from './rule-patterns-file-structure.js';
+import { TOOLING_MATCHERS } from './rule-patterns-tooling.js';
+import { TESTING_MATCHERS } from './rule-patterns-testing.js';
+import { detectQualifier } from './qualifier-detector.js';
+import { INSTRUCTION_PATTERNS } from './instruction-patterns.js';
 
-/** Combined matcher list: base matchers checked first, then extended, then project, then advanced. */
-const ALL_MATCHERS = [...RULE_MATCHERS, ...EXTENDED_RULE_MATCHERS, ...PROJECT_RULE_MATCHERS, ...ADVANCED_RULE_MATCHERS];
+/** Combined matcher list: base, extended, project, advanced, preference, file-structure, tooling, testing. */
+const ALL_MATCHERS = [
+  ...RULE_MATCHERS,
+  ...EXTENDED_RULE_MATCHERS,
+  ...PROJECT_RULE_MATCHERS,
+  ...ADVANCED_RULE_MATCHERS,
+  ...PREFERENCE_MATCHERS,
+  ...FILE_STRUCTURE_MATCHERS,
+  ...TOOLING_MATCHERS,
+  ...TESTING_MATCHERS,
+];
 
 /** Counter for generating unique rule IDs across extraction runs. */
 let ruleCounter = 0;
@@ -58,75 +73,7 @@ const SUBJECTIVE_MARKERS: RegExp[] = [
  * statement, requirement, or constraint) rather than documentation prose.
  */
 function isInstructionCandidate(line: string): boolean {
-  const instructionPatterns = [
-    /^[-*+]\s+/,                     // unordered list item
-    /^\d+\.\s+/,                     // ordered list item
-    /\b(must|should|always|never|no|don'?t|avoid|use|require|ensure)\b/i,
-    /\b(camel|pascal|kebab|snake)[\s-]*case\b/i,
-    /\bconsole\.?\w*\b/i,
-    /\bdefault\s+export/i,
-    /\bany\s+type/i,
-    /\bJSDoc\b/i,
-    /\bstrict\s+mode\b/i,
-    /\btest\s+file/i,
-    /\brelative\s+import/i,
-    /\bpath\s+alias/i,
-    /\bmax(?:imum)?\s+(?:line|file|function|param(?:eter)?s?)\b/i,
-    /\b(?:line|file)\s+length\b/i,
-    /\bnamed\s+export/i,
-    /\bempty\s+catch\b/i,
-    /\benums?\b/i,
-    /\btype\s+assertions?\b/i,
-    /\bnon[\s-]null\s+assertion/i,
-    /\bthrow\b/i,
-    /\bternary\b/i,
-    /\bmagic\s+numbers?\b/i,
-    /\belse\s+after\s+return\b/i,
-    /\bearly\s+returns?\b/i,
-    /\bnamespace\s+imports?\b/i,
-    /\bimport\s+\*/i,
-    /\bbarrel\s+(?:files?|exports?)\b/i,
-    /\bsetTimeout\b/i,
-    /\b@?ts[\s-](?:ignore|nocheck|expect)/i,
-    /\b\.only\s*\(/i,
-    /\b\.skip\s*\(/i,
-    /\bfocused\s+tests?\b/i,
-    /\bskipped\s+tests?\b/i,
-    /\bsingle\s+quotes?\b/i,
-    /\bbanned?\s+(?:package|import|library)\b/i,
-    /\bREADME\b/i,
-    /\bCHANGELOG\b/i,
-    /\bformatter\b/i,
-    /\bprettier\b/i,
-    /\beslint\b/i,
-    /\bbiome\b/i,
-    /\bpin(?:ned)?\s+(?:dependenc|version)/i,
-    /\bexact\s+versions?\b/i,
-    /\bswallow(?:ed)?\s+(?:error|exception)/i,
-    /\bsilent\s+(?:failure|catch)\b/i,
-    /\bwildcard\s+imports?\b/i,
-    /\bprefer\s+const\b/i,
-    /\bconst\s+over\s+let\b/i,
-    /\bimmutable\s+by\s+default\b/i,
-    /\bno\s+var\b/i,
-    /\bwildcard\s+(?:re-?)?exports?\b/i,
-    /\bexport\s*\*\b/i,
-    /\bTODO\b.*\bnot\s+allowed\b/i,
-    /\bno\s+TODO\b/i,
-    /\bsemicolon/i,
-    /\bimplicit\s+any\b/i,
-    /\bunused\s+exports?\b/i,
-    /\bunresolved\s+imports?\b/i,
-    /\bpython\b.*\bsnake/i,
-    /\bgo\b.*\bnaming/i,
-    /\bkebab[\s-]*case\b.*\b(?:director|folder)/i,
-    /\blowercase\s+with\s+dashes?\b.*\b(?:director|folder)/i,
-    /\bconcise\s+(?:syntax|conditional)/i,
-    /\bavoid\b.*\bcurly\s+braces?\b/i,
-    /\bunnecessary\s+(?:curly\s+)?braces?/i,
-  ];
-
-  return instructionPatterns.some((p) => p.test(line));
+  return INSTRUCTION_PATTERNS.some((p) => p.test(line));
 }
 
 /**
@@ -184,11 +131,12 @@ function classifyLine(line: string, stripped: string): 'skip' | 'subjective' | '
  *
  * A single line can express multiple rules (e.g. "TypeScript strict mode,
  * no any types"). Returns all matching Rules, or an empty array if no
- * matcher applies.
+ * matcher applies. Attaches section context and qualifier to each rule.
  */
-function matchLine(line: string, stripped: string): Rule[] {
+function matchLine(line: string, stripped: string, sectionHeader: string): Rule[] {
   const matched: Rule[] = [];
   const seenMatchers = new Set<string>();
+  const qualifier = detectQualifier(stripped);
 
   for (const matcher of ALL_MATCHERS) {
     if (seenMatchers.has(matcher.id)) {
@@ -208,6 +156,8 @@ function matchLine(line: string, stripped: string): Rule[] {
           pattern: matcher.buildPattern(stripped, match),
           confidence: matcher.confidence ?? 'high',
           extractionMethod: 'static',
+          section: sectionHeader || undefined,
+          qualifier,
         });
         seenMatchers.add(matcher.id);
         break;
@@ -268,7 +218,7 @@ export function extractRules(sections: MarkdownSection[]): {
           unparseable.push(line);
           continue;
         case 'candidate': {
-          const matched = matchLine(line, stripped);
+          const matched = matchLine(line, stripped, section.header);
           if (matched.length > 0) {
             rules.push(...matched);
           } else {

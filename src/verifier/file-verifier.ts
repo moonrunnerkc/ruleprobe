@@ -21,6 +21,12 @@ import {
   checkFormatterConfigExists,
   checkPinnedDependencies,
 } from './project-checks.js';
+import {
+  checkDirectoryExistsWithFiles,
+  checkFilePatternExists,
+  checkModuleIndexRequired,
+  checkTestColocation,
+} from './file-structure-checks.js';
 
 /**
  * Collect all file paths under a directory with symlink awareness.
@@ -91,6 +97,42 @@ export function verifyFileSystemRule(
     case 'pinned-dependencies':
       evidence = checkPinnedDependencies(outputDir);
       break;
+    case 'directory-exists-with-files': {
+      const targetDir = typeof rule.pattern.target === 'string'
+        ? rule.pattern.target
+        : '';
+      evidence = checkDirectoryExistsWithFiles(files, outputDir, targetDir);
+      break;
+    }
+    case 'file-pattern-exists': {
+      const filePattern = typeof rule.pattern.target === 'string'
+        ? rule.pattern.target
+        : '';
+      evidence = checkFilePatternExists(files, outputDir, filePattern);
+      break;
+    }
+    case 'module-index-required': {
+      const indexFile = typeof rule.pattern.target === 'string'
+        ? rule.pattern.target
+        : 'index.ts';
+      const result = checkModuleIndexRequired(files, outputDir, indexFile);
+      evidence = result.evidence;
+      return {
+        rule,
+        passed: result.compliance >= 0.8,
+        compliance: result.compliance,
+        evidence: result.evidence,
+      };
+    }
+    case 'test-colocation': {
+      const colocationResult = checkTestColocation(files, outputDir);
+      return {
+        rule,
+        passed: colocationResult.compliance >= 0.8,
+        compliance: colocationResult.compliance,
+        evidence: colocationResult.evidence,
+      };
+    }
     default:
       evidence = [];
   }
@@ -98,6 +140,7 @@ export function verifyFileSystemRule(
   return {
     rule,
     passed: evidence.length === 0,
+    compliance: evidence.length === 0 ? 1 : 0,
     evidence,
   };
 }

@@ -18,6 +18,10 @@ import {
   checkNoTodoComments,
   checkConsistentSemicolons,
 } from './regex-checks.js';
+import {
+  checkDescribeItStructure,
+  checkNoConsoleInTests,
+} from './test-regex-checks.js';
 
 /**
  * Routes to the appropriate check function based on the rule's
@@ -86,6 +90,12 @@ export function verifyRegexRule(
           allEvidence.push(...checkConsistentSemicolons(content, relPath, semiStyle));
           break;
         }
+        case 'describe-it-structure':
+          allEvidence.push(...checkDescribeItStructure(content, relPath, fileName));
+          break;
+        case 'no-console-in-tests':
+          allEvidence.push(...checkNoConsoleInTests(content, relPath, fileName));
+          break;
         default:
           break;
       }
@@ -97,6 +107,7 @@ export function verifyRegexRule(
   return {
     rule,
     passed: allEvidence.length === 0,
+    compliance: allEvidence.length === 0 ? 1 : 0,
     evidence: allEvidence,
   };
 }

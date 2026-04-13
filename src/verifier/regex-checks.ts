@@ -281,7 +281,8 @@ export function checkConsistentSemicolons(
 
 // ── helpers ──
 
-function isTestFile(fileName: string): boolean {
+/** Check if filename looks like a test file. */
+export function isTestFile(fileName: string): boolean {
   return fileName.endsWith('.test.ts') || fileName.endsWith('.spec.ts')
     || fileName.endsWith('.test.js') || fileName.endsWith('.spec.js');
 }

@@ -24,6 +24,10 @@ const CATEGORY_ORDER: RuleCategory[] = [
   'type-safety',
   'code-style',
   'dependency',
+  'preference',
+  'file-structure',
+  'tooling',
+  'testing',
 ];
 
 /**

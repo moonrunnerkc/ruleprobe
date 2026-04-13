@@ -13,6 +13,7 @@ import { handleVerify } from './commands/verify.js';
 import { handleCompare } from './commands/compare.js';
 import { handleTasks, handleTask } from './commands/tasks.js';
 import { handleRun } from './commands/run.js';
+import { handleAnalyze } from './commands/analyze.js';
 
 const program = new Command();
 
@@ -60,6 +61,7 @@ program
   .option('--llm-extract', 'use LLM to extract rules from unparseable lines', false)
   .option('--rubric-decompose', 'decompose subjective rules into measurable rubrics via LLM', false)
   .option('--project <tsconfig>', 'tsconfig.json path for type-aware checks')
+  .option('--threshold <number>', 'compliance threshold (0-1) for pass/fail', '0.8')
   .action(
     async (
       file: string,
@@ -76,6 +78,7 @@ program
         llmExtract: boolean;
         rubricDecompose: boolean;
         project?: string;
+        threshold: string;
       },
     ) => {
       await handleVerify(file, outputDir, opts, exitWithError);
@@ -166,6 +169,25 @@ program
         ...opts,
         timeout: parseInt(opts.timeout, 10),
       }, exitWithError);
+    },
+  );
+
+// ── analyze ──
+
+program
+  .command('analyze')
+  .description(
+    'Discover and analyze all instruction files in a project directory',
+  )
+  .argument('<project-dir>', 'root directory to scan for instruction files')
+  .option('--format <format>', 'output format (text|json)', 'text')
+  .option('--output <path>', 'write report to file instead of stdout')
+  .action(
+    (
+      projectDir: string,
+      opts: { format: string; output?: string },
+    ) => {
+      handleAnalyze(projectDir, opts, exitWithError);
     },
   );
 

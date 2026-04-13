@@ -84,6 +84,7 @@ describe('formatRdjson', () => {
     const warningResult: RuleResult = {
       rule: warningRule,
       passed: false,
+      compliance: 0,
       evidence: [{
         file: '/output/src/index.ts',
         line: 5,
@@ -145,6 +146,7 @@ describe('formatRdjson', () => {
     const fileResult: RuleResult = {
       rule: fileRule,
       passed: false,
+      compliance: 0,
       evidence: [{
         file: '/output/src/MyComponent.ts',
         line: null,

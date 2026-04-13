@@ -42,7 +42,7 @@ export async function verifyTreeSitterRule(
     : filePaths;
 
   if (relevantFiles.length === 0) {
-    return { rule, passed: true, evidence: [] };
+    return { rule, passed: true, compliance: 1, evidence: [] };
   }
 
   for (const fp of relevantFiles) {
@@ -73,6 +73,7 @@ export async function verifyTreeSitterRule(
   return {
     rule,
     passed: allEvidence.length === 0,
+    compliance: allEvidence.length === 0 ? 1 : 0,
     evidence: allEvidence,
   };
 }
