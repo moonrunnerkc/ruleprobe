@@ -317,13 +317,10 @@ const enhanced = await extractWithLlm(ruleSet, { provider });
 
 ## How It Works
 
-```mermaid
-flowchart LR
-    A[Instruction File] --> B[Rule Parser]
-    B --> C[RuleSet]
-    D[Agent Output] --> E[Verifier]
-    C --> E
-    E --> F[Adherence Report]
+```
+  Instruction File ──> Rule Parser ──> RuleSet ──┐
+                                                  ├──> Verifier ──> Adherence Report
+                          Agent Output ───────────┘
 ```
 
 The parser reads your instruction file and identifies lines that map to deterministic checks. Each rule gets a category, a verifier type, a pattern, and a qualifier (how strictly the instruction is worded). Six verifier engines handle different rule types: ts-morph AST analysis for code structure, filesystem checks for naming and directory structure, regex for content patterns, tree-sitter for Python/Go, a preference engine that counts "prefer X over Y" compliance ratios, and a tooling engine that checks package.json/lockfiles/configs. The report collects compliance scores with evidence for every rule.
