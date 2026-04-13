@@ -76,6 +76,25 @@ export const RULE_MATCHERS: RuleMatcher[] = [
     }),
   },
   {
+    id: 'naming-upper-case-constants',
+    patterns: [
+      /\bALL[_\s]*CAPS\b.*\bconstants?\b/i,
+      /\bconstants?\b.*\bALL[_\s]*CAPS\b/i,
+      /\bUPPER[_\s]*CASE\b.*\bconstants?\b/i,
+      /\bconstants?\b.*\bUPPER[_\s]*CASE\b/i,
+      /\bSCREAMING[_\s]*SNAKE[_\s]*CASE\b.*\bconstants?\b/i,
+      /\bconstants?\b.*\bSCREAMING[_\s]*SNAKE[_\s]*CASE\b/i,
+      /\buse\s+ALL_CAPS\s+for\s+constants\b/i,
+    ],
+    category: 'naming',
+    verifier: 'ast',
+    description: 'Constants must use UPPER_CASE naming',
+    severity: 'warning',
+    buildPattern: () => ({
+      type: 'UPPER_CASE', target: 'constants', expected: 'UPPER_CASE', scope: 'file',
+    }),
+  },
+  {
     id: 'forbidden-no-any-type',
     patterns: [
       /\bno\s+any\s+type/i,

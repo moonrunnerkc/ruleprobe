@@ -5,11 +5,15 @@
  * the correct verifier (AST, filesystem, regex, or tree-sitter),
  * collects all RuleResults, and returns them. Handles errors
  * gracefully: if a file can't be parsed, it's logged in evidence.
+ *
+ * AST rules are batched into a single ts-morph pass over all files
+ * to avoid O(rules * files) parsing. Each file is parsed once and
+ * checked against all AST rules, then discarded from memory.
  */
 
 import { extname } from 'node:path';
 import type { Rule, RuleSet, RuleResult } from '../types.js';
-import { verifyAstRule } from './ast-verifier.js';
+import { verifyAstRulesBatch } from './ast-verifier-batch.js';
 import { verifyFileSystemRule, collectFiles, filterSourceFiles } from './file-verifier.js';
 export { verifyFileSystemRule } from './file-verifier.js';
 import { verifyRegexRule } from './regex-verifier.js';
@@ -30,7 +34,8 @@ export interface VerifyOptions {
  *
  * Routes each rule to the appropriate verifier based on rule.verifier.
  * Collects source files once and reuses the list across rules to avoid
- * repeated directory traversals.
+ * repeated directory traversals. AST rules are batched into a single
+ * ts-morph pass to achieve O(files) instead of O(rules * files) parses.
  *
  * @param ruleSet - The set of rules to verify
  * @param outputDir - Root directory containing agent-generated output
@@ -55,22 +60,32 @@ export async function verifyOutput(
   const treeSitterExtensions = new Set(['.py', '.go']);
   const treeSitterFiles = allFiles.filter((f) => treeSitterExtensions.has(extname(f)));
 
-  const results: RuleResult[] = [];
+  // Batch all AST rules for single-pass verification
+  const astRules = ruleSet.rules.filter((r) => r.verifier === 'ast');
+  const astResultMap = astRules.length > 0
+    ? verifyAstRulesBatch(astRules, codeFiles, projectPath)
+    : new Map<Rule, RuleResult>();
 
+  // Verify remaining rule types individually
+  const results: RuleResult[] = [];
   for (const rule of ruleSet.rules) {
-    const result = await verifyRule(
-      rule, outputDir, codeFiles, sourceFiles, allFiles, treeSitterFiles, projectPath,
-    );
-    results.push(result);
+    if (rule.verifier === 'ast') {
+      results.push(astResultMap.get(rule)!);
+    } else {
+      const result = await verifyNonAstRule(
+        rule, outputDir, codeFiles, sourceFiles, allFiles, treeSitterFiles, projectPath,
+      );
+      results.push(result);
+    }
   }
 
   return results;
 }
 
 /**
- * Verify a single rule, routing to the correct verifier.
+ * Verify a single non-AST rule, routing to the correct verifier.
  */
-async function verifyRule(
+async function verifyNonAstRule(
   rule: Rule,
   outputDir: string,
   codeFiles: string[],
@@ -80,8 +95,6 @@ async function verifyRule(
   projectPath?: string,
 ): Promise<RuleResult> {
   switch (rule.verifier) {
-    case 'ast':
-      return verifyAstRule(rule, codeFiles, projectPath);
     case 'filesystem':
       return verifyFileSystemRule(rule, outputDir, allFiles);
     case 'regex':

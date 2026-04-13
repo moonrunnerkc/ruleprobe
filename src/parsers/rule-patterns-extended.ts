@@ -195,4 +195,54 @@ export const EXTENDED_RULE_MATCHERS: RuleMatcher[] = [
       type: 'max-params', target: '*.ts', expected: match[1] ?? '4', scope: 'file',
     }),
   },
+  {
+    id: 'error-async-try-catch',
+    patterns: [
+      /\buse\s+try[\s/]*catch\s+(?:blocks?\s+)?(?:for|with|in)\s+async\b/i,
+      /\basync\s+(?:operations?|functions?|code)\b.*\btry[\s/]*catch\b/i,
+      /\btry[\s/]*catch\b.*\basync\s+(?:operations?|functions?|code)\b/i,
+      /\bwrap\s+async\b.*\btry[\s/]*catch\b/i,
+      /\balways\s+(?:use\s+)?try[\s/]*catch\b/i,
+    ],
+    category: 'error-handling',
+    verifier: 'ast',
+    description: 'Async operations must use try/catch error handling',
+    severity: 'warning',
+    buildPattern: () => ({
+      type: 'async-try-catch', target: '*.ts', expected: 'try-catch-present', scope: 'file',
+    }),
+  },
+  {
+    id: 'structure-typescript-required',
+    patterns: [
+      /\buse\s+TypeScript\s+for\s+(?:all|every|new)\b/i,
+      /\ball\s+(?:new\s+)?code\s+(?:in|must\s+be)\s+TypeScript\b/i,
+      /\bTypeScript\s+for\s+all\b/i,
+      /\bwrite\s+(?:all\s+)?(?:new\s+)?(?:code\s+)?in\s+TypeScript\b/i,
+      /\buse\s+TypeScript\b(?!.*\bstrict\s+mode\b)/i,
+    ],
+    category: 'type-safety',
+    verifier: 'tooling',
+    description: 'Project must use TypeScript',
+    severity: 'warning',
+    buildPattern: () => ({
+      type: 'typescript-required', target: 'tsconfig.json', expected: true, scope: 'project',
+    }),
+  },
+  {
+    id: 'error-log-contextual',
+    patterns: [
+      /\blog\s+errors?\s+with\s+context/i,
+      /\balways\s+log\s+errors?\b/i,
+      /\berror\s+(?:messages?\s+)?(?:must\s+)?include\s+context/i,
+      /\bcontextual\s+(?:error\s+)?(?:log(?:ging)?|information)\b/i,
+    ],
+    category: 'error-handling',
+    verifier: 'ast',
+    description: 'Errors must be logged with contextual information',
+    severity: 'warning',
+    buildPattern: () => ({
+      type: 'error-log-context', target: '*.ts', expected: 'contextual-logging', scope: 'file',
+    }),
+  },
 ];

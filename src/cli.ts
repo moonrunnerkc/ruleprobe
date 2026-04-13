@@ -188,6 +188,7 @@ program
   .option('--no-cache', 'disable profile caching')
   .option('--semantic-log', 'print semantic analysis log to stdout after results', false)
   .option('--cost-report', 'show estimated cost breakdown for semantic analysis', false)
+  .option('--threshold <number>', 'compliance threshold (0-1) for CI pass/fail', '0.8')
   .action(
     async (
       projectDir: string,
@@ -200,6 +201,7 @@ program
         cache: boolean;
         semanticLog: boolean;
         costReport: boolean;
+        threshold?: string;
       },
     ) => {
       await handleAnalyze(projectDir, opts, exitWithError);

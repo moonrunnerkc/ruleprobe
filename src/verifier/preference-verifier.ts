@@ -287,6 +287,9 @@ export function verifyPreferenceRule(
           context: `${pair.preferredLabel} preferred over ${pair.alternativeLabel}`,
         });
       }
+
+      // Remove from Project to bound memory on large codebases
+      project.removeSourceFile(sourceFile);
     } catch {
       // Skip files that can't be parsed
     }

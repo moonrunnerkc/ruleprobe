@@ -20,6 +20,7 @@ tests/fixtures/calibration/payloads/*-payload.json
 
 # Test run artifacts
 .ruleprobe/
+test-treesitter*.mjs
 
 # Private project docs (keep local only)
 .github/copilot-instructions.md

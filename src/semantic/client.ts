@@ -8,7 +8,6 @@
 
 import type {
   RawExtractionPayload,
-  SemanticVerdict,
   SemanticAnalysisConfig,
   SemanticAnalysisReport,
 } from './types.js';
@@ -41,7 +40,6 @@ export interface LicenseValidationResponse {
 
 /** Response from the analyze endpoint. */
 export interface AnalyzeResponse {
-  verdicts: SemanticVerdict[];
   report: SemanticAnalysisReport;
 }
 
@@ -106,7 +104,10 @@ export async function analyzeRemote(
     try {
       const response = await fetchWithTimeout(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-license-key': config.licenseKey,
+        },
         body,
       });
 

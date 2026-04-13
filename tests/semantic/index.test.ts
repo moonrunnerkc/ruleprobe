@@ -22,24 +22,23 @@ let server: Server;
 let port: number;
 let validateResponse = { valid: true, tier: 'pro', callsRemaining: 100 };
 let analyzeResponse = {
-  verdicts: [
-    {
-      ruleId: 'test-rule-1',
-      compliance: 0.92,
-      method: 'structural-fast-path',
-      violations: [],
-      mitigations: [],
-      profileHash: 'abc123',
-      tokenCost: 0,
-    },
-  ],
   report: {
     rulesAnalyzed: 1,
     fastPathResolutions: 1,
     llmResolutions: 0,
     unresolvedRules: 0,
     totalTokenCost: 0,
-    verdicts: [],
+    verdicts: [
+      {
+        ruleId: 'test-rule-1',
+        compliance: 0.92,
+        method: 'structural-fast-path',
+        violations: [],
+        mitigations: [],
+        profileHash: 'abc123',
+        tokenCost: 0,
+      },
+    ],
     profile: {
       profileId: 'test',
       generatedAt: '2026-01-01T00:00:00Z',

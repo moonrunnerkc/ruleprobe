@@ -59,6 +59,14 @@ export interface TreeSitterNode {
 let parserModule: TreeSitterModule | null = null;
 
 /**
+ * Cached parser instances per language. Reusing parsers avoids the
+ * WASM table exhaustion that occurs when creating thousands of
+ * short-lived Parser objects (PostHog has 7000+ Python files).
+ * Language.load is also cached to avoid redundant WASM loads.
+ */
+const parserCache = new Map<TreeSitterLanguage, { parser: TreeSitterParser; lang: TreeSitterLang }>();
+
+/**
  * Initialize tree-sitter if not already loaded.
  *
  * @returns The tree-sitter module, or null if not installed
@@ -109,6 +117,10 @@ export function resolveWasmPath(language: TreeSitterLanguage): string | null {
 /**
  * Parse a file with tree-sitter and return the root node.
  *
+ * Reuses a single Parser instance per language to avoid WASM table
+ * exhaustion on large codebases. The caller must call tree.delete()
+ * when done but must NOT delete the parser (it is shared).
+ *
  * @param filePath - Path to the source file
  * @param language - Which language grammar to use
  * @returns Parse result, or null if parsing fails
@@ -116,25 +128,29 @@ export function resolveWasmPath(language: TreeSitterLanguage): string | null {
 export async function parseWithTreeSitter(
   filePath: string,
   language: TreeSitterLanguage,
-): Promise<{ root: TreeSitterNode; tree: TreeSitterTree; parser: TreeSitterParser } | null> {
+): Promise<{ root: TreeSitterNode; tree: TreeSitterTree } | null> {
   const mod = await loadTreeSitter();
   if (!mod) {
     return null;
   }
 
-  const wasmPath = resolveWasmPath(language);
-  if (!wasmPath) {
-    return null;
+  let cached = parserCache.get(language);
+  if (!cached) {
+    const wasmPath = resolveWasmPath(language);
+    if (!wasmPath) {
+      return null;
+    }
+    const lang = await mod.Language.load(wasmPath);
+    const parser = new mod.Parser();
+    parser.setLanguage(lang);
+    cached = { parser, lang };
+    parserCache.set(language, cached);
   }
 
-  const lang = await mod.Language.load(wasmPath);
-  const parser = new mod.Parser();
-  parser.setLanguage(lang);
-
   const source = readFileSync(filePath, 'utf-8');
-  const tree = parser.parse(source);
+  const tree = cached.parser.parse(source);
 
-  return { root: tree.rootNode, tree, parser };
+  return { root: tree.rootNode, tree };
 }
 
 /**

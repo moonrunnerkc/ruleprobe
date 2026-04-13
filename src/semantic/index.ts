@@ -99,7 +99,7 @@ export async function analyzeProjectSemantic(
 
   return {
     performed: true,
-    verdicts: response.verdicts,
+    verdicts: response.report.verdicts,
     report: response.report,
     sentPayload: payload,
     rawResponse: response,

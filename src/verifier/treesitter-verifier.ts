@@ -67,7 +67,6 @@ export async function verifyTreeSitterRule(
     allEvidence.push(...evidence);
 
     parsed.tree.delete();
-    parsed.parser.delete();
   }
 
   return {

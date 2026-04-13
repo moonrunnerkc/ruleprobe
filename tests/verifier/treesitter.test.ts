@@ -74,7 +74,6 @@ describe('tree-sitter python checks', () => {
     const funcs = collectNodesByType(result!.root, 'function_definition');
     expect(funcs.length).toBeGreaterThan(0);
     result!.tree.delete();
-    result!.parser.delete();
   });
 
   it('passing python has zero snake_case violations', async () => {
@@ -83,7 +82,6 @@ describe('tree-sitter python checks', () => {
     const evidence = checkPythonSnakeCase(result!.root, passingPython);
     expect(evidence).toHaveLength(0);
     result!.tree.delete();
-    result!.parser.delete();
   });
 
   it('failing python detects non-snake_case functions', async () => {
@@ -93,7 +91,6 @@ describe('tree-sitter python checks', () => {
     expect(evidence.length).toBeGreaterThan(0);
     expect(evidence.some((e) => e.found.includes('not snake_case'))).toBe(true);
     result!.tree.delete();
-    result!.parser.delete();
   });
 
   it('passing python has zero class naming violations', async () => {
@@ -102,7 +99,6 @@ describe('tree-sitter python checks', () => {
     const evidence = checkPythonClassNaming(result!.root, passingPython);
     expect(evidence).toHaveLength(0);
     result!.tree.delete();
-    result!.parser.delete();
   });
 
   it('failing python detects non-PascalCase classes', async () => {
@@ -112,7 +108,6 @@ describe('tree-sitter python checks', () => {
     expect(evidence.length).toBeGreaterThan(0);
     expect(evidence.some((e) => e.found.includes('not PascalCase'))).toBe(true);
     result!.tree.delete();
-    result!.parser.delete();
   });
 });
 
@@ -125,7 +120,6 @@ describe('tree-sitter go checks', () => {
     const funcs = collectNodesByType(result!.root, 'function_declaration');
     expect(funcs.length).toBeGreaterThan(0);
     result!.tree.delete();
-    result!.parser.delete();
   });
 
   it('passing go has zero naming violations', async () => {
@@ -134,7 +128,6 @@ describe('tree-sitter go checks', () => {
     const evidence = checkGoNaming(result!.root, passingGo);
     expect(evidence).toHaveLength(0);
     result!.tree.delete();
-    result!.parser.delete();
   });
 });
 
@@ -149,7 +142,6 @@ describe('tree-sitter function length', () => {
     );
     expect(evidence).toHaveLength(0);
     result!.tree.delete();
-    result!.parser.delete();
   });
 
   it('detects python functions exceeding length limit', async () => {
@@ -161,7 +153,6 @@ describe('tree-sitter function length', () => {
     );
     expect(evidence.length).toBeGreaterThan(0);
     result!.tree.delete();
-    result!.parser.delete();
   });
 });
 

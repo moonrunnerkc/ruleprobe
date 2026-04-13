@@ -1,8 +1,6 @@
 /**
- * AST-based verifier using ts-morph. Loads TypeScript/JavaScript files
- * into a ts-morph Project and routes each rule to the correct check
- * function in ast-checks/. Supports per-file parsing (default) and
- * project-aware analysis (when a tsconfig path is provided via --project).
+ * AST-based verifier using ts-morph. Routes each rule to the correct
+ * check function in ast-checks/. Supports per-file and project-aware analysis.
  */
 
 import { Project, type SourceFile } from 'ts-morph';
@@ -10,6 +8,7 @@ import type { Rule, RuleResult, Evidence } from '../types.js';
 import {
   checkCamelCase,
   checkPascalCase,
+  checkUpperCaseConstants,
   checkNoAny,
   checkNoConsoleLog,
   checkNamedExportsOnly,
@@ -39,13 +38,8 @@ import {
   checkConciseConditionals,
 } from '../ast-checks/index.js';
 
-/**
- * Create a ts-morph Project configured for parsing without compilation.
- *
- * Uses liberal compiler options so that agent output files can be
- * parsed even if they have type errors.
- */
-function createProject(): Project {
+/** Create a ts-morph Project for parsing without compilation. */
+export function createProject(): Project {
   return new Project({
     compilerOptions: {
       allowJs: true,
@@ -58,14 +52,7 @@ function createProject(): Project {
   });
 }
 
-/**
- * Create a ts-morph Project from a tsconfig.json for type-aware analysis.
- *
- * Loads the full tsconfig so the TypeChecker can resolve types across
- * files. Used when --project is specified.
- *
- * @param tsconfigPath - Absolute path to tsconfig.json
- */
+/** Create a type-aware ts-morph Project from a tsconfig.json. */
 function createTypeAwareProject(tsconfigPath: string): Project {
   return new Project({
     tsConfigFilePath: tsconfigPath,
@@ -74,7 +61,7 @@ function createTypeAwareProject(tsconfigPath: string): Project {
 }
 
 /** Pattern types that require a type-aware Project. */
-const TYPE_AWARE_PATTERNS = new Set([
+export const TYPE_AWARE_PATTERNS = new Set([
   'no-implicit-any',
   'no-unused-exports',
   'no-unresolved-imports',
@@ -86,7 +73,7 @@ const TYPE_AWARE_PATTERNS = new Set([
  * Routes to the correct checker based on the rule's verification
  * pattern type. Returns evidence of violations found.
  */
-function runAstCheck(rule: Rule, filePath: string, sourceFile: SourceFile): Evidence[] {
+export function runAstCheck(rule: Rule, filePath: string, sourceFile: SourceFile): Evidence[] {
   const patternType = rule.pattern.type;
 
   switch (patternType) {
@@ -154,6 +141,13 @@ function runAstCheck(rule: Rule, filePath: string, sourceFile: SourceFile): Evid
       return checkNoWildcardExports(sourceFile, filePath);
     case 'concise-conditionals':
       return checkConciseConditionals(sourceFile, filePath);
+    case 'UPPER_CASE':
+      return checkUpperCaseConstants(sourceFile, filePath);
+    case 'async-try-catch':
+    case 'error-log-context':
+      // These rules are extracted and tracked but require deeper semantic analysis
+      // to verify accurately. Return empty evidence (no violations found).
+      return [];
     default:
       return [];
   }

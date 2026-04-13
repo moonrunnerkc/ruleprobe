@@ -53,6 +53,8 @@ export function verifyToolingRule(
       return checkTestFramework(rule, outputDir, allFiles, toolName);
     case 'tool-present':
       return checkToolPresent(rule, outputDir, allFiles, toolName);
+    case 'typescript-required':
+      return checkTypescriptRequired(rule, outputDir, allFiles);
     default:
       return { rule, passed: true, compliance: 1, evidence: [] };
   }
@@ -225,6 +227,38 @@ function checkToolPresent(
     rule,
     passed: found,
     compliance: found ? 1 : 0,
+    evidence,
+  };
+}
+
+/**
+ * Check that the project uses TypeScript (has a tsconfig.json).
+ */
+function checkTypescriptRequired(
+  rule: Rule,
+  outputDir: string,
+  allFiles: string[],
+): RuleResult {
+  const evidence: Evidence[] = [];
+  const hasTsconfig = allFiles.some((f) => basename(f) === 'tsconfig.json');
+  const hasTsFiles = allFiles.some((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+
+  const typescriptFound = hasTsconfig || hasTsFiles;
+
+  if (!typescriptFound) {
+    evidence.push({
+      file: outputDir,
+      line: null,
+      found: 'no tsconfig.json or TypeScript files found',
+      expected: 'TypeScript usage',
+      context: 'Instruction requires TypeScript for code',
+    });
+  }
+
+  return {
+    rule,
+    passed: typescriptFound,
+    compliance: typescriptFound ? 1 : 0,
     evidence,
   };
 }

@@ -5,7 +5,7 @@
  * types, interfaces, classes, and enums.
  */
 
-import { SyntaxKind, type SourceFile } from 'ts-morph';
+import { SyntaxKind, VariableDeclarationKind, type SourceFile } from 'ts-morph';
 import type { Evidence } from '../types.js';
 import { makeEvidence } from './helpers.js';
 
@@ -95,6 +95,60 @@ export function checkPascalCase(sourceFile: SourceFile, filePath: string): Evide
     const name = enumDecl.getName();
     if (!isPascalCase(name)) {
       evidence.push(makeEvidence(filePath, enumDecl, name, 'PascalCase'));
+    }
+  }
+
+  return evidence;
+}
+
+const UPPER_CASE_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+
+/**
+ * Verify UPPER_CASE naming for constants (const at module scope).
+ *
+ * Only checks top-level const declarations that are primitive values
+ * (string, number, boolean literals). Skips function expressions,
+ * arrow functions, objects, and arrays since UPPER_CASE is typically
+ * only expected for primitive constant values.
+ */
+export function checkUpperCaseConstants(sourceFile: SourceFile, filePath: string): Evidence[] {
+  const evidence: Evidence[] = [];
+
+  const statements = sourceFile.getStatements();
+  for (const stmt of statements) {
+    if (stmt.getKind() !== SyntaxKind.VariableStatement) {
+      continue;
+    }
+    const varStmt = stmt.asKindOrThrow(SyntaxKind.VariableStatement);
+    const declList = varStmt.getDeclarationList();
+
+    if (declList.getDeclarationKind() !== VariableDeclarationKind.Const) {
+      // Only check const declarations
+      continue;
+    }
+
+    for (const decl of declList.getDeclarations()) {
+      const name = decl.getName();
+      // Skip destructured bindings
+      if (name.includes('{') || name.includes('[')) {
+        continue;
+      }
+      const init = decl.getInitializer();
+      if (!init) continue;
+
+      const kind = init.getKind();
+      const isPrimitive = kind === SyntaxKind.StringLiteral
+        || kind === SyntaxKind.NumericLiteral
+        || kind === SyntaxKind.TrueKeyword
+        || kind === SyntaxKind.FalseKeyword
+        || kind === SyntaxKind.PrefixUnaryExpression;
+
+      if (!isPrimitive) continue;
+
+      // Already UPPER_CASE: fine. camelCase or PascalCase for a primitive const: flag.
+      if (!UPPER_CASE_PATTERN.test(name) && !name.startsWith('_')) {
+        evidence.push(makeEvidence(filePath, decl, name, 'UPPER_CASE'));
+      }
     }
   }
 
