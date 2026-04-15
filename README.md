@@ -144,7 +144,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: moonrunnerkc/ruleprobe@v2
+      - uses: moonrunnerkc/ruleprobe@v4
         with:
           instruction-file: AGENTS.md
           output-dir: src
@@ -154,13 +154,13 @@ jobs:
 
 No API keys needed, deterministic results, runs in seconds.
 
-> **Note:** `@v2` tracks the latest v2.x release. Pin to a specific tag (e.g., `@v2.0.0`) for reproducible builds.
+> **Note:** `@v4` tracks the latest v4.x release. Pin to a specific tag (e.g., `@v4.0.0`) for reproducible builds.
 
 <details>
 <summary>Full action options</summary>
 
 ```yaml
-- uses: moonrunnerkc/ruleprobe@v2
+- uses: moonrunnerkc/ruleprobe@v4
   with:
     instruction-file: AGENTS.md
     output-dir: src
@@ -298,7 +298,7 @@ Most of RuleProbe works offline with no API keys. Opt-in features that use exter
 | Rubric decomposition | `--rubric-decompose` | `OPENAI_API_KEY` | Breaking subjective rules into concrete checks |
 | Semantic analysis | `--semantic` | `ANTHROPIC_API_KEY` | Structural pattern and consistency checks |
 | Agent invocation (SDK mode) | `ruleprobe run --agent claude-code` | `ANTHROPIC_API_KEY` | Invoking Claude to generate code, then verifying |
-| GitHub Action | `uses: moonrunnerkc/ruleprobe@v2` | `GITHUB_TOKEN` | CI, PR comments |
+| GitHub Action | `uses: moonrunnerkc/ruleprobe@v4` | `GITHUB_TOKEN` | CI, PR comments |
 
 `parse`, `verify`, `compare`, `tasks`, and `task` work entirely offline. `analyze` works offline for deterministic analysis; `--semantic` requires `ANTHROPIC_API_KEY` for LLM calls.
 
