@@ -38,6 +38,7 @@ export function computeSummary(analysis: ProjectAnalysis): typeof analysis.summa
     'naming', 'forbidden-pattern', 'structure', 'test-requirement',
     'import-pattern', 'error-handling', 'type-safety', 'code-style',
     'dependency', 'preference', 'file-structure', 'tooling', 'testing',
+    'workflow', 'agent-behavior',
   ];
   const byCategory = {} as Record<RuleCategory, CategoryScore>;
 
@@ -139,6 +140,9 @@ export function formatSemanticSummary(result: SemanticPipelineResult): string {
   if (result.report) {
     lines.push(`  Fast-path: ${result.report.fastPathResolutions}`);
     lines.push(`  LLM-assisted: ${result.report.llmResolutions}`);
+    if (result.report.unresolvedRules > 0) {
+      lines.push(`  Not verifiable: ${result.report.unresolvedRules}`);
+    }
     lines.push(`  Token cost: ${result.report.totalTokenCost}`);
   }
   return lines.join('\n');
@@ -157,6 +161,7 @@ export function formatCostReport(report: SemanticAnalysisReport): string {
     `  Rules analyzed: ${report.rulesAnalyzed}`,
     `  Fast-path resolutions: ${report.fastPathResolutions} (${fastPct}%)`,
     `  LLM resolutions: ${report.llmResolutions} (${llmPct}%)`,
+    `  Not verifiable: ${report.unresolvedRules}`,
     `  Total token cost: ${report.totalTokenCost}`,
     `  Profile cache hit: ${report.profileCacheHit ? 'yes' : 'no'}`,
   ].join('\n');

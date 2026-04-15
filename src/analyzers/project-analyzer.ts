@@ -6,7 +6,7 @@
  * a unified ProjectAnalysis.
  */
 
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, statSync, realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type {
   ProjectAnalysis,
@@ -31,9 +31,17 @@ import { parseInstructionFile } from '../parsers/index.js';
  */
 export function discoverInstructionFiles(projectDir: string): string[] {
   const found: string[] = [];
+  const seenRealPaths = new Set<string>();
   for (const name of INSTRUCTION_FILE_NAMES) {
     const fullPath = join(projectDir, name);
     if (existsSync(fullPath) && statSync(fullPath).isFile()) {
+      // Deduplicate symlinks that resolve to the same file
+      // (e.g. CLAUDE.md, AGENTS.md, GEMINI.md all pointing to .rules)
+      const realPath = realpathSync(fullPath);
+      if (seenRealPaths.has(realPath)) {
+        continue;
+      }
+      seenRealPaths.add(realPath);
       found.push(fullPath);
     }
   }

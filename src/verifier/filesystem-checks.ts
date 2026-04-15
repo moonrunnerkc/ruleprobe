@@ -14,7 +14,18 @@ const KEBAB_CASE_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
  */
 export function filterSourceFiles(files: string[]): string[] {
   const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
-  return files.filter((f) => sourceExtensions.has(extname(f)));
+  return files.filter((f) => {
+    if (!sourceExtensions.has(extname(f))) {
+      return false;
+    }
+    // Exclude minified files: they contain mangled identifiers that
+    // produce massive false-positive counts for naming checks.
+    const name = basename(f);
+    if (/\.min\.[jt]sx?$/.test(name)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 /**

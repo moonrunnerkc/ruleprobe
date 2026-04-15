@@ -22,10 +22,12 @@ export type RuleCategory =
   | 'preference'
   | 'file-structure'
   | 'tooling'
-  | 'testing';
+  | 'testing'
+  | 'workflow'
+  | 'agent-behavior';
 
 /** Which verification engine handles a given rule. */
-export type VerifierType = 'ast' | 'regex' | 'filesystem' | 'treesitter' | 'preference' | 'tooling';
+export type VerifierType = 'ast' | 'regex' | 'filesystem' | 'treesitter' | 'preference' | 'tooling' | 'config-file' | 'git-history';
 
 /**
  * Qualifier describing the strength of an instruction.
@@ -49,6 +51,7 @@ export type InstructionFileType =
   | 'copilot-instructions'
   | 'gemini.md'
   | 'windsurfrules'
+  | 'rules'
   | 'generic-markdown'
   | 'unknown';
 
@@ -242,6 +245,7 @@ export const INSTRUCTION_FILE_NAMES = [
   '.github/copilot-instructions.md',
   'GEMINI.md',
   '.windsurfrules',
+  '.rules',
 ] as const;
 
 /** A conflict between rules in different instruction files. */

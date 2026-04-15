@@ -45,7 +45,13 @@ export function checkCamelCase(sourceFile: SourceFile, filePath: string): Eviden
     if (name.includes('{') || name.includes('[')) {
       continue;
     }
+    // Skip UPPER_SNAKE_CASE constants (e.g. MAX_RETRIES)
     if (/^[A-Z][A-Z0-9_]*$/.test(name)) {
+      continue;
+    }
+    // Skip PascalCase names: these are typically React components,
+    // classes, or type-like constructs that follow PascalCase convention
+    if (isPascalCase(name)) {
       continue;
     }
     if (!isCamelCase(name)) {
@@ -56,6 +62,10 @@ export function checkCamelCase(sourceFile: SourceFile, filePath: string): Eviden
   const allFuncDecls = sourceFile.getDescendantsOfKind(SyntaxKind.FunctionDeclaration);
   for (const func of allFuncDecls) {
     const name = func.getName();
+    // Skip PascalCase function names (React components declared as functions)
+    if (name && isPascalCase(name)) {
+      continue;
+    }
     if (name && !isCamelCase(name)) {
       evidence.push(makeEvidence(filePath, func, name, 'camelCase'));
     }

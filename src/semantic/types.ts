@@ -35,6 +35,15 @@ export interface FeatureVector {
   patternSignatures: string[];
   /** Prevalence of this topic in the codebase (0-1) */
   prevalence: number;
+  /**
+   * Multi-node conjunction counts.
+   *
+   * Each key is a composite pattern name (e.g. "try-catch-with-logging");
+   * the value is the normalized per-file count of files exhibiting that
+   * conjunction. Captures structural co-occurrences that individual node
+   * counts miss.
+   */
+  compositePatterns: Record<string, number>;
 }
 
 /** Sparse cross-file pattern graph tracking which files share structural patterns. */
@@ -47,7 +56,7 @@ export interface CrossFileGraph {
 export interface SemanticVerdict {
   ruleId: string;
   compliance: number;
-  method: 'structural-fast-path' | 'llm-assisted';
+  method: 'structural-fast-path' | 'llm-assisted' | 'not-verifiable' | 'topic-matched-no-profile';
   reasoning?: string;
   violations: StructuralViolation[];
   mitigations: string[];
@@ -84,6 +93,14 @@ export interface QualifierContext {
   frameworkConstraintDetected: boolean;
   legacyCodeRegion: boolean;
   testCode: boolean;
+  /**
+   * Whether the file contains variable reassignments
+   * (assignment_expression or update_expression).
+   *
+   * Justifies using `let` over `const` or mutable state patterns
+   * when the variable is genuinely reassigned.
+   */
+  variableReassigned: boolean;
 }
 
 /** Complete report from a semantic analysis run. */

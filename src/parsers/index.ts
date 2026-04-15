@@ -2,14 +2,22 @@
  * Parser router for instruction files.
  *
  * Detects the instruction file type from its path and orchestrates
- * parsing and rule extraction into a complete RuleSet.
+ * the three-pass extraction pipeline into a complete RuleSet.
+ *
+ * Pass 1: Structural markdown decomposition (structural-parser.ts)
+ * Pass 2: Statement classification (statement-classifier.ts)
+ * Pass 3: Rule assembly (rule-assembler.ts)
  */
 
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import type { InstructionFileType, RuleSet } from '../types.js';
-import { parseMarkdown } from './markdown-parser.js';
-import { extractRules } from './rule-extractor.js';
+import {
+  parseStructuredMarkdown,
+  flattenBlocks,
+} from './structural-parser.js';
+import { classifyAllStatements } from './statement-classifier.js';
+import { assembleRules, resetAssemblerCounter } from './rule-assembler.js';
 
 /**
  * Map of filename patterns to instruction file types.
@@ -22,6 +30,7 @@ const FILE_TYPE_PATTERNS: Array<{ pattern: RegExp; type: InstructionFileType }> 
   { pattern: /^copilot-instructions\.md$/i, type: 'copilot-instructions' },
   { pattern: /^GEMINI\.md$/i, type: 'gemini.md' },
   { pattern: /^\.windsurfrules$/i, type: 'windsurfrules' },
+  { pattern: /^\.rules$/i, type: 'rules' },
 ];
 
 /**
@@ -48,8 +57,8 @@ export function detectFileType(filePath: string): InstructionFileType {
 /**
  * Parse an instruction file and extract machine-verifiable rules.
  *
- * Reads the file, detects its type, parses the markdown into sections,
- * extracts rules, and returns a complete RuleSet.
+ * Reads the file, detects its type, runs the three-pass extraction
+ * pipeline, and returns a complete RuleSet.
  *
  * @param filePath - Absolute or relative path to the instruction file
  * @returns A RuleSet containing extracted rules and unparseable lines
@@ -63,7 +72,10 @@ export function parseInstructionFile(filePath: string): RuleSet {
 /**
  * Parse instruction file content directly (without reading from disk).
  *
- * Useful for testing or when the content is already in memory.
+ * Runs the three-pass extraction pipeline:
+ * 1. Structural decomposition (markdown sections and typed blocks)
+ * 2. Statement classification (keyword + structure signals)
+ * 3. Rule assembly (convert to Rule[] with matcher integration)
  *
  * @param content - Raw markdown content of the instruction file
  * @param filePath - Path used for file type detection and metadata
@@ -74,8 +86,22 @@ export function parseInstructionContent(
   filePath: string,
 ): RuleSet {
   let sourceType = detectFileType(filePath);
-  const sections = parseMarkdown(content);
-  const { rules, unparseable } = extractRules(sections);
+
+  // Reset counter for deterministic IDs per parse call
+  resetAssemblerCounter();
+
+  // Pass 1: Structural decomposition
+  const doc = parseStructuredMarkdown(content);
+
+  // Pass 2: Statement classification
+  const flatBlocks = flattenBlocks(doc);
+  const classified = classifyAllStatements(flatBlocks);
+
+  // Pass 3: Rule assembly
+  const { rules, unparseable, unclassified } = assembleRules(classified);
+
+  // Combine unparseable and unclassified for the RuleSet interface
+  const allUnparseable = [...unparseable, ...unclassified];
 
   if (sourceType === 'unknown' && filePath.endsWith('.md') && rules.length > 0) {
     sourceType = 'generic-markdown';
@@ -85,6 +111,6 @@ export function parseInstructionContent(
     sourceFile: filePath,
     sourceType,
     rules,
-    unparseable,
+    unparseable: allUnparseable,
   };
 }

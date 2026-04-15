@@ -20,6 +20,8 @@ import { verifyRegexRule } from './regex-verifier.js';
 import { verifyTreeSitterRule } from './treesitter-verifier.js';
 import { verifyPreferenceRule } from './preference-verifier.js';
 import { verifyToolingRule } from './tooling-verifier.js';
+import { verifyConfigFileRule } from './config-file-verifier.js';
+import { verifyGitHistoryRule } from './git-history-verifier.js';
 
 /** Options for output verification. */
 export interface VerifyOptions {
@@ -53,8 +55,8 @@ export async function verifyOutput(
   const sourceFiles = filterSourceFiles(allFiles);
 
   // Filter to TypeScript/JavaScript files for AST and regex checks
-  const codeExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
-  const codeFiles = allFiles.filter((f) => codeExtensions.has(extname(f)));
+  // (sourceFiles already excludes minified files via filterSourceFiles)
+  const codeFiles = sourceFiles;
 
   // Filter to Python and Go files for tree-sitter checks
   const treeSitterExtensions = new Set(['.py', '.go']);
@@ -105,6 +107,10 @@ async function verifyNonAstRule(
       return verifyPreferenceRule(rule, codeFiles);
     case 'tooling':
       return verifyToolingRule(rule, outputDir, allFiles);
+    case 'config-file':
+      return verifyConfigFileRule(rule, outputDir, allFiles);
+    case 'git-history':
+      return verifyGitHistoryRule(rule, outputDir);
     default:
       return {
         rule,

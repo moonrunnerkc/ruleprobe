@@ -24,9 +24,7 @@ import type {
   CrossFileRedundancy,
 } from './types.js';
 
-import { parseInstructionFile } from './parsers/index.js';
-import { parseMarkdown } from './parsers/markdown-parser.js';
-import { extractRules as extractRulesFromSections } from './parsers/rule-extractor.js';
+import { parseInstructionFile, parseInstructionContent } from './parsers/index.js';
 import { verifyOutput } from './verifier/index.js';
 import type { VerifyOptions } from './verifier/index.js';
 import { formatReport } from './reporter/index.js';
@@ -81,17 +79,16 @@ export type { WatchOptions, WatchResult } from './runner/watch-mode.js';
 /**
  * Extract rules from raw markdown content.
  *
- * Parses the markdown into sections and extracts machine-verifiable rules.
- * Convenience wrapper combining parseMarkdown + extractRules.
+ * Runs the three-pass extraction pipeline (structural decomposition,
+ * statement classification, rule assembly) on the given markdown.
  *
  * @param markdown - Raw markdown content
  * @param fileType - The instruction file type (used for metadata only)
  * @returns Array of extracted rules
  */
 export function extractRules(markdown: string, fileType: InstructionFileType): Rule[] {
-  const sections = parseMarkdown(markdown);
-  const { rules } = extractRulesFromSections(sections);
-  return rules;
+  const ruleSet = parseInstructionContent(markdown, `synthetic.${fileType}`);
+  return ruleSet.rules;
 }
 
 /**
