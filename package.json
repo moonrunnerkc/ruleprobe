@@ -1,6 +1,6 @@
 {
   "name": "ruleprobe",
-  "version": "1.0.0",
+  "version": "4.0.0",
   "description": "Verify whether AI coding agents follow the instruction files they're given",
   "type": "module",
   "main": "dist/index.js",

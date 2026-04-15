@@ -19,7 +19,7 @@ Every AI coding agent reads an instruction file. None of them prove they followe
 
 You write `CLAUDE.md` or `AGENTS.md` with specific rules: camelCase variables, no `any` types, named exports only, test files for every source file. The agent says "Done." But did it actually follow them? Your code review catches some violations, misses others, and doesn't scale.
 
-RuleProbe reads the same instruction file, extracts the machine-verifiable rules, and checks agent output against each one. Compliance scores with file paths and line numbers as evidence. Deterministic and reproducible by default. Optional semantic analysis (paid tier) handles pattern-matching and consistency rules that require codebase-aware judgment.
+RuleProbe reads the same instruction file, extracts the machine-verifiable rules, and checks agent output against each one. Compliance scores with file paths and line numbers as evidence. Deterministic and reproducible by default. Optional semantic analysis for pattern-matching and consistency rules that require codebase-aware judgment.
 
 ## Quick Start
 
@@ -61,7 +61,7 @@ Every failure includes the file, line number, and what was found. Preference rul
 
 **Verify.** Runs each extracted rule against a directory of agent-generated code. Eight verifier engines: AST (ts-morph), filesystem, regex, tree-sitter (TypeScript, JavaScript, Python, Go), preference (compliance ratios for "prefer X over Y" patterns), tooling (package.json/lockfile/config checks), config-file (linter/formatter/build tool configs), and git-history (commit message and workflow checks). No LLM evaluation by default; results are deterministic.
 
-**Analyze.** Discovers all instruction files in a project, parses each, and cross-references them. Detects conflicts (same topic, contradictory rules across files) and redundancies (same rule in multiple files). Returns a coverage map showing which categories each file addresses. Pass `--semantic` with a license key to add structural pattern analysis via the paid semantic tier.
+**Analyze.** Discovers all instruction files in a project, parses each, and cross-references them. Detects conflicts (same topic, contradictory rules across files) and redundancies (same rule in multiple files). Returns a coverage map showing which categories each file addresses. Pass `--semantic` with an Anthropic API key to add structural pattern analysis.
 
 **LLM Extract (opt-in).** Pass `--llm-extract` to send unparseable lines through an OpenAI-compatible API. LLM-extracted rules are labeled with `extractionMethod: 'llm'` and `confidence: 'medium'`. Requires `OPENAI_API_KEY`.
 
@@ -125,7 +125,7 @@ ruleprobe task rest-endpoint
 ruleprobe run CLAUDE.md --task rest-endpoint --agent claude-code --format text
 ```
 
-The `analyze` command supports semantic analysis flags (`--semantic`, `--license-key`, `--cost-report`, `--semantic-log`) for the paid tier.
+The `analyze` command supports semantic analysis flags (`--semantic`, `--anthropic-key`, `--cost-report`, `--semantic-log`).
 
 Full command reference with all options: [docs/cli-reference.md](docs/cli-reference.md)
 
@@ -266,27 +266,27 @@ Every rule result includes a `compliance` field (0 to 1):
 
 The `--threshold` option (default 0.8) controls what compliance level counts as passing.
 
-## Semantic Analysis (Paid Tier)
+## Semantic Analysis
 
 The deterministic engine handles rules with clear patterns. Rules like "follow existing patterns," "maintain consistency," or qualified rules ("when possible," "avoid unless") require codebase-aware judgment. The semantic tier handles these.
 
-**How it works:** RuleProbe extracts raw AST vectors locally (node type counts, sub-tree hashes, nesting depths). No source code, variable names, comments, or file paths ever leave your machine. The vectors are sent to the RuleProbe API service, which runs structural fingerprinting and similarity analysis to score compliance. An LLM is consulted only when vector similarity is ambiguous, and it receives only numeric data with rule text, never code.
+**How it works:** RuleProbe extracts raw AST vectors locally (node type counts, sub-tree hashes, nesting depths). No source code, variable names, comments, or file paths ever leave your machine. The vectors are analyzed locally using structural fingerprinting and similarity scoring. An LLM is consulted only when vector similarity is ambiguous, and it receives only numeric data with rule text, never code. LLM calls go directly to Anthropic's API with your own key.
 
 ```bash
-ruleprobe analyze ./my-project --semantic --license-key <key>
-ruleprobe analyze ./my-project --semantic --license-key <key> --cost-report
+ruleprobe analyze ./my-project --semantic
+ruleprobe analyze ./my-project --semantic --cost-report
 ```
 
 | Flag | Description |
 |------|-------------|
-| `--semantic` | Enable semantic analysis (requires license key) |
-| `--license-key <key>` | License key (also: `RULEPROBE_LICENSE_KEY` env var or `.ruleprobe/config.json`) |
+| `--semantic` | Enable semantic analysis (requires `ANTHROPIC_API_KEY`) |
+| `--anthropic-key <key>` | Anthropic API key (also: `ANTHROPIC_API_KEY` env var or `.ruleprobe/config.json`) |
 | `--max-llm-calls <n>` | Cap LLM calls per analysis (default: 20) |
 | `--no-cache` | Disable profile caching |
 | `--semantic-log` | Print what was sent/received to stdout |
 | `--cost-report` | Show token cost breakdown |
 
-Without `--semantic`, the analyze command runs deterministic analysis only. If the license key is invalid or the API is unreachable, semantic analysis is skipped gracefully and deterministic results are still returned.
+Without `--semantic`, the analyze command runs deterministic analysis only. If no Anthropic API key is available, semantic analysis is skipped gracefully and deterministic results are still returned.
 
 ## Authentication
 
@@ -296,11 +296,11 @@ Most of RuleProbe works offline with no API keys. Opt-in features that use exter
 |---------|---------|-----------------|------------------|
 | LLM rule extraction | `--llm-extract` | `OPENAI_API_KEY` | Extracting rules from unparseable instruction lines |
 | Rubric decomposition | `--rubric-decompose` | `OPENAI_API_KEY` | Breaking subjective rules into concrete checks |
-| Semantic analysis | `--semantic` | `RULEPROBE_LICENSE_KEY` | Structural pattern and consistency checks |
+| Semantic analysis | `--semantic` | `ANTHROPIC_API_KEY` | Structural pattern and consistency checks |
 | Agent invocation (SDK mode) | `ruleprobe run --agent claude-code` | `ANTHROPIC_API_KEY` | Invoking Claude to generate code, then verifying |
 | GitHub Action | `uses: moonrunnerkc/ruleprobe@v2` | `GITHUB_TOKEN` | CI, PR comments |
 
-`parse`, `verify`, `compare`, `tasks`, and `task` work entirely offline. `analyze` works offline for deterministic analysis; `--semantic` requires an active license key and network access.
+`parse`, `verify`, `compare`, `tasks`, and `task` work entirely offline. `analyze` works offline for deterministic analysis; `--semantic` requires `ANTHROPIC_API_KEY` for LLM calls.
 
 ## Tree-sitter Support
 
@@ -310,7 +310,7 @@ TypeScript, JavaScript, Python, and Go get naming and function-length checks via
 
 RuleProbe never executes scanned code, never makes network calls (unless you opt in with `--llm-extract`, `--rubric-decompose`, `--semantic`, or `ruleprobe run`), and never modifies files in the scanned directory. User-supplied paths are resolved and bounded to the working directory; symlinks outside the project are skipped unless you pass `--allow-symlinks`. All dependencies are pinned to exact versions.
 
-When `--semantic` is enabled, only numeric AST vectors, opaque sub-tree hashes, boolean flags, and rule text are transmitted. No source code, variable names, comments, import paths, or file paths leave the machine. See [SECURITY.md](SECURITY.md) for the full model.
+When `--semantic` is enabled, all analysis runs locally. The only network calls are to the Anthropic API for LLM judgment when vector similarity is ambiguous (using your own `ANTHROPIC_API_KEY`). Only numeric AST vectors, opaque sub-tree hashes, boolean flags, and rule text are sent to the LLM. No source code, variable names, comments, import paths, or file paths leave the machine. See [SECURITY.md](SECURITY.md) for the full model.
 
 ## Limitations
 
@@ -338,8 +338,21 @@ A file or symlink in the output directory resolves outside the project root. Pas
 **Fewer rules extracted than expected**
 Run `ruleprobe parse <instruction-file> --show-unparseable` to see which lines were skipped and why. Add `--llm-extract` to attempt extraction on skipped lines.
 
-**Semantic analysis skipped / license key errors**
-Verify your license key is set via `--license-key`, `RULEPROBE_LICENSE_KEY` env var, or `.ruleprobe/config.json`. Check that the API endpoint is reachable. Deterministic analysis always runs regardless of semantic tier status.
+**Semantic analysis skipped / missing API key**
+Verify your Anthropic API key is set via `--anthropic-key`, `ANTHROPIC_API_KEY` env var, or `.ruleprobe/config.json`. Deterministic analysis always runs regardless of semantic tier status.
+
+## What's New in v4.0.0
+
+v4.0.0 consolidates the three-repo architecture into a single repo and open-sources the semantic analysis engine under MIT.
+
+Key changes:
+- **Single repo**: the semantic engine (40 files, ~3,600 lines) and Anthropic caller moved into `src/semantic/engine/` and `src/semantic/anthropic-caller.ts`. No separate API service or private repos.
+- **Local analysis**: semantic analysis runs entirely on the user's machine. No HTTP server, no license keys. LLM calls go directly to Anthropic with the user's own `ANTHROPIC_API_KEY`.
+- **CLI change**: `--license-key` removed, replaced by `ANTHROPIC_API_KEY` env var (same pattern as `--llm-extract` with `OPENAI_API_KEY`). New `--anthropic-key` flag for explicit key passing.
+- **Open source**: the full ASPE engine (fingerprinting, vector similarity, qualifier resolution, LLM escalation) is now MIT-licensed and visible to contributors.
+- **1,085+ tests** across 86+ test files (was 864 across 68 in v3.0.0, plus 221 engine tests migrated).
+
+Full release notes: [docs/release-v4.0.0.md](docs/release-v4.0.0.md)
 
 ## What's New in v3.0.0
 
@@ -385,6 +398,7 @@ Per-repo details: [excalidraw](docs/verification/e2e-verification-report.md#2-ex
 - [docs/cli-reference.md](docs/cli-reference.md) - Complete CLI command reference
 - [docs/api-reference.md](docs/api-reference.md) - Programmatic API with types
 - [docs/matchers.md](docs/matchers.md) - All 102 matchers with example instructions
+- [docs/release-v4.0.0.md](docs/release-v4.0.0.md) - v4.0.0 release notes (single-repo consolidation)
 - [docs/release-v3.0.0.md](docs/release-v3.0.0.md) - v3.0.0 release notes and migration guide
 - [docs/release-v2.0.0.md](docs/release-v2.0.0.md) - v2.0.0 release notes
 - [docs/case-study-v0.1.0.md](docs/case-study-v0.1.0.md) - Agent comparison case study

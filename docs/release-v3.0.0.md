@@ -1,5 +1,7 @@
 # RuleProbe v3.0.0
 
+> **Note:** v4.0.0 consolidated the three-repo architecture into a single repo. The semantic engine now runs locally. See [docs/release-v4.0.0.md](release-v4.0.0.md) for details.
+
 Released: April 2026
 
 45 files changed, +3,861 / -251 lines since v2.0.0. 10 new source files, 7 new test files, 864 tests across 68 test files (was 572 across 52 at v2.0.0). 3 commits.

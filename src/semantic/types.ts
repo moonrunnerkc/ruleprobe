@@ -1,11 +1,11 @@
 /**
  * Shared semantic analysis types.
  *
- * These types define the public contract between the ruleprobe CLI client
- * and the ruleprobe-api-service. They are the only semantic types that
- * ship in the public npm package. All proprietary logic lives server-side.
+ * These types define the contract between the ruleprobe CLI and the
+ * semantic analysis engine. All analysis runs locally.
  */
 
+export type { QualifierType } from '../types.js';
 import type { QualifierType } from '../types.js';
 
 /** A pattern topic identifier used to classify codebase patterns. */
@@ -74,9 +74,7 @@ export interface StructuralViolation {
 
 /** Configuration for semantic analysis, resolved from CLI flags, env vars, and config file. */
 export interface SemanticAnalysisConfig {
-  apiEndpoint: string;
-  licenseKey: string;
-  model?: string;
+  anthropicApiKey: string;
   maxLlmCalls?: number;
   useCache?: boolean;
   fastPathThreshold?: number;
@@ -145,7 +143,7 @@ export interface RawFileVector {
   subTreeHashes: string[];
 }
 
-/** A rule payload sent to the API service for semantic analysis. */
+/** A rule payload sent for semantic analysis. */
 export interface ExtractedRulePayload {
   ruleId: string;
   ruleText: string;
@@ -153,3 +151,12 @@ export interface ExtractedRulePayload {
   section?: string;
   confidence: number;
 }
+
+/**
+ * Callback type for making LLM calls.
+ * The Anthropic caller is injected through this interface.
+ */
+export type LlmCaller = (
+  model: string,
+  prompt: string,
+) => Promise<string>;

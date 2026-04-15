@@ -2,8 +2,8 @@
  * Public API for semantic analysis.
  *
  * Orchestrates the semantic analysis pipeline: local extraction of
- * raw AST vectors, remote analysis via the API service, and integration
- * of semantic verdicts into the project analysis result.
+ * raw AST vectors, direct invocation of the semantic engine, and
+ * integration of semantic verdicts into the project analysis result.
  */
 
 import type {
@@ -15,8 +15,8 @@ import type {
 } from './types.js';
 import type { ProjectAnalysis, Rule } from '../types.js';
 import { extractRawVectors } from './local-extractor.js';
-import { validateLicense, analyzeRemote } from './client.js';
-import type { AnalyzeResponse } from './client.js';
+import { analyzeSemantic } from './engine/index.js';
+import { createAnthropicCaller } from './anthropic-caller.js';
 
 /** Result of the semantic analysis pipeline. */
 export interface SemanticPipelineResult {
@@ -24,26 +24,21 @@ export interface SemanticPipelineResult {
   performed: boolean;
   /** Reason semantic analysis was skipped, if applicable. */
   skipReason?: string;
-  /** Verdicts from the API service. */
+  /** Verdicts from the semantic engine. */
   verdicts: SemanticVerdict[];
-  /** Full report from the API service. */
+  /** Full report from the semantic engine. */
   report?: SemanticAnalysisReport;
   /** The raw payload that was sent (for audit logging). */
   sentPayload?: RawExtractionPayload;
-  /** The raw response received (for audit logging). */
-  rawResponse?: AnalyzeResponse;
 }
 
 /**
  * Run semantic analysis on a project.
  *
  * 1. Extract raw AST vectors locally (single-pass tree-sitter scan)
- * 2. Validate license key with the API service
- * 3. Send raw vectors to the API for semantic analysis
+ * 2. Create a local LLM caller from the Anthropic API key
+ * 3. Run the semantic engine directly (no HTTP, no server)
  * 4. Return verdicts for integration into the project analysis
- *
- * Degrades gracefully: if the API is unreachable or the license is invalid,
- * returns a result indicating semantic analysis was skipped.
  *
  * @param projectDir - Root directory of the project being analyzed
  * @param config - Resolved semantic analysis configuration
@@ -59,50 +54,21 @@ export async function analyzeProjectSemantic(
 
   payload.rules = rules.map(ruleToPayload);
 
-  const licenseResult = await validateLicense(config);
-  if (licenseResult === null) {
-    return {
-      performed: false,
-      skipReason: 'Could not validate license key. Check your network connection and API endpoint.',
-      verdicts: [],
-      sentPayload: payload,
-    };
-  }
+  const llmCaller = createAnthropicCaller({
+    apiKey: config.anthropicApiKey,
+  });
 
-  if (!licenseResult.valid) {
-    return {
-      performed: false,
-      skipReason: 'License key is invalid or expired. Check your license key configuration.',
-      verdicts: [],
-      sentPayload: payload,
-    };
-  }
-
-  if (licenseResult.callsRemaining <= 0) {
-    return {
-      performed: false,
-      skipReason: 'No API calls remaining on this license. Upgrade your plan or wait for the next billing cycle.',
-      verdicts: [],
-      sentPayload: payload,
-    };
-  }
-
-  const response = await analyzeRemote(config, payload);
-  if (response === null) {
-    return {
-      performed: false,
-      skipReason: 'Semantic analysis API did not respond. Deterministic analysis continues without semantic results.',
-      verdicts: [],
-      sentPayload: payload,
-    };
-  }
+  const report = await analyzeSemantic(payload, llmCaller, {
+    fastPathThreshold: config.fastPathThreshold,
+    maxLlmCalls: config.maxLlmCalls,
+    useCache: config.useCache,
+  });
 
   return {
     performed: true,
-    verdicts: response.report.verdicts,
-    report: response.report,
+    verdicts: report.verdicts,
+    report,
     sentPayload: payload,
-    rawResponse: response,
   };
 }
 
@@ -110,7 +76,7 @@ export async function analyzeProjectSemantic(
  * Convert an internal Rule to an ExtractedRulePayload for transmission.
  *
  * @param rule - Internal rule from the instruction file parser
- * @returns Rule payload safe for API transmission
+ * @returns Rule payload safe for semantic analysis
  */
 function ruleToPayload(rule: Rule): ExtractedRulePayload {
   return {

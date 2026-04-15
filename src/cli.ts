@@ -182,8 +182,8 @@ program
   .argument('<project-dir>', 'root directory to scan for instruction files')
   .option('--format <format>', 'output format (text|json)', 'text')
   .option('--output <path>', 'write report to file instead of stdout')
-  .option('--semantic', 'enable semantic analysis (requires license key)', false)
-  .option('--license-key <key>', 'license key for semantic tier')
+  .option('--semantic', 'enable semantic analysis (requires ANTHROPIC_API_KEY)', false)
+  .option('--anthropic-key <key>', 'Anthropic API key for semantic analysis')
   .option('--max-llm-calls <n>', 'maximum LLM calls per analysis (default: 20)')
   .option('--no-cache', 'disable profile caching')
   .option('--semantic-log', 'print semantic analysis log to stdout after results', false)
@@ -196,7 +196,7 @@ program
         format: string;
         output?: string;
         semantic: boolean;
-        licenseKey?: string;
+        anthropicKey?: string;
         maxLlmCalls?: string;
         cache: boolean;
         semanticLog: boolean;

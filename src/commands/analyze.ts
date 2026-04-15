@@ -4,7 +4,7 @@
  * Discovers all instruction files in a project directory,
  * parses each, detects conflicts and redundancies, and
  * outputs a project-level analysis. Optionally runs semantic
- * analysis via the paid API tier when --semantic is passed.
+ * analysis when --semantic is passed with an Anthropic API key.
  */
 
 import { resolve } from 'node:path';
@@ -38,7 +38,7 @@ export interface AnalyzeOptions {
   format: string;
   output?: string;
   semantic?: boolean;
-  licenseKey?: string;
+  anthropicKey?: string;
   maxLlmCalls?: string;
   cache?: boolean;
   semanticLog?: boolean;
@@ -81,7 +81,7 @@ export async function handleAnalyze(
 
   if (opts.semantic) {
     const cliOptions: SemanticCliOptions = {
-      licenseKey: opts.licenseKey,
+      anthropicKey: opts.anthropicKey,
       maxLlmCalls: opts.maxLlmCalls !== undefined ? parseInt(opts.maxLlmCalls, 10) : undefined,
       noCache: opts.cache === false,
       semanticLog: opts.semanticLog,
@@ -91,8 +91,8 @@ export async function handleAnalyze(
     const config = resolveSemanticConfig(resolvedDir, cliOptions);
     if (config === null) {
       process.stderr.write(
-        'Semantic analysis requires a license key. ' +
-        'Set --license-key, RULEPROBE_LICENSE_KEY env var, or .ruleprobe/config.json.\n',
+        'Semantic analysis requires an Anthropic API key. ' +
+        'Set --anthropic-key, ANTHROPIC_API_KEY env var, or .ruleprobe/config.json.\n',
       );
     } else {
       const allRules: Rule[] = analysis.files.flatMap((f) => f.ruleSet.rules);

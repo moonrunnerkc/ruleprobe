@@ -26,3 +26,4 @@ test-treesitter*.mjs
 .github/copilot-instructions.md
 .github/ruleprobe-e2e-verification-guide.md
 docs/ruleprobe-build-guide.md
+.ruleprobe-semantic/

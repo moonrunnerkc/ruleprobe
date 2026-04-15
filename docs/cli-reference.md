@@ -65,7 +65,7 @@ Discover all instruction files in a project, parse each, and report cross-file c
 ```bash
 ruleprobe analyze ./my-project --format text
 ruleprobe analyze ./my-project --format json --output analysis.json
-ruleprobe analyze ./my-project --semantic --license-key <key>
+ruleprobe analyze ./my-project --semantic
 ruleprobe analyze ./my-project --semantic --cost-report --semantic-log
 ```
 
@@ -76,8 +76,8 @@ Checks for `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.github/copilot-instructio
 | `--format <format>` | `text` | Output format: `text` or `json` |
 | `--output <path>` | stdout | Write report to file |
 | `--threshold <number>` | `0.8` | Compliance threshold (0-1) for CI pass/fail |
-| `--semantic` | `false` | Enable semantic analysis (requires license key and API service) |
-| `--license-key <key>` | none | License key for semantic tier (also: env `RULEPROBE_LICENSE_KEY` or `.ruleprobe/config.json`) |
+| `--semantic` | `false` | Enable semantic analysis (requires `ANTHROPIC_API_KEY`) |
+| `--anthropic-key <key>` | none | Anthropic API key (also: env `ANTHROPIC_API_KEY` or `.ruleprobe/config.json`) |
 | `--max-llm-calls <n>` | `20` | Maximum LLM calls per semantic analysis |
 | `--no-cache` | `false` | Disable profile caching |
 | `--semantic-log` | `false` | Print semantic analysis log to stdout after results |

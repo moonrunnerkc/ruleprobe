@@ -35,6 +35,16 @@ RuleProbe exports core pipeline functions, project analysis, configuration, and 
 | `extractWithLlm(ruleSet, options)` | Run LLM extraction on unparseable lines |
 | `createOpenAiProvider(config?)` | Create an OpenAI-compatible LLM provider |
 
+## Semantic Analysis (v4.0.0+)
+
+| Function | Purpose |
+|----------|---------|
+| `analyzeProjectSemantic(projectDir, config, rules)` | Run ASPE semantic analysis locally (requires `ANTHROPIC_API_KEY`) |
+| `integrateSemanticResults(analysis, semanticResult)` | Merge semantic verdicts into a `ProjectAnalysis` |
+| `resolveSemanticConfig(projectDir, cliOptions)` | Resolve Anthropic API key from CLI flags, env vars, and config file |
+
+Semantic analysis runs entirely in-process. Raw source code never leaves the machine; only numeric AST vectors, opaque hashes, boolean flags, and rule text are sent to the Anthropic API for LLM-assisted judgments.
+
 ## Agent Invocation
 
 | Function | Purpose |
@@ -115,6 +125,24 @@ export default defineConfig({
   ],
   exclude: ['forbidden-no-console-log'],
 });
+```
+
+### Semantic analysis (v4.0.0+)
+
+```typescript
+import { analyzeProject } from 'ruleprobe';
+import { analyzeProjectSemantic, integrateSemanticResults } from 'ruleprobe/semantic';
+import { resolveSemanticConfig } from 'ruleprobe/semantic/config';
+
+const analysis = analyzeProject('./my-project');
+const config = resolveSemanticConfig('./my-project', { anthropicKey: process.env.ANTHROPIC_API_KEY });
+
+if (config) {
+  const rules = analysis.files.flatMap(f => f.ruleSet.rules);
+  const semanticResult = await analyzeProjectSemantic('./my-project', config, rules);
+  const enhanced = integrateSemanticResults(analysis, semanticResult);
+  console.log(`Semantic verdicts: ${semanticResult.report.verdicts.length}`);
+}
 ```
 
 ---
