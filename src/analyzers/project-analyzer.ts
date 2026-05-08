@@ -216,9 +216,8 @@ export function analyzeProject(projectDir: string): ProjectAnalysis {
   const allRules = files.flatMap((f) => f.ruleSet.rules);
   const totalRules = allRules.length;
   const allCategories: RuleCategory[] = [
-    'naming', 'forbidden-pattern', 'structure', 'test-requirement',
+    'naming', 'forbidden-pattern', 'structure',
     'import-pattern', 'error-handling', 'type-safety', 'code-style',
-    'dependency', 'preference', 'file-structure', 'tooling', 'testing',
   ];
   const byCategory = {} as Record<RuleCategory, CategoryScore>;
   for (const cat of allCategories) {

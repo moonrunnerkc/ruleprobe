@@ -1,16 +1,14 @@
 /**
- * Advanced rule matchers: type-aware and tree-sitter checks.
+ * Advanced rule matchers: type-aware AST checks.
  *
- * Contains matchers that require --project (type-aware AST checks)
- * or tree-sitter (Python/Go checks). Merged with other matcher
- * arrays in rule-extractor.ts.
+ * Contains matchers that require --project for type-aware analysis.
+ * Merged with other matcher arrays in rule-extractor.ts.
  */
 
 import type { RuleMatcher } from '../types.js';
 
 /**
- * Matchers for type-aware TypeScript checks and tree-sitter
- * language checks (Python, Go).
+ * Matchers for type-aware TypeScript checks.
  */
 export const ADVANCED_RULE_MATCHERS: RuleMatcher[] = [
   // Type-aware checks (require --project flag)
@@ -46,143 +44,6 @@ export const ADVANCED_RULE_MATCHERS: RuleMatcher[] = [
     severity: 'warning',
     buildPattern: () => ({
       type: 'no-unused-exports', target: '*.ts', expected: false, scope: 'project',
-    }),
-  },
-  {
-    id: 'import-no-unresolved',
-    patterns: [
-      /\bno\s+unresolved\s+imports?\b/i,
-      /\bimports?\s+must\s+(?:be\s+)?resolvable\b/i,
-      /\bno\s+broken\s+imports?\b/i,
-      /\ball\s+imports?\s+must\s+resolve\b/i,
-    ],
-    category: 'import-pattern',
-    verifier: 'ast',
-    description: 'All relative imports must resolve to existing files (requires --project)',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'no-unresolved-imports', target: '*.ts', expected: false, scope: 'project',
-    }),
-  },
-
-  // Tree-sitter checks (Python/Go)
-  {
-    id: 'naming-python-snake-case',
-    patterns: [
-      /\bpython\b.*\bsnake[_\s]*case\b/i,
-      /\bsnake[_\s]*case\b.*\bpython\b/i,
-      /\bpython\s+function\s+names?\b.*\bsnake/i,
-    ],
-    category: 'naming',
-    verifier: 'treesitter',
-    description: 'Python functions must use snake_case naming',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'python-snake-case', target: 'python', expected: 'snake_case', scope: 'file',
-    }),
-  },
-  {
-    id: 'naming-python-class',
-    patterns: [
-      /\bpython\b.*\bclass\b.*\bPascal\s*Case\b/i,
-      /\bPascal\s*Case\b.*\bpython\b.*\bclass/i,
-      /\bpython\s+class\s+names?\b.*\bPascal/i,
-    ],
-    category: 'naming',
-    verifier: 'treesitter',
-    description: 'Python classes must use PascalCase naming',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'python-class-naming', target: 'python', expected: 'PascalCase', scope: 'file',
-    }),
-  },
-  {
-    id: 'naming-go-conventions',
-    patterns: [
-      /\bgo\b.*\bnaming\s+conventions?\b/i,
-      /\bgo\b.*\bPascalCase\b.*\bexported\b/i,
-      /\bgo\b.*\bcamelCase\b.*\bunexported\b/i,
-      /\bgo\s+(?:function|method)\s+naming\b/i,
-    ],
-    category: 'naming',
-    verifier: 'treesitter',
-    description: 'Go functions follow naming conventions (exported: PascalCase, unexported: camelCase)',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'go-naming', target: 'go', expected: 'conventions', scope: 'file',
-    }),
-  },
-  {
-    id: 'style-python-function-length',
-    patterns: [
-      /\bpython\b.*\bmax(?:imum)?\s+(?:function|method)\s+length\b/i,
-      /\bpython\b.*\bfunction\b.*\b(?:under|less\s+than|max|<=?)\s*\d+\s*lines?\b/i,
-    ],
-    category: 'code-style',
-    verifier: 'treesitter',
-    description: 'Python functions must not exceed maximum line count',
-    severity: 'warning',
-    buildPattern: (_line: string, match: RegExpMatchArray) => {
-      const numMatch = match[0].match(/\d+/);
-      const maxLines = numMatch ? numMatch[0] : '50';
-      return {
-        type: 'function-length', target: 'python', expected: maxLines, scope: 'file',
-      };
-    },
-  },
-  {
-    id: 'style-go-function-length',
-    patterns: [
-      /\bgo\b.*\bmax(?:imum)?\s+(?:function|method)\s+length\b/i,
-      /\bgo\b.*\bfunction\b.*\b(?:under|less\s+than|max|<=?)\s*\d+\s*lines?\b/i,
-    ],
-    category: 'code-style',
-    verifier: 'treesitter',
-    description: 'Go functions must not exceed maximum line count',
-    severity: 'warning',
-    buildPattern: (_line: string, match: RegExpMatchArray) => {
-      const numMatch = match[0].match(/\d+/);
-      const maxLines = numMatch ? numMatch[0] : '50';
-      return {
-        type: 'function-length', target: 'go', expected: maxLines, scope: 'file',
-      };
-    },
-  },
-
-  {
-    id: 'style-concise-conditionals',
-    patterns: [
-      /\bavoid\b.*\b(?:unnecessary|unneeded)\s+(?:curly\s+)?braces?\b/i,
-      /\b(?:unnecessary|unneeded)\s+(?:curly\s+)?braces?\b.*\bavoid\b/i,
-      /\bconcise\s+(?:syntax|conditional|style)\b.*\b(?:if|conditional|brace)/i,
-      /\bno\s+(?:curly\s+)?braces?\b.*\bsingle\b.*\bstatement/i,
-      /\bsingle[\s-]line\b.*\bno\s+(?:curly\s+)?braces?\b/i,
-    ],
-    category: 'code-style',
-    verifier: 'ast',
-    description: 'Avoid unnecessary braces around single-statement bodies in conditionals',
-    severity: 'warning',
-    buildPattern: () => ({
-      type: 'concise-conditionals', target: '*.ts', expected: false, scope: 'file',
-    }),
-  },
-
-  // Filesystem checks
-  {
-    id: 'naming-kebab-case-directories',
-    patterns: [
-      /\bkebab[\s-]*case\b.*\b(?:director(?:y|ies)|folder)/i,
-      /\b(?:director(?:y|ies)|folder)\b.*\bkebab[\s-]*case\b/i,
-      /\blowercase\s+with\s+dashes?\b.*\b(?:director(?:y|ies)|folder)/i,
-      /\b(?:director(?:y|ies)|folder)\b.*\blowercase\s+with\s+dashes?\b/i,
-      /\b(?:director(?:y|ies)|folder)\s+names?:?\s*kebab/i,
-    ],
-    category: 'naming',
-    verifier: 'filesystem',
-    description: 'Directory names must use kebab-case (lowercase with dashes)',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'kebab-case-directories', target: 'directories', expected: 'kebab-case', scope: 'project',
     }),
   },
 

@@ -26,124 +26,21 @@ function setup(): string {
   return dir;
 }
 
-describe('v2 integration: preference rules end-to-end', () => {
-  beforeEach(() => {
-    tempDir = setup();
-    outputDir = join(tempDir, 'output');
-    mkdirSync(outputDir, { recursive: true });
-  });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
-
-  it('extracts preference rules, verifies with compliance ratio, and reports', async () => {
-    const instructionFile = join(tempDir, 'CLAUDE.md');
-    writeFileSync(instructionFile, [
-      '# Code Style',
-      '- Prefer const over let',
-      '- Prefer named exports over default exports',
-    ].join('\n'));
-
-    // Agent output: mostly const with one let, all named exports
-    writeFileSync(join(outputDir, 'index.ts'), [
-      'export const a = 1;',
-      'export const b = 2;',
-      'export const c = 3;',
-      'let d = 4;',
-    ].join('\n'));
-
-    const ruleSet = parseInstructionFile(instructionFile);
-    const preferRules = ruleSet.rules.filter((r) => r.category === 'preference');
-    expect(preferRules.length).toBeGreaterThan(0);
-
-    const results = await verifyOutput(ruleSet, outputDir, { allowSymlinks: false });
-    const constRule = results.find((r) => r.rule.id.includes('const-over-let'));
-    expect(constRule).toBeDefined();
-    // 3 const + 1 let = 75% compliance
-    expect(constRule!.compliance).toBeGreaterThan(0);
-    expect(constRule!.compliance).toBeLessThanOrEqual(1);
-  });
-});
-
-describe('v2 integration: tooling rules end-to-end', () => {
-  beforeEach(() => {
-    tempDir = setup();
-    outputDir = join(tempDir, 'output');
-    mkdirSync(outputDir, { recursive: true });
-  });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
-
-  it('extracts tooling rules and verifies against package.json', async () => {
-    const instructionFile = join(tempDir, 'CLAUDE.md');
-    writeFileSync(instructionFile, [
-      '# Tooling',
-      '- Use vitest for testing',
-    ].join('\n'));
-
-    const pkg = {
-      devDependencies: { vitest: '2.1.9' },
-      scripts: { test: 'vitest run' },
-    };
-    writeFileSync(join(outputDir, 'package.json'), JSON.stringify(pkg, null, 2));
-    writeFileSync(join(outputDir, 'index.ts'), 'export const x = 1;');
-
-    const ruleSet = parseInstructionFile(instructionFile);
-    const toolingRules = ruleSet.rules.filter((r) => r.category === 'tooling');
-    expect(toolingRules.length).toBeGreaterThan(0);
-
-    const results = await verifyOutput(ruleSet, outputDir, { allowSymlinks: false });
-    const vitestRule = results.find((r) => r.rule.id.includes('vitest'));
-    expect(vitestRule).toBeDefined();
-    expect(vitestRule!.passed).toBe(true);
-  });
-});
-
-describe('v2 integration: file-structure rules end-to-end', () => {
-  beforeEach(() => {
-    tempDir = setup();
-    outputDir = join(tempDir, 'output');
-    mkdirSync(outputDir, { recursive: true });
-  });
-  afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
-
-  it('extracts file-structure rules and verifies directory existence', async () => {
-    const instructionFile = join(tempDir, 'CLAUDE.md');
-    writeFileSync(instructionFile, [
-      '# Project Structure',
-      '- Tests go in __tests__/',
-    ].join('\n'));
-
-    const testsDir = join(outputDir, '__tests__');
-    mkdirSync(testsDir, { recursive: true });
-    writeFileSync(join(testsDir, 'app.test.ts'), 'test("it works", () => {});');
-    writeFileSync(join(outputDir, 'app.ts'), 'export const x = 1;');
-
-    const ruleSet = parseInstructionFile(instructionFile);
-    const fsRules = ruleSet.rules.filter((r) => r.category === 'file-structure');
-    expect(fsRules.length).toBeGreaterThan(0);
-
-    const results = await verifyOutput(ruleSet, outputDir, { allowSymlinks: false });
-    const testsDirRule = results.find((r) => r.rule.id.includes('tests-dir'));
-    expect(testsDirRule).toBeDefined();
-    expect(testsDirRule!.passed).toBe(true);
-  });
-});
-
 describe('v2 integration: multi-file analysis', () => {
   beforeEach(() => { tempDir = setup(); });
   afterEach(() => { rmSync(tempDir, { recursive: true, force: true }); });
 
   it('discovers multiple instruction files and reports conflicts', () => {
     writeFileSync(join(tempDir, 'CLAUDE.md'), [
-      '# Naming',
+      '# Rules',
       '- Use camelCase for variables',
-      '# Tooling',
-      '- Use pnpm, not npm',
+      '- Maximum line length: 80 characters',
     ].join('\n'));
 
     writeFileSync(join(tempDir, 'AGENTS.md'), [
-      '# Naming',
+      '# Rules',
       '- Use camelCase for variables',
-      '# Tooling',
-      '- Use yarn, not npm',
+      '- Maximum line length: 120 characters',
     ].join('\n'));
 
     const analysis = analyzeProject(tempDir);

@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">RuleProbe</h1>
   <p align="center">
-    Verify whether AI coding agents actually follow the instruction files they're given.
+    Translate instruction files into ESLint configs, detect drift, and extract rules.
   </p>
   <p align="center">
     <a href="https://www.npmjs.com/package/ruleprobe"><img src="https://img.shields.io/npm/v/ruleprobe?style=flat-square" alt="npm version"></a>
@@ -15,11 +15,15 @@
 
 ## Why
 
-Every AI coding agent reads an instruction file. None of them prove they followed it.
+AI coding agents read your `CLAUDE.md`, `AGENTS.md`, or `.cursorrules`, but nothing checks whether your ESLint config actually enforces the same rules. Drift accumulates: the instruction file says "use camelCase" but ESLint never checks it, or ESLint enforces rules the instruction file never mentioned.
 
-You write `CLAUDE.md` or `AGENTS.md` with specific rules: camelCase variables, no `any` types, named exports only, test files for every source file. The agent says "Done." But did it actually follow them? Your code review catches some violations, misses others, and doesn't scale.
+RuleProbe closes that gap. It reads your instruction file, extracts machine-verifiable rules, and bridges them to your tooling in three ways:
 
-RuleProbe reads the same instruction file, extracts the machine-verifiable rules, and checks agent output against each one. Compliance scores with file paths and line numbers as evidence. Deterministic and reproducible by default. Optional semantic analysis for pattern-matching and consistency rules that require codebase-aware judgment.
+**Translate.** Generate an ESLint config from your instruction file. `ruleprobe lint-config CLAUDE.md` produces a flat or legacy config you can drop into your project immediately.
+
+**Detect drift.** Compare your instruction file against an existing ESLint config. `ruleprobe drift CLAUDE.md .eslintrc.json` reports rules present in one but missing from the other, severity mismatches, and config argument differences.
+
+**Extract.** Pull a rules section out of an ESLint config for pasting into an instruction file. `ruleprobe extract .eslintrc.json` converts ESLint rules back into human-readable instruction prose.
 
 ## Quick Start
 
@@ -33,6 +37,27 @@ Or run it directly:
 npx ruleprobe --help
 ```
 
+**Translate an instruction file to ESLint config:**
+
+```bash
+ruleprobe lint-config CLAUDE.md
+ruleprobe lint-config AGENTS.md --format legacy --output .eslintrc.json
+```
+
+**Detect drift between instructions and ESLint:**
+
+```bash
+ruleprobe drift CLAUDE.md .eslintrc.json
+ruleprobe drift CLAUDE.md .eslintrc.json --format markdown
+```
+
+**Extract rules from an ESLint config:**
+
+```bash
+ruleprobe extract .eslintrc.json
+ruleprobe extract .eslintrc.json --output rules-section.md
+```
+
 **Parse an instruction file** to see what rules RuleProbe can extract:
 
 ```bash
@@ -40,42 +65,25 @@ ruleprobe parse CLAUDE.md
 ruleprobe parse AGENTS.md --show-unparseable
 ```
 
-**Verify agent output** against those rules:
+**Verify agent output** against extracted rules (legacy mode):
 
 ```bash
 ruleprobe verify CLAUDE.md ./agent-output --format text
-ruleprobe verify AGENTS.md ./src --format summary --threshold 0.9
 ```
-
-**Analyze a whole project** across all instruction files:
-
-```bash
-ruleprobe analyze ./my-project
-```
-
-Every failure includes the file, line number, and what was found. Preference rules return compliance ratios instead of binary pass/fail.
 
 ## What It Does
 
-**Parse.** Reads 7 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules, .rules) and extracts rules that can be checked mechanically. Each rule gets a qualifier (`always`, `prefer`, `when-possible`, `avoid-unless`, `try-to`, `never`) detected from the instruction text, and the markdown section it came from. Subjective instructions like "write clean code" are reported as unparseable so you know what was skipped.
+**Translate.** Reads 7 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules, .rules) and emits an ESLint config. Each extractable rule maps to an ESLint rule with appropriate severity and options. Rules that have no ESLint equivalent appear as comments in the output so you know what wasn't covered.
 
-**Verify.** Runs each extracted rule against a directory of agent-generated code. Eight verifier engines: AST (ts-morph), filesystem, regex, tree-sitter (TypeScript, JavaScript, Python, Go), preference (compliance ratios for "prefer X over Y" patterns), tooling (package.json/lockfile/config checks), config-file (linter/formatter/build tool configs), and git-history (commit message and workflow checks). No LLM evaluation by default; results are deterministic.
+**Detect drift.** Compares parsed rules against an existing ESLint config. Reports rules in the instruction file but missing from ESLint (you're not enforcing what you said), rules in ESLint but not in the instructions (you're enforcing what you never stated), severity mismatches, and argument differences. Use `--format markdown` for PR-ready output.
 
-**Analyze.** Discovers all instruction files in a project, parses each, and cross-references them. Detects conflicts (same topic, contradictory rules across files) and redundancies (same rule in multiple files). Returns a coverage map showing which categories each file addresses. Pass `--semantic` with an Anthropic API key to add structural pattern analysis.
+**Extract.** Parses an ESLint config and generates a markdown rules section you can paste into an instruction file. Stylistic rules (semicolons, quotes) are reported but skipped from the output by default since they don't carry meaningful instruction content.
 
-**LLM Extract (opt-in).** Pass `--llm-extract` to send unparseable lines through an OpenAI-compatible API. LLM-extracted rules are labeled with `extractionMethod: 'llm'` and `confidence: 'medium'`. Requires `OPENAI_API_KEY`.
+**Parse.** Extracts machine-verifiable rules from instruction files with qualifiers (`always`, `prefer`, `when-possible`, `avoid-unless`, `try-to`, `never`) and section context. Subjective lines like "write clean code" are reported as unparseable.
 
-**Compare.** Point RuleProbe at outputs from two or more agents and get a side-by-side comparison table showing which rules each one followed.
+**Verify.** Runs extracted rules against a directory of code. Deterministic by default, optional semantic analysis available. The original mode, still supported but no longer the primary focus.
 
-**Drift.** Compare a CLAUDE.md instruction file against an existing ESLint config and report mismatches. Detects rules in the instruction file but missing from ESLint, rules in ESLint but not derived from the instructions, severity mismatches, and config argument mismatches. Use `--format markdown` for PR-friendly output.
-
-**Extract.** Parse an ESLint config file and emit a markdown rules section suitable for pasting into a CLAUDE.md or other instruction file.
-
-**Drift detection.** Compare a CLAUDE.md instruction file against an existing ESLint config and report mismatches. `ruleprobe drift CLAUDE.md .eslintrc.json` checks for rules that are in the instruction file but missing from ESLint, rules in ESLint that aren't derived from the instructions, severity mismatches, and config argument mismatches.
-
-**Config generation.** `ruleprobe lint-config CLAUDE.md` translates instruction file rules into an ESLint config. Use `--format flat` (default) for flat config or `--format legacy` for `.eslintrc` format.
-
-**GitHub Action.** Composite action for any repo. Defaults to drift detection: compares instruction files against ESLint config on every PR, posts results as a comment, and optionally opens a follow-up PR with the regenerated config.
+**Analyze.** Discovers all instruction files in a project, parses each, and cross-references them for conflicts and redundancies. Pass `--semantic` for structural pattern analysis.
 
 ## Configuration
 
@@ -117,25 +125,20 @@ export default defineConfig({
 
 `defineConfig()` is a no-op passthrough that provides type checking in TypeScript configs. JSON configs work without it.
 
-Custom rules use the same verifier types (`ast`, `regex`, `filesystem`, `treesitter`, `preference`, `tooling`, `config-file`, `git-history`) and pattern types as extracted rules. Any pattern type listed in the Supported Rule Types table works as a custom rule pattern.
+Custom rules use the same verifier types (`ast`, `regex`, `filesystem`) and pattern types as extracted rules.
 
 ## CLI Reference
 
-Nine commands: `parse`, `verify`, `analyze`, `compare`, `tasks`, `task`, `run`, `lint-config`, `drift`. Quick examples:
+Six commands: `parse`, `verify`, `analyze`, `lint-config`, `drift`, `extract`.
 
 ```bash
 ruleprobe parse CLAUDE.md --show-unparseable
 ruleprobe verify AGENTS.md ./src --format summary --threshold 0.9
-ruleprobe drift CLAUDE.md .eslintrc.json --format markdown
 ruleprobe lint-config CLAUDE.md --format flat --output eslint.config.js
+ruleprobe drift CLAUDE.md .eslintrc.json --format markdown
+ruleprobe extract .eslintrc.json --output rules-section.md
 ruleprobe analyze ./my-project --format json
-ruleprobe compare AGENTS.md ./claude-output ./copilot-output --agents claude,copilot
-ruleprobe tasks
-ruleprobe task rest-endpoint
-ruleprobe run CLAUDE.md --task rest-endpoint --agent claude-code --format text
 ```
-
-The `analyze` command supports semantic analysis flags (`--semantic`, `--anthropic-key`, `--cost-report`, `--semantic-log`).
 
 Full command reference with all options: [docs/cli-reference.md](docs/cli-reference.md)
 
@@ -163,7 +166,7 @@ jobs:
 
 No API keys needed, deterministic results, runs in seconds. The action only runs drift detection when instruction files or ESLint config files are changed in the PR, skipping otherwise.
 
-> **Note:** `@v4` tracks the latest v4.x release. Pin to a specific tag (e.g., `@v4.0.0`) for reproducible builds.
+> **Note:** `@v4` tracks the latest v4.x release. Pin to a specific tag (e.g., `@v4.5.0`) for reproducible builds.
 
 <details>
 <summary>Full action options</summary>
@@ -192,37 +195,9 @@ Drift mode outputs: `drift-count`, `has-drift`.
 
 </details>
 
-<details>
-<summary>Legacy: verify mode</summary>
-
-The original verify mode checks agent output against instruction file rules. It is still available but no longer the default.
-
-```yaml
-- uses: moonrunnerkc/ruleprobe@v4
-  with:
-    mode: verify
-    instruction-file: AGENTS.md
-    output-dir: src
-```
-
-| Input | Default | Description |
-|-------|---------|-------------|
-| `output-dir` | `src` | Directory containing code to verify |
-| `agent` | `ci` | Agent identifier for report metadata |
-| `model` | `unknown` | Model identifier for report metadata |
-| `format` | `text` | Report format: text, json, or markdown |
-| `severity` | `all` | Filter: error, warning, or all |
-| `fail-on-violation` | `true` | Fail the check on any violation |
-| `post-comment` | `true` | Post results as a PR comment |
-| `reviewdog-format` | `false` | Also output rdjson for reviewdog |
-
-Verify mode outputs: `score`, `passed`, `failed`, `total`.
-
-</details>
-
 ## Programmatic API
 
-Core pipeline functions, project analysis, config, LLM extraction, and agent invocation are all exported:
+Core pipeline functions are exported for programmatic use:
 
 ```typescript
 import { parseInstructionFile, verifyOutput, generateReport, formatReport } from 'ruleprobe';
@@ -230,7 +205,7 @@ import { parseInstructionFile, verifyOutput, generateReport, formatReport } from
 const ruleSet = parseInstructionFile('CLAUDE.md');
 const results = await verifyOutput(ruleSet, './agent-output');
 const report = generateReport(
-  { agent: 'claude-code', model: 'opus-4', taskTemplateId: 'rest-endpoint',
+  { agent: 'claude-code', model: 'opus-4', taskTemplateId: 'manual',
     outputDir: './agent-output', timestamp: new Date().toISOString(), durationSeconds: null },
   ruleSet,
   results,
@@ -238,204 +213,79 @@ const report = generateReport(
 console.log(formatReport(report, 'summary'));
 ```
 
-Full API reference with all exported functions and types: [docs/api-reference.md](docs/api-reference.md)
+Full API reference: [docs/api-reference.md](docs/api-reference.md)
 
 ## How It Works
 
 ```
-  Instruction File --> Rule Parser --> RuleSet --+
-                                                 +--> Verifier --> Adherence Report
-                          Agent Output ----------+
+Instruction File --> Rule Parser --> RuleSet --+
+                                               +--> Verifier --> Adherence Report
+                        Agent Output ---------+
+
+Instruction File --> Rule Parser --> RuleSet --> Mapper --> ESLint Config
+
+Instruction File --> Rule Parser --> RuleSet --+
+ESLint Config     --> Parser     --> Parsed --+--> Drift Report
+
+ESLint Config     --> Extractor --> Markdown Rules Section
 ```
 
-The parser reads your instruction file and identifies lines that map to deterministic checks. Each rule gets a category, a verifier type, a pattern, and a qualifier (how strictly the instruction is worded). Eight verifier engines handle different rule types:
+The parser reads your instruction file and identifies lines that map to deterministic checks. Each rule gets a category, a verifier type, a pattern, and a qualifier (how strictly the instruction is worded). Three verifier engines handle different rule types:
 
 | Engine | What it checks |
 |--------|---------------|
 | AST (ts-morph) | Code structure, naming, type safety, imports for TypeScript/JavaScript |
 | Filesystem | File existence, naming conventions, directory structure |
-| Regex | Content patterns, forbidden strings, test conventions |
-| Tree-sitter | Naming and function-length checks for TypeScript, JavaScript, Python, Go |
-| Preference | Compliance ratios for "prefer X over Y" patterns (8 built-in pairs) |
-| Tooling | Package manager, test runner, linter/formatter presence in package.json and lockfiles |
-| Config-file | Linter, formatter, and build tool configuration file contents |
-| Git-history | Commit message conventions, branch naming, workflow patterns |
+| Regex | Content patterns, forbidden strings |
 
-The report collects compliance scores with evidence for every rule.
+The mapper translates extractable rules into ESLint rule entries. The drift detector compares parsed rules against an existing ESLint config. The extractor reverses the mapping: ESLint rules become human-readable instruction prose.
 
 ## Supported Rule Types
 
-102 built-in matchers across 14 categories:
+34 mappable matchers across 7 categories produce ESLint config entries:
 
-| Category | Count | Verifier(s) | Examples |
-|----------|------:|-------------|----------|
-| naming | 9 | AST, Filesystem, Tree-sitter | camelCase variables, PascalCase types, kebab-case files |
-| forbidden-pattern | 5 | AST, Regex | no `any`, no `console.log`, no `eval` |
-| structure | 9 | AST, Filesystem | strict mode, named exports, JSDoc, max file length |
-| test-requirement | 5 | AST, Filesystem, Regex | test file existence, test naming conventions |
-| import-pattern | 5 | AST, Regex | no path aliases, no barrel imports, no wildcard imports |
-| error-handling | 4 | AST | no empty catch, no swallowed errors, typed catches, error boundaries |
-| type-safety | 6 | AST, Regex | no type assertions, no non-null assertions, no enums |
-| code-style | 12 | AST, Regex, Tree-sitter | early returns, no magic numbers, no nested ternaries |
-| dependency | 2 | Filesystem | pinned dependency versions, lockfile presence |
-| preference | 8 | Preference | const over let, named over default exports, interface over type, async/await over .then() |
-| file-structure | 5 | Filesystem | tests directory, components directory, .env file, module index files |
-| tooling | 14 | Tooling | pnpm/yarn/bun, vitest/jest/pytest, eslint/prettier/biome, bundler configs |
-| testing | 3 | Filesystem, Regex | test colocation, describe/it blocks, no console in tests |
-| workflow | 15 | Config-file, Git-history | commit conventions, CI configs, linter/formatter settings, build tool configs |
+| Category | Count | Verifier | Examples |
+|----------|------:|----------|----------|
+| naming | 5 | AST, Filesystem | camelCase variables, PascalCase types, kebab-case files, UPPER_CASE constants |
+| forbidden-pattern | 5 | AST, Regex | no `any`, no `console.log`, no `var`, no `TODO` comments |
+| structure | 5 | AST, Filesystem | named exports, JSDoc required, max file length, max line length, no unused exports |
+| import-pattern | 4 | AST | no path aliases, no deep relative imports, no namespace imports, no wildcard exports |
+| error-handling | 2 | AST | no empty catch, throw Error only |
+| type-safety | 5 | AST, Regex | no enums, no type assertions, no non-null assertions, no implicit any, no ts directives |
+| code-style | 8 | AST, Regex | no var, prefer const, no else after return, no nested ternary, no magic numbers, semicolons, quotes, max function length, max params |
 
-Full table with example instructions and check details: [docs/matchers.md](docs/matchers.md)
+Rules that can't map to ESLint (test file requirements, project config, git conventions) are reported as unmappable so you can enforce them through other tooling.
 
-### Compliance scoring
-
-Every rule result includes a `compliance` field (0 to 1):
-
-- **Deterministic checks** (file exists, no `any` types): compliance is 0 or 1
-- **Preference checks** (prefer const over let): compliance is the ratio (0.85 = 85% const usage)
-- **Coverage checks** (test colocation): compliance is the percentage of source files with tests
-- **Tooling checks**: compliance is 1 if present, 0.5 if present with a competitor, 0 if absent
-
-The `--threshold` option (default 0.8) controls what compliance level counts as passing.
-
-## Semantic Analysis
-
-The deterministic engine handles rules with clear patterns. Rules like "follow existing patterns," "maintain consistency," or qualified rules ("when possible," "avoid unless") require codebase-aware judgment. The semantic tier handles these.
-
-**How it works:** RuleProbe extracts raw AST vectors locally (node type counts, sub-tree hashes, nesting depths). No source code, variable names, comments, or file paths ever leave your machine. The vectors are analyzed locally using structural fingerprinting and similarity scoring. An LLM is consulted only when vector similarity is ambiguous, and it receives only numeric data with rule text, never code. LLM calls go directly to Anthropic's API with your own key.
-
-```bash
-ruleprobe analyze ./my-project --semantic
-ruleprobe analyze ./my-project --semantic --cost-report
-```
-
-| Flag | Description |
-|------|-------------|
-| `--semantic` | Enable semantic analysis (requires `ANTHROPIC_API_KEY`) |
-| `--anthropic-key <key>` | Anthropic API key (also: `ANTHROPIC_API_KEY` env var or `.ruleprobe/config.json`) |
-| `--max-llm-calls <n>` | Cap LLM calls per analysis (default: 20) |
-| `--no-cache` | Disable profile caching |
-| `--semantic-log` | Print what was sent/received to stdout |
-| `--cost-report` | Show token cost breakdown |
-
-Without `--semantic`, the analyze command runs deterministic analysis only. If no Anthropic API key is available, semantic analysis is skipped gracefully and deterministic results are still returned.
-
-## Authentication
-
-Most of RuleProbe works offline with no API keys. Opt-in features that use external APIs:
-
-| Feature | Flag(s) | Required env var | When you need it |
-|---------|---------|-----------------|------------------|
-| LLM rule extraction | `--llm-extract` | `OPENAI_API_KEY` | Extracting rules from unparseable instruction lines |
-| Rubric decomposition | `--rubric-decompose` | `OPENAI_API_KEY` | Breaking subjective rules into concrete checks |
-| Semantic analysis | `--semantic` | `ANTHROPIC_API_KEY` | Structural pattern and consistency checks |
-| Agent invocation (SDK mode) | `ruleprobe run --agent claude-code` | `ANTHROPIC_API_KEY` | Invoking Claude to generate code, then verifying |
-| GitHub Action | `uses: moonrunnerkc/ruleprobe@v4` | `GITHUB_TOKEN` | CI, PR comments |
-
-`parse`, `verify`, `compare`, `tasks`, and `task` work entirely offline. `analyze` works offline for deterministic analysis; `--semantic` requires `ANTHROPIC_API_KEY` for LLM calls.
-
-## Tree-sitter Support
-
-TypeScript, JavaScript, Python, and Go get naming and function-length checks via tree-sitter WASM grammars. The grammar packages (`tree-sitter-typescript`, `tree-sitter-javascript`, `tree-sitter-python`, `tree-sitter-go`, `web-tree-sitter`) ship as regular dependencies; no extra install step is required. WASM binaries are loaded at runtime from the installed packages. If loading fails (unsupported platform, missing native build), tree-sitter checks are skipped and other verifiers still run.
+Full matcher details: [docs/matchers.md](docs/matchers.md)
 
 ## Security
 
-RuleProbe never executes scanned code, never makes network calls (unless you opt in with `--llm-extract`, `--rubric-decompose`, `--semantic`, or `ruleprobe run`), and never modifies files in the scanned directory. User-supplied paths are resolved and bounded to the working directory; symlinks outside the project are skipped unless you pass `--allow-symlinks`. All dependencies are pinned to exact versions.
+RuleProbe never executes scanned code, never makes network calls (unless you opt in with `--llm-extract`, `--rubric-decompose`, or `--semantic`), and never modifies files in the scanned directory. User-supplied paths are resolved and bounded to the working directory; symlinks outside the project are skipped unless you pass `--allow-symlinks`. All dependencies are pinned to exact versions.
 
 When `--semantic` is enabled, all analysis runs locally. The only network calls are to the Anthropic API for LLM judgment when vector similarity is ambiguous (using your own `ANTHROPIC_API_KEY`). Only numeric AST vectors, opaque sub-tree hashes, boolean flags, and rule text are sent to the LLM. No source code, variable names, comments, import paths, or file paths leave the machine. See [SECURITY.md](SECURITY.md) for the full model.
 
 ## Limitations
 
-- **TypeScript gets the deepest coverage.** ts-morph gives full AST analysis for TypeScript and JavaScript across all 14 categories. Python, Go, TypeScript, and JavaScript get naming and function-length checks via tree-sitter. No Rust, Java, or C# AST support yet.
-- **Subjective rules stay subjective.** "Write clean code" has no deterministic check. `--rubric-decompose` uses an LLM to break subjective instructions into weighted concrete checks, tagged with `confidence: 'low'`. Lines with no measurable proxy stay in the unparseable array. Requires `OPENAI_API_KEY`.
-- **Agent invocation covers Claude SDK and watch mode only.** The `run` command invokes agents via the Claude Agent SDK or watches a directory for output. Copilot, Cursor, and other agent SDKs are not integrated; use `--watch` mode for those.
-- **Type-aware checks require --project.** Three checks (implicit any, unused exports, unresolved imports) need a `tsconfig.json`. Without `--project`, ts-morph parses files in isolation and these checks are skipped.
-- **102 matchers, not infinite.** The parser skips lines it can't confidently map to a check. Use `--show-unparseable` to see what was missed, and `--llm-extract` or `--rubric-decompose` to handle the remainder. The semantic tier (`--semantic`) covers pattern-matching and consistency rules that deterministic matchers cannot.
-- **Preference pairs are TypeScript-focused.** The 8 built-in prefer-pairs (const vs let, named vs default exports, etc.) use ts-morph AST queries. Adding pairs for other languages requires new counting functions.
-- **Monorepo support is limited.** Drift detection and lint-config scan from the repository root and use the first ESLint config found. Monorepos with per-package instruction files or configs need to specify paths explicitly. Full monorepo support is planned for a future release.
+- **TypeScript gets the deepest coverage.** ts-morph gives full AST analysis for TypeScript and JavaScript across all categories. Other languages get regex-based checks only.
+- **Subjective rules stay subjective.** "Write clean code" has no deterministic check. `--rubric-decompose` uses an LLM to break subjective instructions into weighted concrete checks, tagged with `confidence: 'low'`. Requires `OPENAI_API_KEY`.
+- **Not all rules map to ESLint.** Test file requirements, project config conventions, git workflow rules, and preference pairs don't have ESLint equivalents. These are reported as unmappable so you can enforce them through other tooling.
+- **Monorepo support is limited.** Drift detection and lint-config scan from the repository root and use the first ESLint config found. Monorepos with per-package instruction files or configs need to specify paths explicitly.
 
-## Troubleshooting
+## What's New in v4.5.0
 
-**`sh: ruleprobe: not found` after global install**
-The npm bin directory may not be in `PATH`. Run `npm bin -g` to find it and add it to your shell profile, or use `npx ruleprobe` instead.
-
-**`Error: OPENAI_API_KEY not set`**
-`--llm-extract` and `--rubric-decompose` require an OpenAI-compatible API key. Export it before running: `export OPENAI_API_KEY=sk-...`. The key is never written to disk or included in reports.
-
-**Tree-sitter checks skipped**
-The WASM grammars load from installed tree-sitter grammar packages. If packages are missing (e.g., after a partial install) or the platform doesn't support WASM, tree-sitter checks silently fall back and other verifiers still run. Re-run `npm install` to restore them.
-
-**`ruleprobe verify` exits 2 with "path outside project root"**
-A file or symlink in the output directory resolves outside the project root. Pass `--allow-symlinks` to follow symlinks across boundaries, or move the symlink targets inside the project.
-
-**Fewer rules extracted than expected**
-Run `ruleprobe parse <instruction-file> --show-unparseable` to see which lines were skipped and why. Add `--llm-extract` to attempt extraction on skipped lines.
-
-**Semantic analysis skipped / missing API key**
-Verify your Anthropic API key is set via `--anthropic-key`, `ANTHROPIC_API_KEY` env var, or `.ruleprobe/config.json`. Deterministic analysis always runs regardless of semantic tier status.
-
-## What's New in v4.0.0
-
-v4.0.0 consolidates the three-repo architecture into a single repo and open-sources the semantic analysis engine under MIT.
+v4.5.0 pivots RuleProbe from "verify adherence" to "translate instruction files into ESLint configs." The core value proposition is now: translate, detect drift, extract.
 
 Key changes:
-- **Single repo**: the semantic engine (40 files, ~3,600 lines) and Anthropic caller moved into `src/semantic/engine/` and `src/semantic/anthropic-caller.ts`. No separate API service or private repos.
-- **Local analysis**: semantic analysis runs entirely on the user's machine. No HTTP server, no license keys. LLM calls go directly to Anthropic with the user's own `ANTHROPIC_API_KEY`.
-- **CLI change**: `--license-key` removed, replaced by `ANTHROPIC_API_KEY` env var (same pattern as `--llm-extract` with `OPENAI_API_KEY`). New `--anthropic-key` flag for explicit key passing.
-- **Open source**: the full ASPE engine (fingerprinting, vector similarity, qualifier resolution, LLM escalation) is now MIT-licensed and visible to contributors.
-- **1,085+ tests** across 86+ test files (was 864 across 68 in v3.0.0, plus 221 engine tests migrated).
-
-Full release notes: [docs/release-v4.0.0.md](docs/release-v4.0.0.md)
-
-## What's New in v3.0.0
-
-v3.0.0 adds the **semantic analysis tier** (ASPE), fixes 12 root-cause bugs found during E2E validation, and delivers a batch AST verifier that drops parse complexity from O(rules * files) to O(files).
-
-Key changes:
-- **Semantic client** (`src/semantic/`): single-pass tree-sitter extraction, HTTP client, audit logging, license/config resolution. No source code leaves the machine.
-- **Batch AST verifier**: parse each file once across all AST rules. Critical for large repos (PostHog: 7,000+ files).
-- **Tree-sitter WASM stability**: parser caching prevents function table exhaustion on large codebases.
-- **12 bug fixes**: tree-sitter crashes, O(rules*files) performance, matcher wiring, format routing, enum comparison, header mismatches, JSON corruption. All root-cause resolutions.
-- **Calibration data**: measured on excalidraw (626 files) and PostHog (7,160 files). Fast-path threshold 0.85 confirmed. Jaccard/cosine weights 0.4/0.6 confirmed.
-- **864 tests** across 68 files (up from 572 across 52 in v2.0.0).
-
-Full release notes and migration guide: [docs/release-v3.0.0.md](docs/release-v3.0.0.md)
-
-## Benchmarks
-
-**Corpus analysis: 580 instruction files from 568 repos.** RuleProbe parsed real CLAUDE.md, AGENTS.md, .cursorrules, .windsurfrules, GEMINI.md, and copilot-instructions.md files scraped from public GitHub repos with 10+ stars, including Sentry (43k stars), PingCAP/TiDB (40k), Lerna (36k), Dragonfly (30k), Kubernetes/kops (17k), RabbitMQ (14k), Google APIs (14k), Redpanda (12k), Cloudflare, Grafana, Microsoft, and others. 309 rules extracted from 150 files that contained verifiable instructions. The other 430 files (74%) had zero extractable rules; many were single-line redirects (e.g. Dragonfly's .cursorrules: "READ AGENTS.md"; Umi's .cursorrules: "RULE.md").
-
-The extraction rate is 3.8% (309 rules from 8,222 total instruction lines). That sounds low until you look at what instruction files actually contain. 96% of the lines are markdown headers, code examples, project descriptions, build commands, agent behavior directives, and contextual prose. The parser isn't failing on those; it's correctly identifying them as not-rules. Only 26 files (4.5%) had parse rates above 20%.
-
-Raw data: [scraped-instructions/per-file-results.json](scraped-instructions/per-file-results.json) (580 entries), [scraped-instructions/all-extracted.json](scraped-instructions/all-extracted.json) (309 rules), [scraped-instructions/analysis.json](scraped-instructions/analysis.json) (summary stats).
-
-**E2E verification: excalidraw.** RuleProbe ran the full deterministic + semantic pipeline against excalidraw (~95k stars). The parser found 9 verifiable rules across CLAUDE.md and copilot-instructions.md. Deterministic analysis scored 66.1% compliance. Semantic analysis (structural fingerprinting of 626 source files) produced 9 verdicts, all resolved via fast-path vector similarity with zero LLM calls and zero token cost:
-
-| Rule | Compliance | Method |
-|------|-----------|--------|
-| Prefer functional components | 0.976 | structural-fast-path |
-| PascalCase type naming | 0.976 | structural-fast-path |
-| Async try/catch usage | 0.983 | structural-fast-path |
-| Contextual error logging | 0.979 | structural-fast-path |
-| Yarn as package manager | 0.50 | no matching topic |
-| TypeScript required | 0.50 | no matching topic |
-| Optional chaining preference | 0.50 | no matching topic |
-| camelCase variables | 0.50 | no matching topic |
-| UPPER\_CASE constants | 0.50 | no matching topic |
-
-Rules matching established code pattern topics (component-structure, error-handling) scored 0.97+. Rules about tooling or naming that don't map to structural AST patterns got a neutral 0.50. Privacy test confirmed: all 626 file IDs are opaque sequential integers; no source code, file paths, or variable names in any payload.
-
-Full report: [docs/verification/e2e-verification-report.md](docs/verification/e2e-verification-report.md)
-
-## Further Reading
-
-- [docs/cli-reference.md](docs/cli-reference.md) - Complete CLI command reference
-- [docs/api-reference.md](docs/api-reference.md) - Programmatic API with types
-- [docs/matchers.md](docs/matchers.md) - All 102 matchers with example instructions
-- [docs/release-v4.0.0.md](docs/release-v4.0.0.md) - v4.0.0 release notes (single-repo consolidation)
-- [docs/release-v3.0.0.md](docs/release-v3.0.0.md) - v3.0.0 release notes and migration guide
-- [docs/release-v2.0.0.md](docs/release-v2.0.0.md) - v2.0.0 release notes
-- [docs/case-study-v0.1.0.md](docs/case-study-v0.1.0.md) - Agent comparison case study
-- [docs/verification/e2e-verification-report.md](docs/verification/e2e-verification-report.md) - E2E verification evidence
+- **New `lint-config` command**: translates an instruction file into a flat or legacy ESLint config.
+- **New `drift` command**: compares an instruction file against an existing ESLint config and reports mismatches.
+- **New `extract` command**: parses an ESLint config and emits a markdown rules section for instruction files.
+- **Removed `compare` command**: agent comparison is no longer a primary use case.
+- **Removed `tasks` and `task` commands**: task template listing and printing removed.
+- **Removed `run` command**: agent invocation via the Claude Agent SDK removed.
+- **Removed runner module**: `buildAgentConfig`, `invokeAgent`, `watchForCompletion`, `countCodeFiles` are no longer exported.
+- **Deprecated `verify` command**: still works, but the primary workflow is now lint-config, drift, and extract.
+- **Matcher audit**: 34 ESLint-mappable matchers remain. 67 unmappable matchers (test file requirements, project config, git workflow, preference pairs, Python/Go, tree-sitter, barrel files, directory naming) removed. The remaining matchers all produce valid ESLint rule entries.
+- **Category cleanup**: `test-requirement`, `dependency`, `preference`, `file-structure`, `tooling`, `testing`, and `workflow` categories removed. The remaining 7 categories (`naming`, `forbidden-pattern`, `structure`, `import-pattern`, `error-handling`, `type-safety`, `code-style`) all map to ESLint rules.
 
 ## Contributing
 

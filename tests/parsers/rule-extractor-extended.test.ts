@@ -159,7 +159,7 @@ describe('extended matchers: code style', () => {
   });
 });
 
-describe('extended matchers: imports and structure', () => {
+describe('extended matchers: imports', () => {
   it('extracts "no namespace imports" rule', () => {
     const { rules } = extract('# Rules\n\n- No namespace imports');
     const rule = findRule(rules, 'import-no-namespace');
@@ -170,81 +170,6 @@ describe('extended matchers: imports and structure', () => {
   it('matches "no import * as"', () => {
     const { rules } = extract('# Rules\n\n- No import * as');
     expect(findRule(rules, 'import-no-namespace')).toBeDefined();
-  });
-
-  it('extracts "no barrel files" rule', () => {
-    const { rules } = extract('# Rules\n\n- No barrel files');
-    const rule = findRule(rules, 'structure-no-barrel-files');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.type).toBe('no-barrel-files');
-  });
-
-  it('extracts "banned package" rule with name', () => {
-    const { rules } = extract('# Rules\n\n- Banned package: lodash');
-    const rule = findRule(rules, 'import-banned-package');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.type).toBe('banned-import');
-    expect(rule!.pattern.expected).toBe('lodash');
-  });
-});
-
-describe('extended matchers: testing patterns', () => {
-  it('extracts "no .only()" rule', () => {
-    const { rules } = extract('# Rules\n\n- No focused tests');
-    const rule = findRule(rules, 'test-no-only');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.type).toBe('no-test-only');
-  });
-
-  it('extracts "no .skip()" rule', () => {
-    const { rules } = extract('# Rules\n\n- No skipped tests');
-    const rule = findRule(rules, 'test-no-skip');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.type).toBe('no-test-skip');
-  });
-
-  it('extracts "no setTimeout in tests" rule', () => {
-    const { rules } = extract('# Rules\n\n- No setTimeout in tests');
-    const rule = findRule(rules, 'test-no-settimeout');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.type).toBe('no-setTimeout-in-tests');
-  });
-});
-
-describe('extended matchers: project structure', () => {
-  it('extracts "README must exist" rule', () => {
-    const { rules } = extract('# Rules\n\n- README must exist');
-    const rule = findRule(rules, 'structure-readme-exists');
-    expect(rule).toBeDefined();
-    expect(rule!.verifier).toBe('filesystem');
-    expect(rule!.pattern.type).toBe('readme-exists');
-  });
-
-  it('extracts "maintain a CHANGELOG" rule', () => {
-    const { rules } = extract('# Rules\n\n- Maintain a CHANGELOG');
-    const rule = findRule(rules, 'structure-changelog-exists');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.type).toBe('changelog-exists');
-  });
-
-  it('extracts "use prettier" rule', () => {
-    const { rules } = extract('# Rules\n\n- Use prettier for formatting');
-    const rule = findRule(rules, 'structure-formatter-config');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.type).toBe('formatter-config-exists');
-  });
-
-  it('extracts "pin dependencies" rule', () => {
-    const { rules } = extract('# Rules\n\n- Pin dependencies to exact versions');
-    const rule = findRule(rules, 'dependency-pinned-versions');
-    expect(rule).toBeDefined();
-    expect(rule!.verifier).toBe('filesystem');
-    expect(rule!.pattern.type).toBe('pinned-dependencies');
-  });
-
-  it('matches "exact versions"', () => {
-    const { rules } = extract('# Rules\n\n- Use exact versions for dependencies');
-    expect(findRule(rules, 'dependency-pinned-versions')).toBeDefined();
   });
 });
 

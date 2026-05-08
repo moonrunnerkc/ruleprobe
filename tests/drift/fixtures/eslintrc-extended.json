@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "@typescript-eslint/no-explicit-any": ["error", { "fixToUnknown": true }],
+    "@typescript-eslint/naming-convention": ["error", { "selector": "variable", "format": ["camelCase"] }],
+    "sonarjs/no-identical-conditions": "error"
+  }
+}

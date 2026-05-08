@@ -6,6 +6,10 @@ scraped-instructions/
 
 # Development files
 .vscode/
+.claude/
+.codex/
+.codex
+.codex-tmp/
 .github/
 docs/
 SECURITY.md
@@ -14,6 +18,9 @@ vitest.config.ts
 tsconfig.json
 .env
 .env.*
+
+# RuleProbe semantic cache
+.ruleprobe-semantic/
 
 # Git
 .git/

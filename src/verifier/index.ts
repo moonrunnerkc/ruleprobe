@@ -2,7 +2,7 @@
  * Verification orchestrator.
  *
  * Takes a RuleSet and an output directory, routes each rule to
- * the correct verifier (AST, filesystem, regex, or tree-sitter),
+ * the correct verifier (AST, filesystem, or regex),
  * collects all RuleResults, and returns them. Handles errors
  * gracefully: if a file can't be parsed, it's logged in evidence.
  *
@@ -11,17 +11,11 @@
  * checked against all AST rules, then discarded from memory.
  */
 
-import { extname } from 'node:path';
 import type { Rule, RuleSet, RuleResult } from '../types.js';
 import { verifyAstRulesBatch } from './ast-verifier-batch.js';
 import { verifyFileSystemRule, collectFiles, filterSourceFiles } from './file-verifier.js';
 export { verifyFileSystemRule } from './file-verifier.js';
 import { verifyRegexRule } from './regex-verifier.js';
-import { verifyTreeSitterRule } from './treesitter-verifier.js';
-import { verifyPreferenceRule } from './preference-verifier.js';
-import { verifyToolingRule } from './tooling-verifier.js';
-import { verifyConfigFileRule } from './config-file-verifier.js';
-import { verifyGitHistoryRule } from './git-history-verifier.js';
 
 /** Options for output verification. */
 export interface VerifyOptions {
@@ -58,10 +52,6 @@ export async function verifyOutput(
   // (sourceFiles already excludes minified files via filterSourceFiles)
   const codeFiles = sourceFiles;
 
-  // Filter to Python and Go files for tree-sitter checks
-  const treeSitterExtensions = new Set(['.py', '.go']);
-  const treeSitterFiles = allFiles.filter((f) => treeSitterExtensions.has(extname(f)));
-
   // Batch all AST rules for single-pass verification
   const astRules = ruleSet.rules.filter((r) => r.verifier === 'ast');
   const astResultMap = astRules.length > 0
@@ -75,7 +65,7 @@ export async function verifyOutput(
       results.push(astResultMap.get(rule)!);
     } else {
       const result = await verifyNonAstRule(
-        rule, outputDir, codeFiles, sourceFiles, allFiles, treeSitterFiles, projectPath,
+        rule, outputDir, codeFiles, sourceFiles, allFiles, projectPath,
       );
       results.push(result);
     }
@@ -93,24 +83,13 @@ async function verifyNonAstRule(
   codeFiles: string[],
   sourceFiles: string[],
   allFiles: string[],
-  treeSitterFiles: string[],
-  projectPath?: string,
+  _projectPath?: string,
 ): Promise<RuleResult> {
   switch (rule.verifier) {
     case 'filesystem':
       return verifyFileSystemRule(rule, outputDir, allFiles);
     case 'regex':
       return verifyRegexRule(rule, sourceFiles, outputDir);
-    case 'treesitter':
-      return verifyTreeSitterRule(rule, treeSitterFiles);
-    case 'preference':
-      return verifyPreferenceRule(rule, codeFiles);
-    case 'tooling':
-      return verifyToolingRule(rule, outputDir, allFiles);
-    case 'config-file':
-      return verifyConfigFileRule(rule, outputDir, allFiles);
-    case 'git-history':
-      return verifyGitHistoryRule(rule, outputDir);
     default:
       return {
         rule,

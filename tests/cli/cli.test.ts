@@ -1,6 +1,5 @@
 // Integration tests for the ruleprobe CLI. Spawns the real CLI via tsx
-// and verifies parse, verify, tasks, task, compare, and help commands,
-// including the summary statistics line in verification output.
+// and verifies parse, verify, lint-config, drift, extract, and help commands.
 
 import { describe, it, expect } from 'vitest';
 import { execSync, type ExecSyncOptionsWithStringEncoding } from 'node:child_process';
@@ -200,51 +199,70 @@ describe('CLI: verify command', () => {
   });
 });
 
-// ── tasks command ──────────────────────────────────────────────
+// ── drift command ──────────────────────────────────────────────
 
-describe('CLI: tasks command', () => {
-  it('lists available task templates', () => {
-    const output = run('tasks');
-    expect(output).toContain('rest-endpoint');
-    expect(output).toContain('utility-module');
-    expect(output).toContain('react-component');
+describe('CLI: drift command', () => {
+  const ESLINT_FIXTURE = 'tests/drift/fixtures/eslintrc-basic.json';
+  const ESLINT_EMPTY = 'tests/drift/fixtures/eslintrc-empty.json';
+
+  it('reports drift between CLAUDE.md and eslint config', () => {
+    const result = runFail(`drift ${CLAUDE_FIXTURE} ${ESLINT_EMPTY}`);
+    expect(result.status).toBe(1);
+    // runFail captures stderr; drift writes to stdout, so check either
   });
 
-  it('shows template descriptions', () => {
-    const output = run('tasks');
-    expect(output).toContain('REST API');
-  });
-});
-
-// ── task command ───────────────────────────────────────────────
-
-describe('CLI: task command', () => {
-  it('outputs the full prompt for a valid template', () => {
-    const output = run('task rest-endpoint');
-    expect(output).toContain('REST API');
-    expect(output).toContain('bookmarks');
+  it('outputs markdown with --format markdown when drift exists', () => {
+    const result = runFail(`drift ${CLAUDE_FIXTURE} ${ESLINT_FIXTURE} --format markdown`);
+    expect(result.status).toBe(1);
   });
 
-  it('fails for unknown template', () => {
-    const { stderr, status } = runFail('task nonexistent-template');
+  it('fails with actionable error for missing instruction file', () => {
+    const { stderr, status } = runFail(`drift nonexistent.md ${ESLINT_FIXTURE}`);
     expect(status).toBe(2);
-    expect(stderr).toContain('Unknown task template');
+    expect(stderr).toContain('Failed to parse instruction file');
+  });
+
+  it('fails with actionable error for missing eslint config', () => {
+    const { stderr, status } = runFail(`drift ${CLAUDE_FIXTURE} nonexistent.json`);
+    expect(status).toBe(2);
+    expect(stderr).toContain('Failed to parse ESLint config');
   });
 });
 
-// ── compare command ────────────────────────────────────────────
+// ── extract command ──────────────────────────────────────────────
 
-describe('CLI: compare command', () => {
-  it('produces markdown comparison table', () => {
-    const output = run(
-      `compare ${CLAUDE_FIXTURE} ${PASSING_DIR} ${FAILING_DIR} ` +
-      '--agents passing,failing --format markdown',
-    );
-    expect(output).toContain('Adherence Comparison');
-    expect(output).toContain('passing');
-    expect(output).toContain('failing');
-    expect(output).toContain('PASS');
-    expect(output).toContain('FAIL');
+describe('CLI: extract command', () => {
+  const ESLINT_FIXTURE = 'tests/drift/fixtures/eslintrc-basic.json';
+
+  it('extracts rules from an eslint config', () => {
+    const result = run(`extract ${ESLINT_FIXTURE}`);
+    expect(result).toContain('## Rules');
+    expect(result).toContain('`any`');
+  });
+
+  it('skips stylistic rules in output', () => {
+    const STYLISTIC_FIXTURE = 'tests/extractor/fixtures/eslintrc-stylistic.json';
+    const result = run(`extract ${STYLISTIC_FIXTURE}`);
+    expect(result).toContain('## Rules');
+    expect(result).toContain('Skipped rules');
+    expect(result).toContain('semi');
+  });
+
+  it('writes output to file with --output', () => {
+    const outPath = resolve(ROOT, 'tests/extractor/fixtures/extract-output.md');
+    try {
+      run(`extract ${ESLINT_FIXTURE} --output ${outPath}`);
+      const content = readFileSync(outPath, 'utf-8');
+      expect(content).toContain('## Rules');
+    } finally {
+      try { unlinkSync(outPath); } catch { /* already gone */ }
+    }
+  });
+
+  it('fails with actionable error for missing eslint config', () => {
+    const { stderr, status } = runFail('extract nonexistent.json');
+    expect(status).toBe(2);
+    expect(stderr).toContain('Failed to parse ESLint config');
   });
 });
 
@@ -256,7 +274,7 @@ describe('CLI: help', () => {
     expect(output).toContain('ruleprobe');
     expect(output).toContain('parse');
     expect(output).toContain('verify');
-    expect(output).toContain('tasks');
-    expect(output).toContain('compare');
+    expect(output).toContain('lint-config');
+    expect(output).toContain('drift');
   });
 });

@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.5.0] - 2026-05-08
+
+### Breaking Changes
+
+- **Default action mode changed.** The primary workflow is now `lint-config`, `drift`, and `extract`, not `verify`. The GitHub Action defaults to drift detection mode.
+- **`compare` command removed.** Agent comparison is no longer a primary use case. Use drift detection instead.
+- **`tasks` and `task` commands removed.** Task template listing and printing removed.
+- **`run` command removed.** Agent invocation via the Claude Agent SDK removed. The `@anthropic-ai/claude-agent-sdk` is no longer a dependency.
+- **Runner module removed from public API.** `buildAgentConfig`, `invokeAgent`, `isAgentSdkAvailable`, `hasAgentOutput`, `watchForCompletion`, `countCodeFiles`, `AgentInvocationConfig`, `RunOptions`, `InvocationResult`, `WatchOptions`, `WatchResult` are no longer exported.
+- **`formatComparisonMarkdown` removed.** The comparison report formatter is no longer exported from `reporter/index`.
+- **`verify` command deprecated.** Still works, but the primary workflow is now translate, detect drift, and extract.
+- **67 unmappable matchers removed.** Categories removed: `test-requirement`, `dependency`, `preference`, `file-structure`, `tooling`, `testing`, `workflow`. Verifier types removed: `treesitter`, `preference`, `tooling`, `config-file`, `git-history`. The remaining 34 matchers all map to ESLint rules.
+- **`RuleCategory` union narrowed.** Removed: `test-requirement`, `dependency`, `preference`, `file-structure`, `tooling`, `testing`, `workflow`. Remaining: `naming`, `forbidden-pattern`, `structure`, `import-pattern`, `error-handling`, `type-safety`, `code-style`, `agent-behavior`.
+- **`VerifierType` union narrowed.** Removed: `treesitter`, `preference`, `tooling`, `config-file`, `git-history`. Remaining: `ast`, `regex`, `filesystem`.
+
+### New Features
+
+- **`lint-config` command.** Translates an instruction file into a flat or legacy ESLint config. Unmappable rules appear as comments in the output.
+- **`drift` command.** Compares an instruction file against an existing ESLint config. Reports rules present in one but missing from the other, severity mismatches, and config argument differences.
+- **`extract` command.** Parses an ESLint config and emits a markdown rules section suitable for pasting into an instruction file.
+
+### Removed
+
+- `compare` command and `formatComparisonMarkdown` export.
+- `tasks` and `task` commands and `src/runner/task-templates/` directory.
+- `run` command and `src/runner/agent-configs.ts`, `src/runner/agent-invoker.ts`, `src/runner/watch-mode.ts`.
+- Matcher files: `rule-patterns-preference.ts`, `rule-patterns-file-structure.ts`, `rule-patterns-tooling.ts`, `rule-patterns-testing.ts`, `rule-patterns-config-file.ts`, `rule-patterns-git-history.ts`.
+- Individual unmappable matchers from remaining files: `test-files-exist`, `test-named-pattern`, `structure-strict-mode`, `error-async-try-catch`, `structure-typescript-required`, `error-log-contextual`, `import-no-unresolved`, `naming-python-snake-case`, `naming-python-class`, `naming-go-conventions`, `style-python-function-length`, `style-go-function-length`, `style-concise-conditionals`, `naming-kebab-case-directories`, `structure-no-barrel-files`, `test-no-settimeout`, `test-no-only`, `test-no-skip`, `import-banned-package`, `structure-readme-exists`, `structure-changelog-exists`, `structure-formatter-config`, `dependency-pinned-versions`.
+
+### Stats
+
+| Metric | v4.0.0 | v4.5.0 |
+|--------|--------|--------|
+| Rule matchers | ~103 | 34 |
+| Rule categories | 14 | 7 (+ `agent-behavior`) |
+| Verifier engines | 8 | 3 |
+| CLI commands | 9 | 6 |
+| Public API exports | ~40 | ~25 |
+
+## [4.0.0] - 2026-04-28
+
+Major release consolidating the three-repo architecture. See [docs/release-v4.0.0.md](docs/release-v4.0.0.md) for full details.
+
 ## [1.0.0] - 2026-04-07
 
 14 commits, 100 files changed, +9,017 lines since v0.1.0.

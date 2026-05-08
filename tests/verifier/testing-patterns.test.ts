@@ -1,64 +1,11 @@
 /**
- * Tests for testing pattern matcher extraction and verification.
+ * Tests for testing pattern verification.
  *
- * Covers test colocation, describe/it structure, and
- * no-console-in-tests rules.
+ * Covers describe/it structure and no-console-in-tests checks.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { extractRules, resetRuleCounter } from '../../src/parsers/rule-extractor.js';
+import { describe, it, expect } from 'vitest';
 import { checkDescribeItStructure, checkNoConsoleInTests } from '../../src/verifier/test-regex-checks.js';
-import type { MarkdownSection } from '../../src/types.js';
-
-function makeSections(lines: string[]): MarkdownSection[] {
-  return [{
-    header: 'Testing',
-    level: 2,
-    lines,
-    codeBlocks: [],
-  }];
-}
-
-describe('testing matcher extraction', () => {
-  beforeEach(() => { resetRuleCounter(); });
-
-  it('extracts "Colocate tests with source files"', () => {
-    const { rules } = extractRules(makeSections(['Colocate tests with source files']));
-    const match = rules.find((r) => r.id.includes('testing-colocate'));
-    expect(match).toBeDefined();
-    expect(match!.pattern.type).toBe('test-colocation');
-  });
-
-  it('extracts "Use describe/it blocks"', () => {
-    const { rules } = extractRules(makeSections(['Use describe/it blocks']));
-    const match = rules.find((r) => r.id.includes('testing-describe'));
-    expect(match).toBeDefined();
-    expect(match!.pattern.type).toBe('describe-it-structure');
-  });
-
-  it('extracts "Organize tests with describe blocks"', () => {
-    const { rules } = extractRules(makeSections(['Organize tests with describe blocks']));
-    const match = rules.find((r) => r.id.includes('testing-describe'));
-    expect(match).toBeDefined();
-  });
-
-  it('extracts "No console.log in tests"', () => {
-    const { rules } = extractRules(makeSections(['No console.log in tests']));
-    const match = rules.find((r) => r.id.includes('testing-no-console'));
-    expect(match).toBeDefined();
-    expect(match!.pattern.type).toBe('no-console-in-tests');
-  });
-
-  it('sets category to testing', () => {
-    const { rules } = extractRules(makeSections(['Colocate tests with source files']));
-    const match = rules.find((r) => r.id.includes('testing'));
-    expect(match).toBeDefined();
-    expect(match!.category).toBe('testing');
-  });
-});
 
 describe('checkDescribeItStructure', () => {
   it('passes when test file has describe and it blocks', () => {

@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "no-console": "error",
+    "some-plugin/unknown-rule": "warn",
+    "another-plugin/custom-check": "error"
+  }
+}

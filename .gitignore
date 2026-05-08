@@ -7,6 +7,10 @@ coverage/
 # Environment variables
 .env
 
+# Phase 0 data collection cache and output
+.cache/
+data/
+
 # Scripts (local utilities, not shipped)
 scripts/
 

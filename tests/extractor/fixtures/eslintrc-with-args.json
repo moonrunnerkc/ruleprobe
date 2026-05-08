@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "max-lines": ["warn", { "max": 300, "skipBlankLines": true, "skipComments": true }],
+    "max-len": ["warn", { "code": 120 }],
+    "max-lines-per-function": ["warn", { "max": 50 }],
+    "max-params": ["warn", 4],
+    "no-warning-comments": ["warn", { "terms": ["todo", "fixme"], "location": "start" }]
+  }
+}

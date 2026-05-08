@@ -12,23 +12,15 @@ import { RULE_MATCHERS } from './rule-patterns.js';
 import { EXTENDED_RULE_MATCHERS } from './rule-patterns-extended.js';
 import { PROJECT_RULE_MATCHERS } from './rule-patterns-project.js';
 import { ADVANCED_RULE_MATCHERS } from './rule-patterns-advanced.js';
-import { PREFERENCE_MATCHERS } from './rule-patterns-preference.js';
-import { FILE_STRUCTURE_MATCHERS } from './rule-patterns-file-structure.js';
-import { TOOLING_MATCHERS } from './rule-patterns-tooling.js';
-import { TESTING_MATCHERS } from './rule-patterns-testing.js';
 import { detectQualifier } from './qualifier-detector.js';
 import { INSTRUCTION_PATTERNS } from './instruction-patterns.js';
 
-/** Combined matcher list: base, extended, project, advanced, preference, file-structure, tooling, testing. */
+/** Combined matcher list: base, extended, project, advanced. */
 const ALL_MATCHERS = [
   ...RULE_MATCHERS,
   ...EXTENDED_RULE_MATCHERS,
   ...PROJECT_RULE_MATCHERS,
   ...ADVANCED_RULE_MATCHERS,
-  ...PREFERENCE_MATCHERS,
-  ...FILE_STRUCTURE_MATCHERS,
-  ...TOOLING_MATCHERS,
-  ...TESTING_MATCHERS,
 ];
 
 /** Counter for generating unique rule IDs across extraction runs. */

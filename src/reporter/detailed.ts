@@ -18,15 +18,9 @@ const CATEGORY_ORDER: RuleCategory[] = [
   'forbidden-pattern',
   'structure',
   'import-pattern',
-  'test-requirement',
   'error-handling',
   'type-safety',
   'code-style',
-  'dependency',
-  'preference',
-  'file-structure',
-  'tooling',
-  'testing',
 ];
 
 /**

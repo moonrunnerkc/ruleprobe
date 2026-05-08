@@ -13,21 +13,14 @@ export type RuleCategory =
   | 'naming'
   | 'forbidden-pattern'
   | 'structure'
-  | 'test-requirement'
   | 'import-pattern'
   | 'error-handling'
   | 'type-safety'
   | 'code-style'
-  | 'dependency'
-  | 'preference'
-  | 'file-structure'
-  | 'tooling'
-  | 'testing'
-  | 'workflow'
   | 'agent-behavior';
 
 /** Which verification engine handles a given rule. */
-export type VerifierType = 'ast' | 'regex' | 'filesystem' | 'treesitter' | 'preference' | 'tooling' | 'config-file' | 'git-history';
+export type VerifierType = 'ast' | 'regex' | 'filesystem';
 
 /**
  * Qualifier describing the strength of an instruction.

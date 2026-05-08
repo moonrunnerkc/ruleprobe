@@ -29,17 +29,17 @@ export const CATEGORY_MAP: Record<StatementCategory, {
     severity: 'warning',
   },
   PREFER_PATTERN: {
-    ruleCategory: 'preference',
-    verifier: 'preference',
+    ruleCategory: 'code-style',
+    verifier: 'regex',
     severity: 'warning',
   },
   TOOLING_COMMAND: {
-    ruleCategory: 'tooling',
-    verifier: 'tooling',
+    ruleCategory: 'code-style',
+    verifier: 'regex',
     severity: 'warning',
   },
   FILE_STRUCTURE: {
-    ruleCategory: 'file-structure',
+    ruleCategory: 'structure',
     verifier: 'filesystem',
     severity: 'warning',
   },
@@ -49,8 +49,8 @@ export const CATEGORY_MAP: Record<StatementCategory, {
     severity: 'error',
   },
   WORKFLOW: {
-    ruleCategory: 'workflow',
-    verifier: 'config-file',
+    ruleCategory: 'code-style',
+    verifier: 'regex',
     severity: 'warning',
   },
   CODE_STYLE: {

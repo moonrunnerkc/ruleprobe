@@ -163,7 +163,7 @@ describe('Regex check: consistent-semicolons', () => {
 // -- Rule extractor matchers --
 
 describe('Rule extraction: new Phase 5 matchers', () => {
-  it('has 53 total unique matchers', async () => {
+  it('has 34 total unique matchers', async () => {
     const { RULE_MATCHERS } = await import('../../src/parsers/rule-patterns.js');
     const { EXTENDED_RULE_MATCHERS } = await import('../../src/parsers/rule-patterns-extended.js');
     const { PROJECT_RULE_MATCHERS } = await import('../../src/parsers/rule-patterns-project.js');
@@ -172,11 +172,11 @@ describe('Rule extraction: new Phase 5 matchers', () => {
     const all = [...RULE_MATCHERS, ...EXTENDED_RULE_MATCHERS, ...PROJECT_RULE_MATCHERS, ...ADVANCED_RULE_MATCHERS];
     const ids = new Set(all.map(m => m.id));
 
-    expect(ids.size).toBeGreaterThanOrEqual(53);
+    expect(ids.size).toBeGreaterThanOrEqual(34);
     expect(ids.size).toBe(all.length); // no duplicates
   });
 
-  it('includes all 5 new Phase 5 matcher IDs', async () => {
+  it('includes all advanced matcher IDs', async () => {
     const { ADVANCED_RULE_MATCHERS } = await import('../../src/parsers/rule-patterns-advanced.js');
     const advancedIds = ADVANCED_RULE_MATCHERS.map(m => m.id);
 
@@ -185,8 +185,6 @@ describe('Rule extraction: new Phase 5 matchers', () => {
     expect(advancedIds).toContain('forbidden-no-var');
     expect(advancedIds).toContain('style-prefer-const');
     expect(advancedIds).toContain('import-no-wildcard-exports');
-    expect(advancedIds).toContain('naming-kebab-case-directories');
-    expect(advancedIds).toContain('style-concise-conditionals');
   });
 });
 

@@ -35,10 +35,9 @@ export function computeSummary(analysis: ProjectAnalysis): typeof analysis.summa
   const adherenceScore = totalRules > 0 ? (passed / totalRules) * 100 : 0;
 
   const allCategories: RuleCategory[] = [
-    'naming', 'forbidden-pattern', 'structure', 'test-requirement',
+    'naming', 'forbidden-pattern', 'structure',
     'import-pattern', 'error-handling', 'type-safety', 'code-style',
-    'dependency', 'preference', 'file-structure', 'tooling', 'testing',
-    'workflow', 'agent-behavior',
+    'agent-behavior',
   ];
   const byCategory = {} as Record<RuleCategory, CategoryScore>;
 

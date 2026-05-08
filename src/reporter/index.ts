@@ -16,7 +16,7 @@ import { formatCi } from './ci.js';
 
 export { formatTextPlain, formatParseText } from './text.js';
 export { formatJson } from './json.js';
-export { formatMarkdown, formatComparisonMarkdown } from './markdown.js';
+export { formatMarkdown } from './markdown.js';
 export { formatRdjson } from './rdjson.js';
 export { formatSummary } from './summary.js';
 export { formatDetailed } from './detailed.js';

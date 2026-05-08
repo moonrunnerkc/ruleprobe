@@ -222,29 +222,6 @@ describe('extractRules: max line length', () => {
   });
 });
 
-describe('extractRules: test file requirements', () => {
-  it('extracts from "All files must have tests"', () => {
-    const { rules } = extract('# Rules\n\n- All files must have tests');
-    const rule = findRule(rules, 'test-files-exist');
-    expect(rule).toBeDefined();
-    expect(rule!.category).toBe('test-requirement');
-    expect(rule!.verifier).toBe('filesystem');
-  });
-
-  it('extracts from "Every source file must have a corresponding test"', () => {
-    const { rules } = extract('# Rules\n\n- Every source file must have a corresponding test');
-    const rule = findRule(rules, 'test-files-exist');
-    expect(rule).toBeDefined();
-  });
-
-  it('extracts test naming pattern from "named *.test.ts"', () => {
-    const { rules } = extract('# Rules\n\n- Test files must be named *.test.ts');
-    const rule = findRule(rules, 'test-named-pattern');
-    expect(rule).toBeDefined();
-    expect(rule!.pattern.expected).toBe('*.test.ts');
-  });
-});
-
 describe('extractRules: import patterns', () => {
   it('extracts from "No relative imports deeper than 2 levels"', () => {
     const { rules } = extract('# Rules\n\n- No relative imports deeper than 2 levels');
@@ -280,16 +257,6 @@ describe('extractRules: JSDoc requirement', () => {
     const { rules } = extract('# Rules\n\n- JSDoc is required for all exports');
     const rule = findRule(rules, 'structure-jsdoc-required');
     expect(rule).toBeDefined();
-  });
-});
-
-describe('extractRules: strict mode', () => {
-  it('extracts from "TypeScript strict mode"', () => {
-    const { rules } = extract('# Rules\n\n- TypeScript strict mode, no any types');
-    const rule = findRule(rules, 'structure-strict-mode');
-    expect(rule).toBeDefined();
-    expect(rule!.category).toBe('structure');
-    expect(rule!.verifier).toBe('filesystem');
   });
 });
 
@@ -421,7 +388,6 @@ describe('parseInstructionFile: sample-agents.md fixture', () => {
     expect(findRule(ruleSet.rules, 'forbidden-no-any')).toBeDefined();
     expect(findRule(ruleSet.rules, 'forbidden-no-console')).toBeDefined();
     expect(findRule(ruleSet.rules, 'structure-named-exports')).toBeDefined();
-    expect(findRule(ruleSet.rules, 'test-files-exist')).toBeDefined();
     expect(findRule(ruleSet.rules, 'structure-jsdoc')).toBeDefined();
 
     // The agents fixture has a 250-line file limit

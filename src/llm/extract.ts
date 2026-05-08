@@ -11,13 +11,13 @@ import type { RuleCategory, VerifierType } from '../types.js';
 
 /** Valid categories for LLM-extracted rules. */
 const VALID_CATEGORIES: ReadonlySet<string> = new Set<RuleCategory>([
-  'naming', 'forbidden-pattern', 'structure', 'test-requirement',
-  'import-pattern', 'error-handling', 'type-safety', 'code-style', 'dependency',
+  'naming', 'forbidden-pattern', 'structure',
+  'import-pattern', 'error-handling', 'type-safety', 'code-style',
 ]);
 
 /** Valid verifier types. */
 const VALID_VERIFIERS: ReadonlySet<string> = new Set<VerifierType>([
-  'ast', 'regex', 'filesystem', 'treesitter',
+  'ast', 'regex', 'filesystem',
 ]);
 
 /** Prompt parts returned by buildExtractionPrompt. */

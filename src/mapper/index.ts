@@ -12,6 +12,7 @@
 
 import type { RuleSet, Rule } from '../types.js';
 import type { EslintConfig, EslintRuleEntry, EslintSeverity, UnmappableRule } from './types.js';
+import { UNMAPPABLE_TYPES } from '../mappings/index.js';
 import { mapNoAny } from './mappings/no-any.js';
 import { mapNamedExports } from './mappings/named-exports.js';
 import { mapKebabCaseFiles } from './mappings/kebab-case-files.js';
@@ -54,52 +55,7 @@ import { mapNoTodoComments } from './mappings/no-todo.js';
 /** Pattern types that are handled by the naming-convention merger. */
 const NAMING_PATTERN_TYPES = new Set(['PascalCase', 'camelCase', 'UPPER_CASE']);
 
-/** Pattern types with no ESLint equivalent. */
-const UNMAPPABLE_TYPES: Record<string, string> = {
-  'test-files-exist': 'No ESLint rule enforces test file existence; use a project-level script or CI check instead.',
-  'test-file-naming': 'No ESLint rule enforces test file naming conventions across the project.',
-  'test-colocation': 'No ESLint rule enforces test file colocation with source files.',
-  'describe-it-structure': 'No ESLint rule enforces describe/it block structure in test files.',
-  'no-console-in-tests': 'No ESLint rule restricts console usage specifically in test files (no-console applies globally).',
-  'no-setTimeout-in-tests': 'No ESLint rule restricts setTimeout specifically in test files.',
-  'no-test-only': 'No ESLint rule restricts .only() in test files without a test-framework-specific plugin.',
-  'no-test-skip': 'No ESLint rule restricts .skip() in test files without a test-framework-specific plugin.',
-  'strict-mode': 'TypeScript strict mode is a tsconfig setting, not an ESLint rule; use @tsconfig/strict or set strict: true in tsconfig.json.',
-  'typescript-required': 'TypeScript adoption is a project configuration choice, not an ESLint rule.',
-  'package-manager': 'Package manager choice (npm, pnpm, yarn) is enforced by project config, not ESLint.',
-  'test-framework': 'Test framework choice is a project dependency, not an ESLint rule.',
-  'tool-present': 'Tool presence (eslint, prettier, biome) is a project dependency, not an ESLint rule.',
-  'ci-command-present': 'CI configuration is a GitHub Actions/workflow concern, not an ESLint rule.',
-  'ci-config-present': 'CI configuration existence is a project setup concern, not an ESLint rule.',
-  'pre-commit-check': 'Pre-commit hooks are configured via husky/lefthook, not ESLint.',
-  'git-hook-present': 'Git hooks are configured via husky/lefthook, not ESLint.',
-  'script-present': 'npm scripts are package.json config, not an ESLint rule.',
-  'env-tool-present': 'Environment tooling (flox, nix, devcontainer) is project setup, not an ESLint rule.',
-  'readme-exists': 'File existence checks are project-level concerns, not ESLint rules.',
-  'changelog-exists': 'File existence checks are project-level concerns, not ESLint rules.',
-  'formatter-config-exists': 'Config file existence is a project-level concern, not ESLint rules.',
-  'pinned-dependencies': 'Dependency version pinning is enforced by npm/Renovabot, not ESLint.',
-  'banned-import': 'Can be approximated with no-restricted-imports, but requires manual config per banned package.',
-  'directory-exists-with-files': 'Directory structure checks are project-level concerns, not ESLint rules.',
-  'file-pattern-exists': 'File existence checks are project-level concerns, not ESLint rules.',
-  'module-index-required': 'Module index file checks are project-level concerns, not ESLint rules.',
-  'python-snake-case': 'Python naming conventions are handled by Python linters (e.g. flake8, ruff), not ESLint.',
-  'python-class-naming': 'Python naming conventions are handled by Python linters, not ESLint.',
-  'go-naming': 'Go naming conventions are handled by Go linters (e.g. golint), not ESLint.',
-  'function-length': 'Language-specific function length checks (Python/Go) are not ESLint rules.',
-  'conventional-commits': 'Commit message format is enforced by commitlint, not ESLint.',
-  'commit-message-prefix': 'Commit message format is enforced by commitlint, not ESLint.',
-  'branch-naming': 'Branch naming conventions are enforced by git hooks, not ESLint.',
-  'signed-commits': 'Commit signing is a git configuration, not an ESLint rule.',
-  'commit-message-pattern': 'Commit message format is enforced by commitlint, not ESLint.',
-  'no-unresolved-imports': 'Import resolution requires eslint-plugin-import with TypeScript resolver config.',
-  'prefer-pair': 'Preference rules (prefer X over Y) require contextual enforcement; no direct ESLint mapping.',
-  'async-try-catch': 'Async try/catch enforcement has no direct ESLint rule; use @typescript-eslint/require-await as partial coverage.',
-  'error-log-context': 'Error logging context has no ESLint rule; use custom eslint plugin or project-level convention.',
-  'kebab-case-directories': 'Directory naming conventions are project-level, not ESLint rules.',
-  'concise-conditionals': 'No ESLint rule enforces optional braces in single-statement conditionals.',
-  'barrel-files': 'No ESLint rule bans barrel files; use @typescript-eslint/no-reexport or project convention.',
-};
+/** Pattern types with no ESLint equivalent. Imported from mappings module. */
 
 /**
  * Map a single RuleProbe rule to an ESLint rule entry.

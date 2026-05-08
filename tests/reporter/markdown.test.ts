@@ -1,8 +1,8 @@
-// Tests for the Markdown report formatter (single report and comparison table).
+// Tests for the Markdown report formatter.
 
 import { describe, it, expect } from 'vitest';
-import { formatMarkdown, formatComparisonMarkdown } from '../../src/reporter/markdown.js';
-import { testReport, testReportFailing } from './report-fixture.js';
+import { formatMarkdown } from '../../src/reporter/markdown.js';
+import { testReport } from './report-fixture.js';
 
 describe('Markdown reporter: single report', () => {
   it('includes a top-level heading', () => {
@@ -44,62 +44,5 @@ describe('Markdown reporter: single report', () => {
     expect(output).toContain('| Category | Passed | Total | Score |');
     expect(output).toContain('| naming | 1 | 1 | 100% |');
     expect(output).toContain('| forbidden-pattern | 1 | 2 | 50% |');
-  });
-});
-
-describe('Markdown reporter: comparison', () => {
-  it('includes comparison heading', () => {
-    const output = formatComparisonMarkdown(
-      [testReport, testReportFailing],
-      ['good-agent', 'bad-agent'],
-    );
-    expect(output).toContain('# RuleProbe: Agent Instruction Adherence Comparison');
-  });
-
-  it('includes rules source and metadata', () => {
-    const output = formatComparisonMarkdown(
-      [testReport, testReportFailing],
-      ['good-agent', 'bad-agent'],
-    );
-    expect(output).toContain('CLAUDE.md');
-    expect(output).toContain('3 rules extracted');
-    expect(output).toContain('1 unparseable');
-  });
-
-  it('produces a table with one column per agent', () => {
-    const output = formatComparisonMarkdown(
-      [testReport, testReportFailing],
-      ['good-agent', 'bad-agent'],
-    );
-    expect(output).toContain('| Rule | good-agent | bad-agent |');
-  });
-
-  it('shows PASS/FAIL correctly per agent per rule', () => {
-    const output = formatComparisonMarkdown(
-      [testReport, testReportFailing],
-      ['good-agent', 'bad-agent'],
-    );
-    // For the camelCase rule: good-agent PASS, bad-agent FAIL
-    const lines = output.split('\n');
-    const camelLine = lines.find((l) => l.includes('camelCase variables'));
-    expect(camelLine).toContain('PASS');
-    expect(camelLine).toContain('FAIL');
-  });
-
-  it('includes a score summary table', () => {
-    const output = formatComparisonMarkdown(
-      [testReport, testReportFailing],
-      ['good-agent', 'bad-agent'],
-    );
-    expect(output).toContain('| Agent | Score |');
-    expect(output).toContain('good-agent (test-model-v1)');
-    expect(output).toContain('67%');
-    expect(output).toContain('bad-agent (bad-model-v1)');
-    expect(output).toContain('0%');
-  });
-
-  it('handles empty reports array', () => {
-    const output = formatComparisonMarkdown([], []);
-    expect(output).toContain('No reports to compare');
   });
 });

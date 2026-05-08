@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "no-console": "error",
+    "prefer-const": "warn",
+    "max-lines": ["error", { "max": 300 }],
+    "@typescript-eslint/no-explicit-any": "error"
+  }
+}

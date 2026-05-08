@@ -18,12 +18,6 @@ import { RULE_MATCHERS } from './rule-patterns.js';
 import { EXTENDED_RULE_MATCHERS } from './rule-patterns-extended.js';
 import { PROJECT_RULE_MATCHERS } from './rule-patterns-project.js';
 import { ADVANCED_RULE_MATCHERS } from './rule-patterns-advanced.js';
-import { PREFERENCE_MATCHERS } from './rule-patterns-preference.js';
-import { FILE_STRUCTURE_MATCHERS } from './rule-patterns-file-structure.js';
-import { TOOLING_MATCHERS } from './rule-patterns-tooling.js';
-import { TESTING_MATCHERS } from './rule-patterns-testing.js';
-import { CONFIG_FILE_MATCHERS } from './rule-patterns-config-file.js';
-import { GIT_HISTORY_MATCHERS } from './rule-patterns-git-history.js';
 import type { RuleMatcher } from '../types.js';
 import {
   CATEGORY_MAP,
@@ -34,18 +28,12 @@ import {
   deduplicateAssembledRules,
 } from './rule-assembler-helpers.js';
 
-/** Combined matcher list from the existing v2.0.0 pipeline. */
+/** Combined matcher list for the rule assembly pipeline. */
 const ALL_MATCHERS: RuleMatcher[] = [
   ...RULE_MATCHERS,
   ...EXTENDED_RULE_MATCHERS,
   ...PROJECT_RULE_MATCHERS,
   ...ADVANCED_RULE_MATCHERS,
-  ...PREFERENCE_MATCHERS,
-  ...FILE_STRUCTURE_MATCHERS,
-  ...TOOLING_MATCHERS,
-  ...TESTING_MATCHERS,
-  ...CONFIG_FILE_MATCHERS,
-  ...GIT_HISTORY_MATCHERS,
 ];
 
 /** Counter for generating unique rule IDs. */

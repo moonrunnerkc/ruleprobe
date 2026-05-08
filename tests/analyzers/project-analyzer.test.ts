@@ -82,11 +82,11 @@ describe('analyzeProject', () => {
   });
 
   it('detects conflicting rules across files', () => {
-    writeFileSync(join(tempDir, 'CLAUDE.md'), '# Tooling\n- Use pnpm, not npm');
-    writeFileSync(join(tempDir, 'AGENTS.md'), '# Tooling\n- Use yarn, not npm');
+    writeFileSync(join(tempDir, 'CLAUDE.md'), '# Rules\n- Maximum line length: 80 characters');
+    writeFileSync(join(tempDir, 'AGENTS.md'), '# Rules\n- Maximum line length: 120 characters');
     const result = analyzeProject(tempDir);
     expect(result.conflicts.length).toBeGreaterThan(0);
-    expect(result.conflicts[0]!.topic).toBe('package-manager');
+    expect(result.conflicts[0]!.topic).toBe('max-line-length');
   });
 
   it('builds coverage map by category', () => {

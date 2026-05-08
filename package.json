@@ -1,7 +1,7 @@
 {
   "name": "ruleprobe",
-  "version": "4.0.0",
-  "description": "Verify whether AI coding agents follow the instruction files they're given",
+  "version": "4.5.0",
+  "description": "Translate instruction files into ESLint configs, detect drift, and extract rules",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,21 +9,24 @@
     "ruleprobe": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc && mkdir -p dist/runner/task-templates && cp src/runner/task-templates/*.md dist/runner/task-templates/",
+    "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
-    "audit": "npm audit --audit-level=moderate"
+    "audit": "npm audit --audit-level=moderate",
+    "collect": "tsx scripts/dataset/collect.ts"
   },
   "keywords": [
     "ai",
     "coding-agent",
+    "eslint",
+    "drift-detection",
     "instruction-adherence",
-    "verification",
     "CLAUDE.md",
     "AGENTS.md",
     "cursorrules",
-    "benchmark"
+    "lint-config",
+    "rule-extraction"
   ],
   "author": "Brad (Aftermath Technologies)",
   "license": "MIT",
@@ -47,6 +50,7 @@
   },
   "devDependencies": {
     "@types/node": "22.19.17",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3",
     "vitest": "2.1.9"
   }

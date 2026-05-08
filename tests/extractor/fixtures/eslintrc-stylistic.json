@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "semi": ["warn", "always"],
+    "quotes": ["warn", "double"],
+    "no-var": "error",
+    "prefer-const": "warn"
+  }
+}

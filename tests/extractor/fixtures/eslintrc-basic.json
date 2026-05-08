@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-console": ["error", { "allow": [] }],
+    "import/no-default-export": "error",
+    "unicorn/filename-case": ["error", { "cases": { "kebab": true } }],
+    "max-lines": ["warn", { "max": 300 }],
+    "no-var": "error",
+    "prefer-const": "warn"
+  }
+}

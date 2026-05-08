@@ -183,39 +183,6 @@ export const RULE_MATCHERS: RuleMatcher[] = [
     }),
   },
   {
-    id: 'test-files-exist',
-    patterns: [
-      /\ball\s+files?\s+must\s+have\s+tests?\b/i,
-      /\btest\s+files?\s+(for\s+)?(every|each|all)\b/i,
-      /\bevery\s+(?:source\s+)?file\s+(?:must\s+|should\s+)?have\s+(?:a\s+)?(?:corresponding\s+)?test/i,
-      /\bco[\s-]?located\b.*\btests?\b/i,
-      /\btests?\b.*\bco[\s-]?located\b/i,
-      /\btest\s+files?:?\s+co[\s-]?located\b/i,
-    ],
-    category: 'test-requirement',
-    verifier: 'filesystem',
-    description: 'Every source file must have a corresponding test file',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'test-files-exist', target: 'src/**/*.ts', expected: true, scope: 'project',
-    }),
-  },
-  {
-    id: 'test-named-pattern',
-    patterns: [
-      /\btest\s+files?\b.*\bnamed\b.*\b\.test\.ts\b/i,
-      /\bnamed\b.*\*\.test\.ts\b/i,
-      /\b\.test\.ts\b.*\btest\s+files?\b/i,
-    ],
-    category: 'test-requirement',
-    verifier: 'filesystem',
-    description: 'Test files must be named *.test.ts',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'test-file-naming', target: 'tests/**', expected: '*.test.ts', scope: 'project',
-    }),
-  },
-  {
     id: 'import-no-deep-relative',
     patterns: [
       /\bno\s+(?:deep\s+)?relative\s+imports?\s+deeper\s+than\s+(\d+)/i,
@@ -261,22 +228,6 @@ export const RULE_MATCHERS: RuleMatcher[] = [
     severity: 'warning',
     buildPattern: () => ({
       type: 'jsdoc-required', target: '*.ts', expected: true, scope: 'file',
-    }),
-  },
-  {
-    id: 'structure-strict-mode',
-    patterns: [
-      /\bTypeScript\s+strict\s+mode\b/i,
-      /\bstrict\s+mode\b.*\bTypeScript\b/i,
-      /\btsconfig\b.*\bstrict\b/i,
-      /\bstrict:\s*true\b/i,
-    ],
-    category: 'structure',
-    verifier: 'filesystem',
-    description: 'TypeScript strict mode must be enabled',
-    severity: 'error',
-    buildPattern: () => ({
-      type: 'strict-mode', target: 'tsconfig.json', expected: true, scope: 'project',
     }),
   },
 ];
