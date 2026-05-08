@@ -1,26 +1,48 @@
-name: "RuleProbe: Verify Instruction Adherence"
+name: "RuleProbe: Detect Config Drift"
 description: >
-  Verify whether AI coding agent output follows project instruction file rules.
-  Deterministic checks, no LLM calls, no API keys beyond GITHUB_TOKEN.
+  Detect drift between instruction files (CLAUDE.md, AGENTS.md, .cursorrules)
+  and ESLint config on every PR. Posts results as a PR comment and optionally
+  opens a follow-up PR with the regenerated config. Deterministic checks,
+  no LLM calls, no API keys beyond GITHUB_TOKEN.
 
 branding:
   icon: check-circle
   color: blue
 
 inputs:
+  mode:
+    description: "Run mode: drift (default) or verify (legacy)"
+    required: false
+    default: "drift"
   instruction-file:
     description: "Path to instruction file (CLAUDE.md, AGENTS.md, .cursorrules, etc)"
     required: true
+  eslint-file:
+    description: "Path to ESLint config (auto-detected if not specified)"
+    required: false
+  regenerate-on-drift:
+    description: "Open a follow-up PR with regenerated config when drift is detected"
+    required: false
+    default: "false"
+  comment-on-pr:
+    description: "Post drift results as a PR comment"
+    required: false
+    default: "true"
+  fail-on-drift:
+    description: "Fail the action if drift is detected"
+    required: false
+    default: "false"
+  # Legacy verify-mode inputs
   output-dir:
-    description: "Directory containing code to verify"
-    required: true
+    description: "Directory containing code to verify (verify mode only)"
+    required: false
     default: "src"
   agent:
-    description: "Agent identifier for the report"
+    description: "Agent identifier for the report (verify mode only)"
     required: false
     default: "ci"
   model:
-    description: "Model identifier for the report"
+    description: "Model identifier for the report (verify mode only)"
     required: false
     default: "unknown"
   format:
@@ -28,34 +50,41 @@ inputs:
     required: false
     default: "text"
   severity:
-    description: "Minimum severity to report: error, warning, or all"
+    description: "Minimum severity to report (verify mode only)"
     required: false
     default: "all"
   fail-on-violation:
-    description: "Fail the action if any rule violations are found"
-    required: false
-    default: "true"
-  post-comment:
-    description: "Post results as a PR comment"
+    description: "Fail the action if any violations are found (verify mode only)"
     required: false
     default: "true"
   reviewdog-format:
-    description: "Also output in reviewdog rdjson format for annotation integration"
+    description: "Also output in reviewdog rdjson format (verify mode only)"
     required: false
     default: "false"
+  post-comment:
+    description: "Post results as a PR comment (verify mode only)"
+    required: false
+    default: "true"
 
 outputs:
+  drift-count:
+    description: "Number of drift issues detected"
+    value: ${{ steps.drift.outputs.drift-count }}
+  has-drift:
+    description: "Whether drift was detected"
+    value: ${{ steps.drift.outputs.has-drift }}
+  # Legacy verify outputs
   score:
-    description: "Adherence score as a percentage"
+    description: "Adherence score as a percentage (verify mode only)"
     value: ${{ steps.verify.outputs.score }}
   passed:
-    description: "Number of rules that passed"
+    description: "Number of rules that passed (verify mode only)"
     value: ${{ steps.verify.outputs.passed }}
   failed:
-    description: "Number of rules that failed"
+    description: "Number of rules that failed (verify mode only)"
     value: ${{ steps.verify.outputs.failed }}
   total:
-    description: "Total number of rules checked"
+    description: "Total number of rules checked (verify mode only)"
     value: ${{ steps.verify.outputs.total }}
 
 runs:
@@ -73,7 +102,28 @@ runs:
         npm ci --ignore-scripts
         npm run build
 
+    - name: Run drift detection
+      if: inputs.mode != 'verify'
+      id: drift
+      shell: bash
+      env:
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_INSTRUCTION_FILE: ${{ inputs.instruction-file }}
+        INPUT_ESLINT_FILE: ${{ inputs.eslint-file }}
+        INPUT_REGENERATE_ON_DRIFT: ${{ inputs.regenerate-on-drift }}
+        INPUT_COMMENT_ON_PR: ${{ inputs.comment-on-pr }}
+        INPUT_FAIL_ON_DRIFT: ${{ inputs.fail-on-drift }}
+        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_API_URL: ${{ github.api_url }}
+        GITHUB_EVENT_PATH: ${{ github.event_path }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        GITHUB_WORKSPACE: ${{ github.workspace }}
+        GITHUB_OUTPUT: ${{ github.output_file }}
+      run: node "${{ github.action_path }}/dist/action/main.js"
+
     - name: Run ruleprobe verify
+      if: inputs.mode == 'verify'
       id: verify
       shell: bash
       env:
@@ -88,8 +138,8 @@ runs:
         RULEPROBE_BIN: ${{ github.action_path }}/dist/cli.js
       run: bash "${{ github.action_path }}/action-scripts/run-verify.sh"
 
-    - name: Post PR comment
-      if: inputs.post-comment == 'true' && github.event_name == 'pull_request'
+    - name: Post PR comment (verify mode)
+      if: inputs.mode == 'verify' && inputs.post-comment == 'true' && github.event_name == 'pull_request'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ github.token }}

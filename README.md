@@ -67,7 +67,15 @@ Every failure includes the file, line number, and what was found. Preference rul
 
 **Compare.** Point RuleProbe at outputs from two or more agents and get a side-by-side comparison table showing which rules each one followed.
 
-**GitHub Action.** Composite action for any repo. Runs `ruleprobe verify` on every PR, posts results as a comment, and optionally outputs reviewdog rdjson format for inline annotations.
+**Drift.** Compare a CLAUDE.md instruction file against an existing ESLint config and report mismatches. Detects rules in the instruction file but missing from ESLint, rules in ESLint but not derived from the instructions, severity mismatches, and config argument mismatches. Use `--format markdown` for PR-friendly output.
+
+**Extract.** Parse an ESLint config file and emit a markdown rules section suitable for pasting into a CLAUDE.md or other instruction file.
+
+**Drift detection.** Compare a CLAUDE.md instruction file against an existing ESLint config and report mismatches. `ruleprobe drift CLAUDE.md .eslintrc.json` checks for rules that are in the instruction file but missing from ESLint, rules in ESLint that aren't derived from the instructions, severity mismatches, and config argument mismatches.
+
+**Config generation.** `ruleprobe lint-config CLAUDE.md` translates instruction file rules into an ESLint config. Use `--format flat` (default) for flat config or `--format legacy` for `.eslintrc` format.
+
+**GitHub Action.** Composite action for any repo. Defaults to drift detection: compares instruction files against ESLint config on every PR, posts results as a comment, and optionally opens a follow-up PR with the regenerated config.
 
 ## Configuration
 
@@ -113,11 +121,13 @@ Custom rules use the same verifier types (`ast`, `regex`, `filesystem`, `treesit
 
 ## CLI Reference
 
-Seven commands: `parse`, `verify`, `analyze`, `compare`, `tasks`, `task`, `run`. Quick examples:
+Nine commands: `parse`, `verify`, `analyze`, `compare`, `tasks`, `task`, `run`, `lint-config`, `drift`. Quick examples:
 
 ```bash
 ruleprobe parse CLAUDE.md --show-unparseable
 ruleprobe verify AGENTS.md ./src --format summary --threshold 0.9
+ruleprobe drift CLAUDE.md .eslintrc.json --format markdown
+ruleprobe lint-config CLAUDE.md --format flat --output eslint.config.js
 ruleprobe analyze ./my-project --format json
 ruleprobe compare AGENTS.md ./claude-output ./copilot-output --agents claude,copilot
 ruleprobe tasks
@@ -134,10 +144,10 @@ Full command reference with all options: [docs/cli-reference.md](docs/cli-refere
 Drop this into `.github/workflows/ruleprobe.yml`:
 
 ```yaml
-name: RuleProbe
+name: RuleProbe Drift
 on: [pull_request]
 jobs:
-  check-rules:
+  drift-check:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -146,13 +156,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: moonrunnerkc/ruleprobe@v4
         with:
-          instruction-file: AGENTS.md
-          output-dir: src
+          instruction-file: CLAUDE.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-No API keys needed, deterministic results, runs in seconds.
+No API keys needed, deterministic results, runs in seconds. The action only runs drift detection when instruction files or ESLint config files are changed in the PR, skipping otherwise.
 
 > **Note:** `@v4` tracks the latest v4.x release. Pin to a specific tag (e.g., `@v4.0.0`) for reproducible builds.
 
@@ -162,20 +171,42 @@ No API keys needed, deterministic results, runs in seconds.
 ```yaml
 - uses: moonrunnerkc/ruleprobe@v4
   with:
-    instruction-file: AGENTS.md
-    output-dir: src
-    agent: ci
-    model: unknown
-    format: text
-    severity: all
-    fail-on-violation: "true"
-    post-comment: "true"
-    reviewdog-format: "false"
+    mode: drift
+    instruction-file: CLAUDE.md
+    eslint-file: .eslintrc.json
+    regenerate-on-drift: "false"
+    comment-on-pr: "true"
+    fail-on-drift: "false"
 ```
 
 | Input | Default | Description |
 |-------|---------|-------------|
+| `mode` | `drift` | Run mode: `drift` (default) or `verify` (legacy) |
 | `instruction-file` | (required) | Path to instruction file |
+| `eslint-file` | (auto-detected) | Path to ESLint config file |
+| `regenerate-on-drift` | `false` | Open a follow-up PR with regenerated config when drift is detected |
+| `comment-on-pr` | `true` | Post drift results as a PR comment |
+| `fail-on-drift` | `false` | Fail the action if drift is detected |
+
+Drift mode outputs: `drift-count`, `has-drift`.
+
+</details>
+
+<details>
+<summary>Legacy: verify mode</summary>
+
+The original verify mode checks agent output against instruction file rules. It is still available but no longer the default.
+
+```yaml
+- uses: moonrunnerkc/ruleprobe@v4
+  with:
+    mode: verify
+    instruction-file: AGENTS.md
+    output-dir: src
+```
+
+| Input | Default | Description |
+|-------|---------|-------------|
 | `output-dir` | `src` | Directory containing code to verify |
 | `agent` | `ci` | Agent identifier for report metadata |
 | `model` | `unknown` | Model identifier for report metadata |
@@ -185,7 +216,7 @@ No API keys needed, deterministic results, runs in seconds.
 | `post-comment` | `true` | Post results as a PR comment |
 | `reviewdog-format` | `false` | Also output rdjson for reviewdog |
 
-Outputs: `score`, `passed`, `failed`, `total` (available to downstream steps).
+Verify mode outputs: `score`, `passed`, `failed`, `total`.
 
 </details>
 
@@ -320,6 +351,7 @@ When `--semantic` is enabled, all analysis runs locally. The only network calls 
 - **Type-aware checks require --project.** Three checks (implicit any, unused exports, unresolved imports) need a `tsconfig.json`. Without `--project`, ts-morph parses files in isolation and these checks are skipped.
 - **102 matchers, not infinite.** The parser skips lines it can't confidently map to a check. Use `--show-unparseable` to see what was missed, and `--llm-extract` or `--rubric-decompose` to handle the remainder. The semantic tier (`--semantic`) covers pattern-matching and consistency rules that deterministic matchers cannot.
 - **Preference pairs are TypeScript-focused.** The 8 built-in prefer-pairs (const vs let, named vs default exports, etc.) use ts-morph AST queries. Adding pairs for other languages requires new counting functions.
+- **Monorepo support is limited.** Drift detection and lint-config scan from the repository root and use the first ESLint config found. Monorepos with per-package instruction files or configs need to specify paths explicitly. Full monorepo support is planned for a future release.
 
 ## Troubleshooting
 
