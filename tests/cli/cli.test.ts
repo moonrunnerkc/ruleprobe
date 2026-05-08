@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { execSync, type ExecSyncOptionsWithStringEncoding } from 'node:child_process';
 import { resolve } from 'node:path';
+import { readFileSync, unlinkSync } from 'node:fs';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const CLI = 'npx tsx src/cli.ts';
@@ -43,6 +44,44 @@ function runFail(args: string): { stderr: string; status: number } {
     };
   }
 }
+
+// ── lint-config command ─────────────────────────────────────────
+
+describe('CLI: lint-config command', () => {
+  it('emits flat config by default', () => {
+    const output = run(`lint-config ${CLAUDE_FIXTURE}`);
+    expect(output).toContain('export default [');
+    expect(output).toContain('rules: {');
+  });
+
+  it('emits legacy config with --format legacy', () => {
+    const output = run(`lint-config ${CLAUDE_FIXTURE} --format legacy`);
+    expect(output).toContain('"rules"');
+    expect(output).toContain('"plugins"');
+  });
+
+  it('includes unmappable rules as comments', () => {
+    const output = run(`lint-config ${AGENTS_FIXTURE}`);
+    expect(output).toContain('Unmappable');
+  });
+
+  it('writes output to file with --output', () => {
+    const tmpFile = resolve(ROOT, 'tmp-lint-config-test.js');
+    try {
+      run(`lint-config ${CLAUDE_FIXTURE} --output ${tmpFile}`);
+      const content = readFileSync(tmpFile, 'utf-8');
+      expect(content).toContain('export default [');
+    } finally {
+      unlinkSync(tmpFile);
+    }
+  });
+
+  it('fails with actionable error for missing instruction file', () => {
+    const result = runFail('lint-config nonexistent.md');
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain('Failed to parse instruction file');
+  });
+});
 
 // ── parse command ──────────────────────────────────────────────
 

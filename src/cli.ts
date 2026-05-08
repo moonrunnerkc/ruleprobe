@@ -14,6 +14,7 @@ import { handleCompare } from './commands/compare.js';
 import { handleTasks, handleTask } from './commands/tasks.js';
 import { handleRun } from './commands/run.js';
 import { handleAnalyze } from './commands/analyze.js';
+import { handleLintConfig } from './commands/lint-config.js';
 
 const program = new Command();
 
@@ -207,6 +208,20 @@ program
       await handleAnalyze(projectDir, opts, exitWithError);
     },
   );
+
+// ── lint-config ──
+
+program
+  .command('lint-config')
+  .description(
+    'Parse an instruction file and emit an ESLint config',
+  )
+  .argument('<instruction-file>', 'path to instruction file')
+  .option('--format <format>', 'output format (flat|legacy)', 'flat')
+  .option('--output <path>', 'write config to file instead of stdout')
+  .action(async (file: string, opts: { format: string; output?: string }) => {
+    await handleLintConfig(file, opts, exitWithError);
+  });
 
 // ── Error handling ──
 
