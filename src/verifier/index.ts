@@ -13,9 +13,10 @@
 
 import type { Rule, RuleSet, RuleResult } from '../types.js';
 import { verifyAstRulesBatch } from './ast-verifier-batch.js';
-import { verifyFileSystemRule, collectFiles, filterSourceFiles } from './file-verifier.js';
+import { verifyFileSystemRule, collectFiles, filterSourceFiles, filterTreeSitterFiles } from './file-verifier.js';
 export { verifyFileSystemRule } from './file-verifier.js';
 import { verifyRegexRule } from './regex-verifier.js';
+import { verifyTreeSitterRule } from './treesitter-verifier.js';
 
 /** Options for output verification. */
 export interface VerifyOptions {
@@ -47,6 +48,7 @@ export async function verifyOutput(
   const projectPath = options.projectPath;
   const allFiles = collectFiles(outputDir, allowSymlinks);
   const sourceFiles = filterSourceFiles(allFiles);
+  const treeSitterFiles = filterTreeSitterFiles(allFiles);
 
   // Filter to TypeScript/JavaScript files for AST and regex checks
   // (sourceFiles already excludes minified files via filterSourceFiles)
@@ -65,7 +67,7 @@ export async function verifyOutput(
       results.push(astResultMap.get(rule)!);
     } else {
       const result = await verifyNonAstRule(
-        rule, outputDir, codeFiles, sourceFiles, allFiles, projectPath,
+        rule, outputDir, codeFiles, sourceFiles, allFiles, treeSitterFiles, projectPath,
       );
       results.push(result);
     }
@@ -76,6 +78,11 @@ export async function verifyOutput(
 
 /**
  * Verify a single non-AST rule, routing to the correct verifier.
+ *
+ * Tree-sitter rules run against Python and Go files. Filesystem rules
+ * receive the full file list so they can check directory naming and
+ * file existence beyond TypeScript/JavaScript. Regex rules use the
+ * TS/JS source list.
  */
 async function verifyNonAstRule(
   rule: Rule,
@@ -83,6 +90,7 @@ async function verifyNonAstRule(
   codeFiles: string[],
   sourceFiles: string[],
   allFiles: string[],
+  treeSitterFiles: string[],
   _projectPath?: string,
 ): Promise<RuleResult> {
   switch (rule.verifier) {
@@ -90,6 +98,8 @@ async function verifyNonAstRule(
       return verifyFileSystemRule(rule, outputDir, allFiles);
     case 'regex':
       return verifyRegexRule(rule, sourceFiles, outputDir);
+    case 'treesitter':
+      return verifyTreeSitterRule(rule, treeSitterFiles);
     default:
       return {
         rule,

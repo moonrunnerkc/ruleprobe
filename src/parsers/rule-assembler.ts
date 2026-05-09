@@ -14,6 +14,7 @@ import { RULE_MATCHERS } from './rule-patterns.js';
 import { EXTENDED_RULE_MATCHERS } from './rule-patterns-extended.js';
 import { PROJECT_RULE_MATCHERS } from './rule-patterns-project.js';
 import { ADVANCED_RULE_MATCHERS } from './rule-patterns-advanced.js';
+import { TREESITTER_RULE_MATCHERS } from './rule-patterns-treesitter.js';
 import type { RuleMatcher } from '../types.js';
 import {
   truncateDescription,
@@ -27,6 +28,7 @@ const ALL_MATCHERS: RuleMatcher[] = [
   ...EXTENDED_RULE_MATCHERS,
   ...PROJECT_RULE_MATCHERS,
   ...ADVANCED_RULE_MATCHERS,
+  ...TREESITTER_RULE_MATCHERS,
 ];
 
 /** Counter for generating unique rule IDs. */

@@ -12,15 +12,17 @@ import { RULE_MATCHERS } from './rule-patterns.js';
 import { EXTENDED_RULE_MATCHERS } from './rule-patterns-extended.js';
 import { PROJECT_RULE_MATCHERS } from './rule-patterns-project.js';
 import { ADVANCED_RULE_MATCHERS } from './rule-patterns-advanced.js';
+import { TREESITTER_RULE_MATCHERS } from './rule-patterns-treesitter.js';
 import { detectQualifier } from './qualifier-detector.js';
 import { INSTRUCTION_PATTERNS } from './instruction-patterns.js';
 
-/** Combined matcher list: base, extended, project, advanced. */
+/** Combined matcher list: base, extended, project, advanced, tree-sitter. */
 const ALL_MATCHERS = [
   ...RULE_MATCHERS,
   ...EXTENDED_RULE_MATCHERS,
   ...PROJECT_RULE_MATCHERS,
   ...ADVANCED_RULE_MATCHERS,
+  ...TREESITTER_RULE_MATCHERS,
 ];
 
 /** Counter for generating unique rule IDs across extraction runs. */

@@ -11,6 +11,10 @@ const KEBAB_CASE_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 /**
  * Filter file paths to only TypeScript/JavaScript source files.
+ *
+ * Used by the AST and regex engines, both of which only understand
+ * TypeScript/JavaScript syntax. Tree-sitter checks use the broader
+ * filterTreeSitterFiles helper instead.
  */
 export function filterSourceFiles(files: string[]): string[] {
   const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
@@ -26,6 +30,17 @@ export function filterSourceFiles(files: string[]): string[] {
     }
     return true;
   });
+}
+
+/**
+ * Filter file paths to source files that the tree-sitter engine can
+ * parse. Currently Python (.py) and Go (.go); kept separate from
+ * filterSourceFiles so existing AST/regex callers do not start
+ * processing non-JavaScript files implicitly.
+ */
+export function filterTreeSitterFiles(files: string[]): string[] {
+  const tsExtensions = new Set(['.py', '.go']);
+  return files.filter((f) => tsExtensions.has(extname(f)));
 }
 
 /**

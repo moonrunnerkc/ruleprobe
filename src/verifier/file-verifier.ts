@@ -10,6 +10,7 @@ import type { Rule, RuleResult, Evidence } from '../types.js';
 import { walkDirectorySafe } from '../utils/safe-path.js';
 import {
   filterSourceFiles,
+  filterTreeSitterFiles,
   checkKebabCaseFileNames,
   checkKebabCaseDirectories,
   checkTestFilesExist,
@@ -182,5 +183,5 @@ export function verifyFileSystemRule(
   };
 }
 
-export { collectFiles, filterSourceFiles };
+export { collectFiles, filterSourceFiles, filterTreeSitterFiles };
 export type { Evidence };
