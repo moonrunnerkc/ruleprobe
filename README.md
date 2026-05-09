@@ -264,8 +264,6 @@ When `--semantic` is enabled, all analysis runs locally. The only network calls 
 
 ## Limitations
 
-- **TypeScript gets the deepest coverage.** ts-morph gives full AST analysis for TypeScript and JavaScript across all categories. Other languages get regex-based checks only.
-- **Subjective rules stay subjective.** "Write clean code" has no deterministic check. `--rubric-decompose` uses an LLM to break subjective instructions into weighted concrete checks, tagged with `confidence: 'low'`. Requires `OPENAI_API_KEY`.
 - **Not all rules map to ESLint.** Test file requirements, project config conventions, git workflow rules, and preference pairs don't have ESLint equivalents. These are reported as unmappable so you can enforce them through other tooling.
 - **Monorepo support is limited.** Drift detection and lint-config scan from the repository root and use the first ESLint config found. Monorepos with per-package instruction files or configs need to specify paths explicitly.
 

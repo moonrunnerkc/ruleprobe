@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Resolved Limitations
+
+- **Other-language coverage.** Tree-sitter is now wired into the verifier orchestrator behind a fourth `treesitter` engine. Python and Go files get real AST evidence (function/class naming, function length) rather than regex/filesystem fallbacks. New matcher table at `src/parsers/rule-patterns-treesitter.ts`; integration tests at `tests/verifier/treesitter-integration.test.ts`.
+- **Subjective lines decompose without an LLM.** A deterministic rubric pass now runs unconditionally over unparseable instruction lines. Phrases like "write clean code" and "keep it simple" expand into weighted proxy checks (`max-function-length`, `no-magic-numbers`, etc.) tagged `extractionMethod: 'rubric-deterministic'` with `confidence: 'medium'`. Source: `src/parsers/rubric-deterministic.ts` + `src/parsers/rubric-table.ts`.
+- **Mapper rule names verified against real plugins.** The new `tests/mapper/eslint-rule-existence.test.ts` suite imports `@typescript-eslint/eslint-plugin`, `eslint-plugin-import`, `eslint-plugin-jsdoc`, `eslint-plugin-unicorn`, and core `eslint`; it asserts every rule the mapper can emit exists in the loaded plugin's registry, then runs `Linter.verify` against an exhaustive synthetic config to ensure no `"Definition for rule X was not found"` errors. The test caught and forced fixes for: `@typescript-eslint/no-enum` (rule never existed; remapped to `no-restricted-syntax` with `TSEnumDeclaration`), `no-else-after-return` (rule renamed to `no-else-return`), `unicorn/filename-case` options shape, and `@typescript-eslint/naming-convention` options shape.
+- **Self-check workflow blocks on findings.** `.github/workflows/self-check.yml` now sets `fail-on-violation: 'true'`. The codebase passes its own AGENTS.md error-severity checks: file renames in `src/drift/` to kebab-case, `src/action/main.ts` writes through `process.stdout/stderr` instead of `console.*`, `src/verifier/ast-verifier.ts` was split into `ast-check-dispatch.ts` + `ast-verifier-type-aware.ts`, and `src/semantic/engine/fingerprint/structural-features/` imports go through a local `types.ts` re-export instead of `../../../`.
+- **Verify exit code now reflects severity.** Warning-severity rule failures (rubric proxies, advisory style guidance) no longer cause a non-zero exit. Only error-severity violations fail CI, matching how every other linter treats `error` vs `warn`.
+
 ## [4.5.0] - 2026-05-08
 
 ### Breaking Changes
