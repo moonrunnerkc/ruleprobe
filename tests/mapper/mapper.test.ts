@@ -211,7 +211,7 @@ describe('mapRuleSetToEslintConfig', () => {
     expect(config.rules[0].ruleName).toBe('no-empty');
   });
 
-  it('maps no-enum to @typescript-eslint/no-enum', () => {
+  it('maps no-enum to no-restricted-syntax with a TSEnumDeclaration selector', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'type-no-enum-1',
@@ -222,7 +222,9 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('@typescript-eslint/no-enum');
+    expect(config.rules[0].ruleName).toBe('no-restricted-syntax');
+    const options = config.rules[0].options as Array<{ selector: string }>;
+    expect(options[0].selector).toBe('TSEnumDeclaration');
   });
 
   it('maps no-type-assertions to @typescript-eslint/consistent-type-assertions', () => {
@@ -323,7 +325,7 @@ describe('mapRuleSetToEslintConfig', () => {
     expect(config.rules[0].ruleName).toBe('no-throw-literal');
   });
 
-  it('maps no-else-after-return to no-else-after-return', () => {
+  it('maps no-else-after-return to the core no-else-return rule', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'style-no-else-after-return-1',
@@ -334,7 +336,7 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('no-else-after-return');
+    expect(config.rules[0].ruleName).toBe('no-else-return');
   });
 
   it('maps no-wildcard-exports to no-restricted-syntax with ExportAllDeclaration selector', () => {

@@ -28,10 +28,10 @@ export function mapPreferConst(): EslintRuleEntry {
   };
 }
 
-/** Map no-else-after-return pattern. */
+/** Map no-else-after-return pattern to the core ESLint no-else-return rule. */
 export function mapNoElseAfterReturn(): EslintRuleEntry {
   return {
-    ruleName: 'no-else-after-return',
+    ruleName: 'no-else-return',
     severity: 'warn',
     sourceRuleId: '',
     description: 'Do not use else after a return statement',

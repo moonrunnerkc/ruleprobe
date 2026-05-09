@@ -87,9 +87,16 @@ function camelCaseGeneral(): NamingEntry[] {
   ];
 }
 
-/** Build naming-convention options from accumulated entries. */
+/**
+ * Build naming-convention options from accumulated entries.
+ *
+ * The @typescript-eslint/naming-convention rule expects each selector
+ * spec as a separate options element, not wrapped in a `rules` object,
+ * so the spread shape is `[severity, spec1, spec2, ...]` once the
+ * severity is prepended by the consumer.
+ */
 function buildNamingOptions(entries: NamingEntry[]): unknown[] {
-  const rules = entries.map((entry) => {
+  return entries.map((entry) => {
     const rule: Record<string, unknown> = {
       selector: entry.selector,
       format: entry.format,
@@ -105,7 +112,6 @@ function buildNamingOptions(entries: NamingEntry[]): unknown[] {
     }
     return rule;
   });
-  return [{ rules }];
 }
 
 /** Accumulated naming entries for merging. */
@@ -157,8 +163,6 @@ export function hasNamingEntries(): boolean {
 
 /** Build the merged naming-convention rule entry from accumulated entries. */
 export function buildNamingConventionRule(): EslintRuleEntry {
-  // If we only have camelCase, use general selectors instead of specific ones
-  const uniqueTypes = new Set(namingEntries.map((e) => e.format.join(',')));
   const entries = namingEntries.length > 0 ? namingEntries : camelCaseGeneral();
   const options = buildNamingOptions(entries);
 

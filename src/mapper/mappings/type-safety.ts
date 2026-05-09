@@ -7,12 +7,19 @@
 
 import type { EslintRuleEntry } from '../types.js';
 
-/** Map no-enum pattern to @typescript-eslint/no-enum. */
+/**
+ * Map no-enum pattern to no-restricted-syntax with a TSEnumDeclaration
+ * selector. typescript-eslint does not ship a rule named no-enum;
+ * forbidding enums is conventionally done with no-restricted-syntax.
+ */
 export function mapNoEnum(): EslintRuleEntry {
   return {
-    ruleName: '@typescript-eslint/no-enum',
-    plugin: '@typescript-eslint',
+    ruleName: 'no-restricted-syntax',
     severity: 'warn',
+    options: [{
+      selector: 'TSEnumDeclaration',
+      message: 'Enums are not allowed; prefer union types or `as const` objects.',
+    }],
     sourceRuleId: '',
     description: 'Enums must not be used; prefer union types',
   };

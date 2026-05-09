@@ -12,7 +12,7 @@ export function mapKebabCaseFiles(): EslintRuleEntry {
     ruleName: 'unicorn/filename-case',
     plugin: 'unicorn',
     severity: 'error',
-    options: [{ cases: { kebab: true } }],
+    options: [{ case: 'kebabCase' }],
     sourceRuleId: '',
     description: 'File names must use kebab-case',
   };
