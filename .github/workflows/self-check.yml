@@ -16,6 +16,6 @@ jobs:
           mode: verify
           instruction-file: tests/fixtures/sample-claude.md
           output-dir: src
-          fail-on-violation: 'false'
+          fail-on-violation: 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

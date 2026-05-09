@@ -45,15 +45,19 @@ export function formatCi(
   lines.push(`passed=${report.summary.passed}`);
   lines.push(`failed=${report.summary.failed}`);
 
-  // GitHub Actions annotations for failures
+  // GitHub Actions annotations for failures. Use ::warning for
+  // warning-severity rules (rubric proxies, advisory style) and
+  // ::error only for error-severity violations, so the PR UI matches
+  // the verify command's exit-code semantics.
   const failures = report.results.filter((r) => !r.passed);
   for (const result of failures) {
+    const annotation = result.rule.severity === 'warning' ? 'warning' : 'error';
     for (const ev of result.evidence) {
       const path = shortenPath(ev.file, report.run.outputDir);
       if (ev.line !== null) {
-        lines.push(`::error file=${path},line=${ev.line}::${result.rule.description}: ${ev.found}`);
+        lines.push(`::${annotation} file=${path},line=${ev.line}::${result.rule.description}: ${ev.found}`);
       } else {
-        lines.push(`::error file=${path}::${result.rule.description}: ${ev.found}`);
+        lines.push(`::${annotation} file=${path}::${result.rule.description}: ${ev.found}`);
       }
     }
   }

@@ -157,6 +157,9 @@ export async function handleVerify(
     process.stdout.write(formatted + '\n');
   }
 
-  const hasViolations = report.summary.failed > 0;
-  process.exit(hasViolations ? EXIT_VIOLATIONS : EXIT_ALL_PASSED);
+  // Exit code is driven by error-severity violations only. Warning-severity
+  // failures (rubric proxies, style guidance, etc.) are advisory: they show
+  // up in the report but never block CI on their own.
+  const errorViolations = report.summary.failed - report.summary.warnings;
+  process.exit(errorViolations > 0 ? EXIT_VIOLATIONS : EXIT_ALL_PASSED);
 }
