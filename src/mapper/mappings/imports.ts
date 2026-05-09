@@ -7,12 +7,22 @@
 
 import type { EslintRuleEntry } from '../types.js';
 
-/** Map no-wildcard-exports pattern to import/no-anonymous-default-export. */
+const DEFAULT_MAX_RELATIVE_DEPTH = 2;
+
+/**
+ * Map no-wildcard-exports pattern to no-restricted-syntax with an
+ * ExportAllDeclaration selector. Uses a core ESLint rule so no plugin
+ * is required; eslint-plugin-import has no rule that targets re-export
+ * stars specifically.
+ */
 export function mapNoWildcardExports(): EslintRuleEntry {
   return {
-    ruleName: 'import/no-anonymous-default-export',
-    plugin: 'import',
+    ruleName: 'no-restricted-syntax',
     severity: 'warn',
+    options: [{
+      selector: 'ExportAllDeclaration',
+      message: 'Wildcard re-exports (export * from) are not allowed; use named re-exports.',
+    }],
     sourceRuleId: '',
     description: 'No wildcard re-exports (use named re-exports)',
   };
@@ -39,14 +49,24 @@ export function mapNoPathAliases(): EslintRuleEntry {
   };
 }
 
-/** Map no-deep-relative-imports pattern to import/no-relative-parent. */
+/**
+ * Map no-deep-relative-imports to no-restricted-syntax with a regex
+ * selector that flags imports traversing more than maxDepth parent
+ * directories. eslint-plugin-import only ships an all-or-nothing
+ * no-relative-parent-imports rule, so a regex selector is the closest
+ * faithful translation of the depth-limit instruction.
+ */
 export function mapNoDeepRelativeImports(expected: string | boolean): EslintRuleEntry {
-  const maxDepth = typeof expected === 'string' ? parseInt(expected, 10) : 2;
+  const parsed = typeof expected === 'string' ? parseInt(expected, 10) : DEFAULT_MAX_RELATIVE_DEPTH;
+  const maxDepth = Number.isNaN(parsed) || parsed < 1 ? DEFAULT_MAX_RELATIVE_DEPTH : parsed;
+  const violatingDepth = maxDepth + 1;
   return {
-    ruleName: 'import/no-relative-parent',
-    plugin: 'import',
+    ruleName: 'no-restricted-syntax',
     severity: 'warn',
-    options: [{ maxDepth: Number.isNaN(maxDepth) ? 2 : maxDepth }],
+    options: [{
+      selector: `ImportDeclaration[source.value=/^(\\.\\.\\/){${violatingDepth},}/]`,
+      message: `Relative imports must not traverse more than ${maxDepth} parent directories.`,
+    }],
     sourceRuleId: '',
     description: 'Relative imports must not go too deep',
   };

@@ -87,10 +87,10 @@ export const MAPPINGS: MappingEntry[] = [
   { patternType: 'max-params', eslintRuleName: 'max-params', defaultSeverity: 'warn', description: 'Functions must not have too many parameters' },
 
   // imports
-  { patternType: 'no-wildcard-exports', eslintRuleName: 'import/no-namespace', plugin: 'import', defaultSeverity: 'warn', description: 'No wildcard imports; use named imports' },
-  { patternType: 'no-namespace-imports', eslintRuleName: '@typescript-eslint/consistent-type-imports', plugin: '@typescript-eslint', defaultSeverity: 'warn', description: 'Use import type for type-only imports' },
+  { patternType: 'no-wildcard-exports', eslintRuleName: 'no-restricted-syntax', defaultSeverity: 'warn', description: 'No wildcard re-exports (use named re-exports)' },
+  { patternType: 'no-namespace-imports', eslintRuleName: 'import/no-namespace', plugin: 'import', defaultSeverity: 'warn', description: 'Namespace imports (import * as) are not allowed' },
   { patternType: 'no-path-aliases', eslintRuleName: 'no-restricted-imports', defaultSeverity: 'warn', description: 'Imports must use relative paths, not path aliases' },
-  { patternType: 'no-deep-relative-imports', eslintRuleName: 'import/no-relative-parent', plugin: 'import', defaultSeverity: 'warn', description: 'Relative imports must not go too deep' },
+  { patternType: 'no-deep-relative-imports', eslintRuleName: 'no-restricted-syntax', defaultSeverity: 'warn', description: 'Relative imports must not go too deep' },
 
   // comments
   { patternType: 'no-todo-comments', eslintRuleName: 'no-warning-comments', defaultSeverity: 'warn', description: 'No TODO/FIXME/HACK/XXX comments in production code' },

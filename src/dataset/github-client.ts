@@ -7,6 +7,11 @@
 
 import { cacheKey, readCache, writeCache } from './cache.js';
 
+/** Write a status line to stderr; this is offline tooling, not the published library. */
+function logStatus(message: string): void {
+  process.stderr.write(`${message}\n`);
+}
+
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
@@ -91,19 +96,19 @@ export async function githubFetch(url: string, retries = MAX_RETRIES): Promise<u
       if (remaining === '0' && resetTime) {
         const resetDate = new Date(parseInt(resetTime, 10) * 1000);
         const waitMs = Math.max(resetDate.getTime() - Date.now() + 1000, delay);
-        console.log(`  Rate limited (remaining=0). Waiting ${Math.ceil(waitMs / 1000)}s until ${resetDate.toISOString()}`);
+        logStatus(`  Rate limited (remaining=0). Waiting ${Math.ceil(waitMs / 1000)}s until ${resetDate.toISOString()}`);
         await sleep(waitMs);
         continue;
       }
 
-      console.log(`  ${response.status} on attempt ${attempt + 1}. Retrying in ${delay}ms...`);
+      logStatus(`  ${response.status} on attempt ${attempt + 1}. Retrying in ${delay}ms...`);
       await sleep(delay);
       delay = Math.min(delay * 2, MAX_DELAY_MS);
       continue;
     }
 
     if (response.status === 422) {
-      console.log(`  422 for ${url}, skipping`);
+      logStatus(`  422 for ${url}, skipping`);
       return null;
     }
 
@@ -111,13 +116,13 @@ export async function githubFetch(url: string, retries = MAX_RETRIES): Promise<u
       return null;
     }
 
-    console.error(`  HTTP ${response.status} for ${url}`);
+    logStatus(`  HTTP ${response.status} for ${url}`);
     const body = await response.text();
-    console.error(`  ${body.slice(0, 200)}`);
+    logStatus(`  ${body.slice(0, 200)}`);
     return null;
   }
 
-  console.error(`  Max retries exceeded for ${url}`);
+  logStatus(`  Max retries exceeded for ${url}`);
   return null;
 }
 
@@ -132,7 +137,7 @@ export async function searchForFile(filename: string): Promise<SearchResultItem[
 
   for (let page = 1; page <= 10; page++) {
     const url = `https://api.github.com/search/code?q=${query}&per_page=100&page=${page}`;
-    console.log(`  Searching page ${page} for ${filename}...`);
+    logStatus(`  Searching page ${page} for ${filename}...`);
 
     const data = await githubFetch(url) as { items?: Array<{
       repository: { owner: { login: string }; name: string; full_name: string };
@@ -156,7 +161,7 @@ export async function searchForFile(filename: string): Promise<SearchResultItem[
       }
     }
 
-    console.log(`    Found ${data.items.length} results (${results.length} at root so far)`);
+    logStatus(`    Found ${data.items.length} results (${results.length} at root so far)`);
     if (data.items.length < 100) break;
     await sleep(SEARCH_PAGE_DELAY_MS);
   }
@@ -208,7 +213,7 @@ export async function downloadFileContent(
   const response = await fetch(url, { headers: { 'User-Agent': 'ruleprobe-collect' } });
 
   if (!response.ok) {
-    console.log(`    Failed to download ${owner}/${repo}/${path}: HTTP ${response.status}`);
+    logStatus(`    Failed to download ${owner}/${repo}/${path}: HTTP ${response.status}`);
     return null;
   }
 

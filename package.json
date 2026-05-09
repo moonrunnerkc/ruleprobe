@@ -51,15 +51,15 @@
     "commander": "12.1.0",
     "glob": "11.1.0",
     "tree-sitter-go": "0.25.0",
-    "tree-sitter-javascript": "^0.25.0",
+    "tree-sitter-javascript": "0.25.0",
     "tree-sitter-python": "0.25.0",
-    "tree-sitter-typescript": "^0.23.2",
+    "tree-sitter-typescript": "0.23.2",
     "ts-morph": "24.0.0",
     "web-tree-sitter": "0.26.8"
   },
   "devDependencies": {
     "@types/node": "22.19.17",
-    "tsx": "^4.21.0",
+    "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "2.1.9"
   }

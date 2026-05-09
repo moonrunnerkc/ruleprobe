@@ -164,9 +164,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-No API keys needed, deterministic results, runs in seconds. The action only runs drift detection when instruction files or ESLint config files are changed in the PR, skipping otherwise.
-
-> **Note:** `@v4` tracks the latest v4.x release. Pin to a specific tag (e.g., `@v4.5.0`) for reproducible builds.
+No API keys needed, deterministic results, runs in seconds. The action only runs drift detection when instruction files or ESLint config files change in the PR. `@v4` tracks the latest v4.x release; pin to a specific tag (e.g., `@v4.5.0`) for reproducible builds.
 
 <details>
 <summary>Full action options</summary>
@@ -276,16 +274,10 @@ When `--semantic` is enabled, all analysis runs locally. The only network calls 
 v4.5.0 pivots RuleProbe from "verify adherence" to "translate instruction files into ESLint configs." The core value proposition is now: translate, detect drift, extract.
 
 Key changes:
-- **New `lint-config` command**: translates an instruction file into a flat or legacy ESLint config.
-- **New `drift` command**: compares an instruction file against an existing ESLint config and reports mismatches.
-- **New `extract` command**: parses an ESLint config and emits a markdown rules section for instruction files.
-- **Removed `compare` command**: agent comparison is no longer a primary use case.
-- **Removed `tasks` and `task` commands**: task template listing and printing removed.
-- **Removed `run` command**: agent invocation via the Claude Agent SDK removed.
-- **Removed runner module**: `buildAgentConfig`, `invokeAgent`, `watchForCompletion`, `countCodeFiles` are no longer exported.
-- **Deprecated `verify` command**: still works, but the primary workflow is now lint-config, drift, and extract.
-- **Matcher audit**: 34 ESLint-mappable matchers remain. 67 unmappable matchers (test file requirements, project config, git workflow, preference pairs, Python/Go, tree-sitter, barrel files, directory naming) removed. The remaining matchers all produce valid ESLint rule entries.
-- **Category cleanup**: `test-requirement`, `dependency`, `preference`, `file-structure`, `tooling`, `testing`, and `workflow` categories removed. The remaining 7 categories (`naming`, `forbidden-pattern`, `structure`, `import-pattern`, `error-handling`, `type-safety`, `code-style`) all map to ESLint rules.
+- **New commands**: `lint-config` (translate instructions → ESLint config), `drift` (compare instructions vs an existing ESLint config), `extract` (ESLint config → instruction prose).
+- **Removed**: `compare`, `tasks`, `task`, `run`, the runner module exports (`buildAgentConfig`, `invokeAgent`, `watchForCompletion`, `countCodeFiles`).
+- **Deprecated**: `verify` still works, but the primary workflow is now lint-config, drift, and extract.
+- **Matcher audit**: 34 ESLint-mappable matchers remain across 7 categories (`naming`, `forbidden-pattern`, `structure`, `import-pattern`, `error-handling`, `type-safety`, `code-style`). 67 unmappable matchers and the `test-requirement`, `dependency`, `preference`, `file-structure`, `tooling`, `testing`, and `workflow` categories were removed.
 
 ## Contributing
 

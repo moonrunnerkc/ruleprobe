@@ -337,7 +337,7 @@ describe('mapRuleSetToEslintConfig', () => {
     expect(config.rules[0].ruleName).toBe('no-else-after-return');
   });
 
-  it('maps no-wildcard-exports to import/no-anonymous-default-export', () => {
+  it('maps no-wildcard-exports to no-restricted-syntax with ExportAllDeclaration selector', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'import-no-wildcard-exports-1',
@@ -348,8 +348,10 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('import/no-anonymous-default-export');
-    expect(config.rules[0].plugin).toBe('import');
+    expect(config.rules[0].ruleName).toBe('no-restricted-syntax');
+    expect(config.rules[0].plugin).toBeUndefined();
+    const opts = (config.rules[0].options ?? [])[0] as { selector?: string };
+    expect(opts.selector).toBe('ExportAllDeclaration');
   });
 
   it('maps no-namespace-imports to import/no-namespace', () => {
