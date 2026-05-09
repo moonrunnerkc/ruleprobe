@@ -3,6 +3,7 @@
  *
  * Routes filesystem rules to the appropriate check function
  * and manages directory walking with symlink awareness.
+ * Unknown pattern types are skipped rather than false-passed.
  */
 
 import type { Rule, RuleResult, Evidence } from '../types.js';
@@ -27,6 +28,24 @@ import {
   checkModuleIndexRequired,
   checkTestColocation,
 } from './file-structure-checks.js';
+
+/** Pattern types handled by the filesystem verifier. */
+const SUPPORTED_FILE_PATTERNS = new Set([
+  'kebab-case',
+  'kebab-case-directories',
+  'test-files-exist',
+  'test-file-naming',
+  'max-file-length',
+  'strict-mode',
+  'readme-exists',
+  'changelog-exists',
+  'formatter-config-exists',
+  'pinned-dependencies',
+  'directory-exists-with-files',
+  'file-pattern-exists',
+  'module-index-required',
+  'test-colocation',
+]);
 
 /**
  * Collect all file paths under a directory with symlink awareness.
@@ -60,7 +79,18 @@ export function verifyFileSystemRule(
   files: string[],
 ): RuleResult {
   const patternType = rule.pattern.type;
-  let evidence: Evidence[];
+
+  // Skip unknown pattern types instead of false-passing
+  if (!SUPPORTED_FILE_PATTERNS.has(patternType)) {
+    return {
+      rule,
+      passed: false,
+      compliance: 0,
+      evidence: [],
+      skipped: true,
+    };
+  }
+  let evidence: Evidence[] = [];
 
   switch (patternType) {
     case 'kebab-case':
@@ -133,9 +163,16 @@ export function verifyFileSystemRule(
         evidence: colocationResult.evidence,
       };
     }
-    default:
-      evidence = [];
   }
+
+  // All supported patterns are handled above; the earlier guard
+  // ensures we never reach this point with an unsupported pattern.
+  return {
+    rule,
+    passed: evidence.length === 0,
+    compliance: evidence.length === 0 ? 1 : 0,
+    evidence,
+  };
 
   return {
     rule,

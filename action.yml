@@ -120,6 +120,7 @@ runs:
         GITHUB_EVENT_NAME: ${{ github.event_name }}
         GITHUB_WORKSPACE: ${{ github.workspace }}
         GITHUB_OUTPUT: ${{ github.output_file }}
+        RULEPROBE_BIN: ${{ github.action_path }}/dist/cli.js
       run: node "${{ github.action_path }}/dist/action/main.js"
 
     - name: Run ruleprobe verify

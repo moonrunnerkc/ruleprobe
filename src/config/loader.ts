@@ -9,6 +9,16 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import type { RuleProbeConfig, CustomRule, RuleOverride } from './types.js';
+import type { RuleCategory, VerifierType } from '../types.js';
+
+/** Valid rule categories. */
+const VALID_CATEGORIES: Set<string> = new Set([
+  'naming', 'forbidden-pattern', 'structure', 'import-pattern',
+  'error-handling', 'type-safety', 'code-style', 'agent-behavior',
+]);
+
+/** Valid verifier types. */
+const VALID_VERIFIERS: Set<string> = new Set(['ast', 'regex', 'filesystem']);
 
 /** Config file names searched in order of priority. */
 const CONFIG_FILE_NAMES = [
@@ -112,11 +122,17 @@ function validateCustomRule(rule: CustomRule, index: number): void {
   if (!rule.category || typeof rule.category !== 'string') {
     throw new Error(`${prefix}.category must be a valid RuleCategory`);
   }
+  if (typeof rule.category === 'string' && !VALID_CATEGORIES.has(rule.category)) {
+    throw new Error(`${prefix}.category must be one of: ${[...VALID_CATEGORIES].join(', ')}; got "${rule.category}"`);
+  }
   if (!rule.description || typeof rule.description !== 'string') {
     throw new Error(`${prefix}.description must be a non-empty string`);
   }
   if (!rule.verifier || typeof rule.verifier !== 'string') {
-    throw new Error(`${prefix}.verifier must be one of: ast, regex, filesystem`);
+    throw new Error(`${prefix}.verifier must be one of: ${[...VALID_VERIFIERS].join(', ')}`);
+  }
+  if (typeof rule.verifier === 'string' && !VALID_VERIFIERS.has(rule.verifier)) {
+    throw new Error(`${prefix}.verifier must be one of: ${[...VALID_VERIFIERS].join(', ')}; got "${rule.verifier}"`);
   }
   if (!rule.pattern || typeof rule.pattern !== 'object') {
     throw new Error(`${prefix}.pattern must be a VerificationPattern object`);

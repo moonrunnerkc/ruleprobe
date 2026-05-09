@@ -38,6 +38,14 @@ import {
   checkConciseConditionals,
 } from '../ast-checks/index.js';
 
+/** Sentinel value returned by runAstCheck when a pattern type has no implementation. */
+const SKIP_MARKER: Evidence[] = [];
+
+/** Check whether evidence array is the skip marker. */
+function isSkipMarker(evidence: Evidence[]): boolean {
+  return evidence === SKIP_MARKER;
+}
+
 /** Create a ts-morph Project for parsing without compilation. */
 export function createProject(): Project {
   return new Project({
@@ -145,11 +153,11 @@ export function runAstCheck(rule: Rule, filePath: string, sourceFile: SourceFile
       return checkUpperCaseConstants(sourceFile, filePath);
     case 'async-try-catch':
     case 'error-log-context':
-      // These rules are extracted and tracked but require deeper semantic analysis
-      // to verify accurately. Return empty evidence (no violations found).
-      return [];
+      // These rules are tracked but not yet implemented for AST verification.
+      // Return a marker to indicate the check was skipped.
+      return SKIP_MARKER;
     default:
-      return [];
+      return SKIP_MARKER;
   }
 }
 
@@ -194,11 +202,16 @@ export function verifyAstRule(
 
   const project = createProject();
   const allEvidence: Evidence[] = [];
+  let skipped = false;
 
   for (const fp of filePaths) {
     try {
       const sourceFile = project.addSourceFileAtPath(fp);
       const evidence = runAstCheck(rule, fp, sourceFile);
+      if (isSkipMarker(evidence)) {
+        skipped = true;
+        continue;
+      }
       allEvidence.push(...evidence);
     } catch {
       allEvidence.push({
@@ -209,6 +222,16 @@ export function verifyAstRule(
         context: '',
       });
     }
+  }
+
+  if (skipped && allEvidence.length === 0) {
+    return {
+      rule,
+      passed: false,
+      compliance: 0,
+      evidence: [],
+      skipped: true,
+    };
   }
 
   return {
@@ -288,6 +311,6 @@ function runTypeAwareCheck(
     case 'no-unresolved-imports':
       return checkUnresolvedImports(sourceFile, filePath, project);
     default:
-      return [];
+      return SKIP_MARKER;
   }
 }

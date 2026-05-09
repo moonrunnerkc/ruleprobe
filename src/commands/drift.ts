@@ -11,9 +11,10 @@
 
 import { parseInstructionFile } from '../parsers/index.js';
 import { mapRuleSetToEslintConfig } from '../mapper/index.js';
-import { parseEslintConfig } from '../drift/parseEslintConfig.js';
+import { parseEslintConfigAsync } from '../drift/parseEslintConfig.js';
 import { compareConfigs } from '../drift/compareConfigs.js';
 import { formatDriftReport } from '../drift/formatDriftReport.js';
+import { resolveSafePath } from '../utils/safe-path.js';
 import type { DriftFormat } from '../drift/types.js';
 import { writeFileSync } from 'node:fs';
 
@@ -35,10 +36,14 @@ export async function handleDrift(
 ): Promise<void> {
   const format: DriftFormat = opts.format === 'json' ? 'json' : opts.format === 'markdown' ? 'markdown' : 'text';
 
+  // Resolve and validate input paths
+  const safeInputPath = resolveSafePath(mdFile);
+  const safeEslintPath = resolveSafePath(eslintFile);
+
   // Parse the instruction file into rules
   let ruleSet;
   try {
-    ruleSet = parseInstructionFile(mdFile);
+    ruleSet = parseInstructionFile(safeInputPath);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     exitWithError(`Failed to parse instruction file: ${message}`);
@@ -47,10 +52,10 @@ export async function handleDrift(
   // Map rules to ESLint config
   const mdConfig = mapRuleSetToEslintConfig(ruleSet);
 
-  // Parse the existing ESLint config
+  // Parse the existing ESLint config (async to support JS/TS files)
   let fileConfig;
   try {
-    fileConfig = parseEslintConfig(eslintFile);
+    fileConfig = await parseEslintConfigAsync(safeEslintPath);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     exitWithError(`Failed to parse ESLint config: ${message}`);

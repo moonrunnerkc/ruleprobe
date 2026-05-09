@@ -7,10 +7,10 @@
 
 import type { EslintRuleEntry } from '../types.js';
 
-/** Map no-wildcard-exports pattern to import/no-namespace. */
+/** Map no-wildcard-exports pattern to import/no-anonymous-default-export. */
 export function mapNoWildcardExports(): EslintRuleEntry {
   return {
-    ruleName: 'import/no-namespace',
+    ruleName: 'import/no-anonymous-default-export',
     plugin: 'import',
     severity: 'warn',
     sourceRuleId: '',
@@ -18,13 +18,12 @@ export function mapNoWildcardExports(): EslintRuleEntry {
   };
 }
 
-/** Map no-namespace-imports pattern to @typescript-eslint/consistent-type-imports. */
+/** Map no-namespace-imports pattern to import/no-namespace. */
 export function mapNoNamespaceImports(): EslintRuleEntry {
   return {
-    ruleName: '@typescript-eslint/consistent-type-imports',
-    plugin: '@typescript-eslint',
+    ruleName: 'import/no-namespace',
+    plugin: 'import',
     severity: 'warn',
-    options: [{ prefer: 'type-imports' }],
     sourceRuleId: '',
     description: 'Namespace imports (import * as) are not allowed',
   };
@@ -47,6 +46,7 @@ export function mapNoDeepRelativeImports(expected: string | boolean): EslintRule
     ruleName: 'import/no-relative-parent',
     plugin: 'import',
     severity: 'warn',
+    options: [{ maxDepth: Number.isNaN(maxDepth) ? 2 : maxDepth }],
     sourceRuleId: '',
     description: 'Relative imports must not go too deep',
   };

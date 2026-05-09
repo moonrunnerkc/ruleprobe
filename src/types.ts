@@ -154,6 +154,8 @@ export interface RuleResult {
   compliance: number;
   /** Evidence of what was checked and found. */
   evidence: Evidence[];
+  /** Whether this rule was skipped because it has no concrete implementation. */
+  skipped?: boolean;
 }
 
 /** Per-category breakdown of pass/total counts. */

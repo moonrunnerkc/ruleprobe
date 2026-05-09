@@ -3,6 +3,8 @@
  *
  * Verifies that classified statements are correctly assembled into Rule[]
  * objects, with proper matcher integration and deduplication.
+ * Generic categories without concrete matcher implementations
+ * now go to unparseable rather than producing false-passing rules.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -41,14 +43,14 @@ describe('rule assembler: matcher integration', () => {
     expect(camelRule?.category).toBe('naming');
   });
 
-  it('creates generic rule when no matcher applies', () => {
+  it('sends CODE_STYLE with no matcher to unparseable', () => {
     const stmts = [
       makeStmt('Keep functions focused and small', 'CODE_STYLE'),
     ];
-    const { rules } = assembleRules(stmts);
-    expect(rules.length).toBeGreaterThan(0);
-    const rule = rules[0];
-    expect(rule?.id).toContain('code-style');
+    const { rules, unparseable } = assembleRules(stmts);
+    expect(rules).toHaveLength(0);
+    expect(unparseable).toHaveLength(1);
+    expect(unparseable[0]).toContain('Keep functions focused');
   });
 
   it('separates CONTEXT_ONLY into contextOnly array', () => {
@@ -94,54 +96,54 @@ describe('rule assembler: deduplication', () => {
   });
 });
 
-describe('rule assembler: WORKFLOW and PATTERN_REFERENCE', () => {
+describe('rule assembler: unverifiable categories', () => {
   beforeEach(() => { resetAssemblerCounter(); });
 
-  it('extracts WORKFLOW as non-verifiable rules', () => {
+  it('sends WORKFLOW to unparseable instead of creating a generic rule', () => {
     const stmts = [
       makeStmt('Create a PR for each feature', 'WORKFLOW'),
     ];
-    const { rules } = assembleRules(stmts);
-    expect(rules.length).toBeGreaterThan(0);
-    expect(rules[0]?.id).toContain('workflow');
+    const { rules, unparseable } = assembleRules(stmts);
+    expect(rules).toHaveLength(0);
+    expect(unparseable).toHaveLength(1);
+    expect(unparseable[0]).toContain('Create a PR');
   });
 
-  it('extracts PATTERN_REFERENCE as non-verifiable rules', () => {
+  it('sends PATTERN_REFERENCE to unparseable instead of creating a generic rule', () => {
     const stmts = [
       makeStmt('Follow existing patterns in the codebase', 'PATTERN_REFERENCE'),
     ];
-    const { rules } = assembleRules(stmts);
-    expect(rules.length).toBeGreaterThan(0);
-    expect(rules[0]?.id).toContain('pattern-ref');
+    const { rules, unparseable } = assembleRules(stmts);
+    expect(rules).toHaveLength(0);
+    expect(unparseable).toHaveLength(1);
+    expect(unparseable[0]).toContain('Follow existing patterns');
   });
-});
 
-describe('rule assembler: qualifier detection', () => {
-  beforeEach(() => { resetAssemblerCounter(); });
+  it('sends AGENT_BEHAVIOR to unparseable', () => {
+    const stmts = [
+      makeStmt('Always review code before merging', 'AGENT_BEHAVIOR'),
+    ];
+    const { rules, unparseable } = assembleRules(stmts);
+    expect(rules).toHaveLength(0);
+    expect(unparseable).toHaveLength(1);
+  });
 
-  it('detects "always" qualifier', () => {
+  it('sends IMPERATIVE_DIRECT without a matcher to unparseable', () => {
     const stmts = [
       makeStmt('Always use strict mode', 'IMPERATIVE_DIRECT'),
     ];
-    const { rules } = assembleRules(stmts);
-    expect(rules[0]?.qualifier).toBe('always');
+    const { rules, unparseable } = assembleRules(stmts);
+    expect(rules).toHaveLength(0);
+    expect(unparseable).toHaveLength(1);
   });
 
-  it('detects "never" qualifier', () => {
-    const stmts = [
-      makeStmt('Never commit directly to main', 'IMPERATIVE_DIRECT'),
-    ];
-    const { rules } = assembleRules(stmts);
-    expect(rules[0]?.qualifier).toBe('never');
-  });
-
-  it('detects "prefer" qualifier', () => {
+  it('sends PREFER_PATTERN without a matcher to unparseable', () => {
     const stmts = [
       makeStmt('Prefer functional components', 'PREFER_PATTERN'),
     ];
-    const { rules } = assembleRules(stmts);
-    const prefRule = rules.find((r) => r.qualifier === 'prefer');
-    expect(prefRule).toBeDefined();
+    const { rules, unparseable } = assembleRules(stmts);
+    expect(rules).toHaveLength(0);
+    expect(unparseable).toHaveLength(1);
   });
 });
 
@@ -157,30 +159,16 @@ describe('rule assembler: section context', () => {
   });
 });
 
-describe('rule assembler: confidence mapping', () => {
+describe('rule assembler: matched rules have correct confidence', () => {
   beforeEach(() => { resetAssemblerCounter(); });
 
-  it('maps high confidence correctly', () => {
+  it('sets confidence to high for matched rules', () => {
     const stmts = [
-      makeStmt('Keep functions small', 'CODE_STYLE', 'Style', 0.95),
+      makeStmt('No any types allowed', 'IMPERATIVE_DIRECT', 'Types', 0.95),
     ];
     const { rules } = assembleRules(stmts);
-    expect(rules[0]?.confidence).toBe('high');
-  });
-
-  it('maps medium confidence correctly', () => {
-    const stmts = [
-      makeStmt('Functions should be short', 'CODE_STYLE', 'Style', 0.75),
-    ];
-    const { rules } = assembleRules(stmts);
-    expect(rules[0]?.confidence).toBe('medium');
-  });
-
-  it('maps low confidence correctly', () => {
-    const stmts = [
-      makeStmt('Some style thing', 'CODE_STYLE', 'Style', 0.50),
-    ];
-    const { rules } = assembleRules(stmts);
-    expect(rules[0]?.confidence).toBe('low');
+    const anyRule = rules.find((r) => r.id.includes('forbidden-no-any'));
+    expect(anyRule).toBeDefined();
+    expect(anyRule?.confidence).toBe('high');
   });
 });

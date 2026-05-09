@@ -71,7 +71,7 @@ export async function handleVerify(
     exitWithError(`Instruction file not found: ${filePath}`);
   }
 
-  const validFormats: ReportFormat[] = ['text', 'json', 'markdown', 'rdjson'];
+  const validFormats: ReportFormat[] = ['text', 'json', 'markdown', 'rdjson', 'summary', 'detailed', 'ci'];
   if (!validFormats.includes(opts.format as ReportFormat)) {
     exitWithError(
       `Invalid format "${opts.format}". Use one of: ${validFormats.join(', ')}`,

@@ -44,11 +44,11 @@ describe('Regex verifier: passing fixtures', () => {
     expect(result.evidence).toHaveLength(0);
   });
 
-  it('finds no file length violations with 300-line limit', () => {
+  it('skips filesystem pattern types (handled by file verifier)', () => {
     const rule = makeRule('max-file-length', '300');
     const result = verifyRegexRule(rule, passingFiles, passingDir);
-    expect(result.passed).toBe(true);
-    expect(result.evidence).toHaveLength(0);
+    expect(result.skipped).toBe(true);
+    expect(result.passed).toBe(false);
   });
 });
 

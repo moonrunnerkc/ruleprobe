@@ -139,7 +139,8 @@ describe('Verifier orchestrator: edge cases', () => {
     const ruleSet = buildRuleSet([rule]);
     const results = await verifyOutput(ruleSet, passingDir);
     expect(results).toHaveLength(1);
-    // Unknown verifier returns a passing result (no check to run)
-    expect(results[0]!.passed).toBe(true);
+    // Unknown verifier returns a skipped result
+    expect(results[0]!.passed).toBe(false);
+    expect(results[0]!.skipped).toBe(true);
   });
 });

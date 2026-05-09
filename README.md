@@ -65,7 +65,7 @@ ruleprobe parse CLAUDE.md
 ruleprobe parse AGENTS.md --show-unparseable
 ```
 
-**Verify agent output** against extracted rules (legacy mode):
+**Verify agent output** against extracted rules (legacy mode). Valid formats: `text`, `json`, `markdown`, `rdjson`, `summary`, `detailed`, `ci`.
 
 ```bash
 ruleprobe verify CLAUDE.md ./agent-output --format text
@@ -73,7 +73,7 @@ ruleprobe verify CLAUDE.md ./agent-output --format text
 
 ## What It Does
 
-**Translate.** Reads 7 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules, .rules) and emits an ESLint config. Each extractable rule maps to an ESLint rule with appropriate severity and options. Rules that have no ESLint equivalent appear as comments in the output so you know what wasn't covered.
+**Translate.** Reads 7 instruction file formats (CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, .windsurfrules, .rules) and emits an ESLint config. Flat config is the default; pass `--format legacy` for `.eslintrc.json` output. Each extractable rule maps to an ESLint rule with appropriate severity and options. Rules that have no ESLint equivalent appear as comments in the output so you know what wasn't covered.
 
 **Detect drift.** Compares parsed rules against an existing ESLint config. Reports rules in the instruction file but missing from ESLint (you're not enforcing what you said), rules in ESLint but not in the instructions (you're enforcing what you never stated), severity mismatches, and argument differences. Use `--format markdown` for PR-ready output.
 
@@ -133,7 +133,7 @@ Six commands: `parse`, `verify`, `analyze`, `lint-config`, `drift`, `extract`.
 
 ```bash
 ruleprobe parse CLAUDE.md --show-unparseable
-ruleprobe verify AGENTS.md ./src --format summary --threshold 0.9
+ruleprobe verify AGENTS.md ./src --format detailed --threshold 0.9
 ruleprobe lint-config CLAUDE.md --format flat --output eslint.config.js
 ruleprobe drift CLAUDE.md .eslintrc.json --format markdown
 ruleprobe extract .eslintrc.json --output rules-section.md
@@ -247,12 +247,12 @@ The mapper translates extractable rules into ESLint rule entries. The drift dete
 | Category | Count | Verifier | Examples |
 |----------|------:|----------|----------|
 | naming | 5 | AST, Filesystem | camelCase variables, PascalCase types, kebab-case files, UPPER_CASE constants |
-| forbidden-pattern | 5 | AST, Regex | no `any`, no `console.log`, no `var`, no `TODO` comments |
-| structure | 5 | AST, Filesystem | named exports, JSDoc required, max file length, max line length, no unused exports |
+| forbidden-pattern | 5 | AST, Regex | no `any`, no `console.log`, no `var`, max line length, no `TODO` comments |
+| structure | 4 | AST, Filesystem | named exports, JSDoc required, max file length, no unused exports |
 | import-pattern | 4 | AST | no path aliases, no deep relative imports, no namespace imports, no wildcard exports |
 | error-handling | 2 | AST | no empty catch, throw Error only |
 | type-safety | 5 | AST, Regex | no enums, no type assertions, no non-null assertions, no implicit any, no ts directives |
-| code-style | 8 | AST, Regex | no var, prefer const, no else after return, no nested ternary, no magic numbers, semicolons, quotes, max function length, max params |
+| code-style | 9 | AST, Regex | prefer const, no else after return, no nested ternary, no magic numbers, semicolons, quotes, max function length, max params, no TODO comments |
 
 Rules that can't map to ESLint (test file requirements, project config, git conventions) are reported as unmappable so you can enforce them through other tooling.
 

@@ -41,24 +41,26 @@ export function mapNonNullAssertions(): EslintRuleEntry {
   };
 }
 
-/** Map no-implicit-any pattern to @typescript-eslint/no-implicit-any. */
+/** Map no-implicit-any pattern to @typescript-eslint/no-explicit-any.
+ * Note: implicit any is caught by TypeScript's noImplicitAny compiler option,
+ * not by an ESLint rule. This maps to the closest ESLint equivalent. */
 export function mapNoImplicitAny(): EslintRuleEntry {
   return {
-    ruleName: '@typescript-eslint/no-implicit-any',
+    ruleName: '@typescript-eslint/no-explicit-any',
     plugin: '@typescript-eslint',
     severity: 'warn',
     sourceRuleId: '',
-    description: 'No implicit any types',
+    description: 'No implicit any types (use @typescript-eslint/no-explicit-any; enable noImplicitAny in tsconfig)',
   };
 }
 
-/** Map no-unused-exports pattern to no-unused-vars (closest eslint equivalent). */
+/** Map no-unused-exports pattern to import/no-unused-modules. */
 export function mapNoUnusedExports(): EslintRuleEntry {
   return {
-    ruleName: 'no-unused-vars',
-    plugin: '@typescript-eslint',
+    ruleName: 'import/no-unused-modules',
+    plugin: 'import',
     severity: 'warn',
-    options: [{ vars: 'all', args: 'after-used', ignoreRestSiblings: true }],
+    options: [{ missingExports: true, unusedExports: true }],
     sourceRuleId: '',
     description: 'Exported declarations must be imported by other files',
   };

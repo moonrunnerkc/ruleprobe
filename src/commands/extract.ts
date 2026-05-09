@@ -7,8 +7,9 @@
  * as skipped comments.
  */
 
-import { parseEslintConfig } from '../drift/parseEslintConfig.js';
+import { parseEslintConfigAsync } from '../drift/parseEslintConfig.js';
 import { extractRules, formatRulesMarkdown } from '../extractor/index.js';
+import { resolveSafePath } from '../utils/safe-path.js';
 import { writeFileSync } from 'node:fs';
 
 /**
@@ -24,10 +25,13 @@ export async function handleExtract(
   opts: { output?: string },
   exitWithError: (message: string) => never,
 ): Promise<void> {
-  // Parse the ESLint config
+  // Resolve and validate input path
+  const safeInputPath = resolveSafePath(eslintFile);
+
+  // Parse the ESLint config (async to support JS/TS files)
   let config;
   try {
-    config = parseEslintConfig(eslintFile);
+    config = await parseEslintConfigAsync(safeInputPath);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     exitWithError(`Failed to parse ESLint config: ${message}`);

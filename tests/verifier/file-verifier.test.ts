@@ -316,14 +316,15 @@ describe('File verifier: test-file-naming', () => {
 // -- default (unknown pattern type) --
 
 describe('File verifier: unknown pattern type', () => {
-  it('returns a passing result with no evidence for an unrecognised pattern', () => {
+  it('returns a skipped result for an unrecognised pattern type', () => {
     const rule = makeRule('totally-unknown-pattern-xyz', true);
     const isolated = mkdtempSync(join(tmpdir(), 'ruleprobe-test-'));
     try {
       writeFileSync(join(isolated, 'index.ts'), 'export {};');
       const files = collectFiles(isolated);
       const result = verifyFileSystemRule(rule, isolated, files);
-      expect(result.passed).toBe(true);
+      expect(result.skipped).toBe(true);
+      expect(result.passed).toBe(false);
       expect(result.evidence).toHaveLength(0);
     } finally {
       rmSync(isolated, { recursive: true, force: true });

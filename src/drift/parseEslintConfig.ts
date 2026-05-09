@@ -1,20 +1,20 @@
 /**
  * ESLint config file parser.
  *
- * Reads .eslintrc.json files and extracts rule entries with severity
- * and options. Uses direct JSON parsing rather than ESLint's
- * loadConfigFromFile because loadConfigFromFile requires all
- * referenced plugins to be installed and resolvable, which makes
- * it brittle in CI/CD pipelines and cross-project contexts where
- * plugin dependencies may not be present.
+ * Reads ESLint config files and extracts rule entries with severity
+ * and options. Supports:
+ * - .eslintrc.json and eslint.config.json (synchronous JSON parsing)
+ * - .eslintrc.js, .eslintrc.cjs, .eslintrc.mjs (async dynamic import)
+ * - eslint.config.js, .mjs, .cjs (async dynamic import)
+ * - eslint.config.ts (async dynamic import)
  *
- * For JS/CJS flat config files, dynamic import is attempted with
- * graceful failure. If the config references plugins that aren't
- * installed, the import will fail and a descriptive error is thrown.
+ * Uses direct JSON parsing for JSON configs rather than ESLint's
+ * loadConfigFromFile because loadConfigFromFile requires all referenced
+ * plugins to be installed, which is brittle in CI/CD pipelines.
  */
 
 import { readFileSync } from 'node:fs';
-import { extname } from 'node:path';
+import { extname, resolve } from 'node:path';
 import type { ParsedEslintConfig, ParsedEslintRule } from './types.js';
 
 /** Normalize a severity value to "error" | "warn" | "off". */
@@ -90,25 +90,27 @@ function extractFlatConfigRules(configArray: unknown[]): ParsedEslintRule[] {
   return rules;
 }
 
+/** File extensions that require dynamic import (JS-like configs). */
+const JS_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts']);
+
 /**
- * Parse an ESLint config file and extract all rule entries.
+ * Parse an ESLint config file synchronously.
  *
- * Supports:
- * - .eslintrc.json (legacy config format)
- * - eslint.config.json (flat config JSON)
- * - .eslintrc.js / .eslintrc.cjs (dynamic import, best effort)
- * - eslint.config.js / eslint.config.mjs / eslint.config.cjs (dynamic import, best effort)
+ * Only supports JSON config files. For JS/TS config files,
+ * use parseEslintConfigAsync instead.
  *
  * @param filePath - Absolute or relative path to the ESLint config file
  * @returns A ParsedEslintConfig with all rules found in the file
- * @throws If the file cannot be read, parsed, or imported
+ * @throws If the file is a JS/TS config or cannot be read/parsed
  */
 export function parseEslintConfig(filePath: string): ParsedEslintConfig {
   const ext = extname(filePath).toLowerCase();
-  const isJsLike = ext === '.js' || ext === '.cjs' || ext === '.mjs';
 
-  if (isJsLike) {
-    return parseJsConfig(filePath);
+  if (JS_EXTENSIONS.has(ext)) {
+    throw new Error(
+      `JS/TS ESLint config files (${filePath}) require runtime module resolution. ` +
+      `Use the async parseEslintConfigAsync function instead.`,
+    );
   }
 
   // JSON config files
@@ -116,7 +118,7 @@ export function parseEslintConfig(filePath: string): ParsedEslintConfig {
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
-  } catch (err) {
+  } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Failed to parse ESLint config at ${filePath}: ${message}`);
   }
@@ -140,17 +142,39 @@ export function parseEslintConfig(filePath: string): ParsedEslintConfig {
 }
 
 /**
- * Parse a JS/JS-like ESLint config file via dynamic import.
+ * Parse an ESLint config file asynchronously.
  *
- * This is a best-effort parse. If the config file imports plugins
- * that aren't installed, the import will fail. In that case, we
- * throw a descriptive error suggesting the user install dependencies
- * or use a JSON config instead.
+ * Supports all formats including JS/TS config files that require
+ * dynamic import. JSON configs are parsed synchronously as a fast path.
+ *
+ * @param filePath - Absolute or relative path to the ESLint config file
+ * @returns A ParsedEslintConfig with all rules found in the file
+ * @throws If the file cannot be read, parsed, or imported
  */
-async function parseJsConfigSync(filePath: string): Promise<ParsedEslintConfig> {
-  const absolutePath = new URL(filePath, import.meta.url).href;
-  const mod = await import(/* @vite-ignore */ absolutePath);
-  const config = mod.default ?? mod;
+export async function parseEslintConfigAsync(filePath: string): Promise<ParsedEslintConfig> {
+  const ext = extname(filePath).toLowerCase();
+
+  // JSON configs can be parsed synchronously
+  if (!JS_EXTENSIONS.has(ext)) {
+    return parseEslintConfig(filePath);
+  }
+
+  // JS/TS configs require dynamic import
+  const absolutePath = resolve(filePath);
+  const fileUrl = new URL(`file://${absolutePath}`).href;
+
+  let mod: unknown;
+  try {
+    mod = await import(/* @vite-ignore */ fileUrl);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `Failed to import ESLint config at ${filePath}: ${message}. ` +
+      `Ensure all plugin dependencies are installed, or convert to .eslintrc.json for reliable parsing.`,
+    );
+  }
+
+  const config = (mod as Record<string, unknown>)['default'] ?? mod;
 
   if (Array.isArray(config)) {
     return {
@@ -167,40 +191,4 @@ async function parseJsConfigSync(filePath: string): Promise<ParsedEslintConfig> 
   }
 
   throw new Error(`Unexpected ESLint config format in ${filePath}: expected object or array`);
-}
-
-/**
- * Parse a JS config file synchronously.
- *
- * JS config files require async dynamic import, so this wrapper
- * provides a sync-like interface by returning the result directly
- * if possible. For JS files, callers should use the async variant.
- *
- * Note: For JS files, this function throws an error directing the
- * user to convert their config to JSON or ensure dependencies are
- * installed. JSON configs are fully supported synchronously.
- */
-function parseJsConfig(filePath: string): ParsedEslintConfig {
-  throw new Error(
-    `JS/TS ESLint config files (${filePath}) require runtime module resolution. ` +
-    `Convert to .eslintrc.json for reliable parsing, or ensure all plugin ` +
-    `dependencies are installed and use the async parseEslintConfigAsync function.`,
-  );
-}
-
-/**
- * Parse an ESLint config file asynchronously.
- *
- * Supports all formats including JS/TS config files that require
- * dynamic import. Use this when the config file is a JS module.
- */
-export async function parseEslintConfigAsync(filePath: string): Promise<ParsedEslintConfig> {
-  const ext = extname(filePath).toLowerCase();
-  const isJsLike = ext === '.js' || ext === '.cjs' || ext === '.mjs';
-
-  if (!isJsLike) {
-    return parseEslintConfig(filePath);
-  }
-
-  return parseJsConfigSync(filePath);
 }

@@ -85,65 +85,49 @@ Checks for `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.github/copilot-instructio
 
 ---
 
-## `ruleprobe compare <instruction-file> <dirs...>`
+## `ruleprobe lint-config <instruction-file>`
 
-Run verification against multiple agent outputs and produce a comparison.
+Parse an instruction file and emit an ESLint config. Flat config is the default; use `--format legacy` for `.eslintrc.json` output.
 
 ```bash
-ruleprobe compare AGENTS.md ./claude-output ./copilot-output --agents claude,copilot --format markdown
+ruleprobe lint-config CLAUDE.md
+ruleprobe lint-config CLAUDE.md --format legacy --output .eslintrc.json
+ruleprobe lint-config AGENTS.md --format flat --output eslint.config.js
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--agents <names>` | none | Comma-separated labels for each directory |
-| `--format <format>` | `markdown` | Report format: `text`, `json`, or `markdown` |
+| `--format <format>` | `flat` | Output format: `flat` (ESLint flat config) or `legacy` (`.eslintrc.json`) |
+| `--output <path>` | stdout | Write config to file |
+
+---
+
+## `ruleprobe drift <md-file> <eslint-file>`
+
+Detect drift between an instruction file and an ESLint config. Reports rules present in only one side, severity mismatches, and argument differences.
+
+```bash
+ruleprobe drift CLAUDE.md .eslintrc.json
+ruleprobe drift CLAUDE.md eslint.config.js --format markdown
+ruleprobe drift AGENTS.md .eslintrc.json --format json --output drift-report.json
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--format <format>` | `text` | Output format: `text`, `json`, or `markdown` |
 | `--output <path>` | stdout | Write report to file |
-| `--allow-symlinks` | `false` | Follow symlinks outside the working directory |
-| `--config <path>` | auto-discovered | Path to config file |
 
 ---
 
-## `ruleprobe tasks`
+## `ruleprobe extract <eslint-file>`
 
-List available task templates and their descriptions.
-
-```bash
-ruleprobe tasks
-```
-
----
-
-## `ruleprobe task <template-id>`
-
-Output the full task prompt for a given template. Three templates ship: `rest-endpoint`, `utility-module`, `react-component`.
+Parse an ESLint config and emit a markdown rules section suitable for pasting into an instruction file. Stylistic rules are reported but excluded from the output by default.
 
 ```bash
-ruleprobe task rest-endpoint
-```
-
----
-
-## `ruleprobe run <instruction-file>`
-
-Invoke an AI agent on a task template, then verify its output. Requires `@anthropic-ai/claude-agent-sdk` and `ANTHROPIC_API_KEY` for SDK mode. Alternatively, use `--watch` to point at a directory where an agent will write output.
-
-```bash
-# SDK mode: invoke Claude, verify, report
-ruleprobe run CLAUDE.md --task rest-endpoint --agent claude-code --model sonnet --format text
-
-# Watch mode: wait for output in a directory, then verify
-ruleprobe run CLAUDE.md --watch ./agent-output --timeout 300 --format json
+ruleprobe extract .eslintrc.json
+ruleprobe extract eslint.config.js --output rules-section.md
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--task <template-id>` | `rest-endpoint` | Task template to give the agent |
-| `--agent <name>` | `claude-code` | Agent identifier |
-| `--model <name>` | `sonnet` | Model to use for the agent |
-| `--format <format>` | `text` | Report format: `text`, `json`, `markdown`, or `rdjson` |
-| `--output-dir <path>` | none | Directory to persist agent output |
-| `--watch <dir>` | none | Watch a directory for agent output instead of invoking |
-| `--timeout <seconds>` | `300` | Watch mode timeout in seconds |
-| `--allow-symlinks` | `false` | Follow symlinks outside the working directory |
-| `--config <path>` | auto-discovered | Path to config file |
-| `--project <tsconfig>` | none | tsconfig.json path for type-aware checks |
+| `--output <path>` | stdout | Write output to file |

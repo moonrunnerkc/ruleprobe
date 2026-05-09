@@ -2,112 +2,34 @@
  * Rule assembler helper functions and constants.
  *
  * Extracted from rule-assembler.ts for the 300-line file limit.
- * Contains: category mapping, ID prefix generation, pattern building,
- * text formatting, and deduplication.
+ * Contains: category mapping, text formatting, and deduplication.
  */
 
-import type { Rule, RuleCategory, VerifierType, VerificationPattern } from '../types.js';
-import type { StatementCategory, ClassifiedStatement } from './pipeline-types.js';
+import type { Rule } from '../types.js';
+import type { StatementCategory } from './pipeline-types.js';
 
 /**
  * Map statement categories to rule categories and verifier types.
- * Categories not in this map are not directly verifiable.
+ * All categories are null because generic classification without a
+ * concrete matcher implementation produces false-passing rules.
+ * Only statements that match a specific deterministic matcher
+ * produce verifiable rules. Everything else goes to unparseable.
  */
-export const CATEGORY_MAP: Record<StatementCategory, {
-  ruleCategory: RuleCategory;
-  verifier: VerifierType;
-  severity: 'error' | 'warning';
-} | null> = {
-  IMPERATIVE_DIRECT: {
-    ruleCategory: 'code-style',
-    verifier: 'regex',
-    severity: 'error',
-  },
-  IMPERATIVE_QUALIFIED: {
-    ruleCategory: 'code-style',
-    verifier: 'regex',
-    severity: 'warning',
-  },
-  PREFER_PATTERN: {
-    ruleCategory: 'code-style',
-    verifier: 'regex',
-    severity: 'warning',
-  },
-  TOOLING_COMMAND: {
-    ruleCategory: 'code-style',
-    verifier: 'regex',
-    severity: 'warning',
-  },
-  FILE_STRUCTURE: {
-    ruleCategory: 'structure',
-    verifier: 'filesystem',
-    severity: 'warning',
-  },
-  NAMING_CONVENTION: {
-    ruleCategory: 'naming',
-    verifier: 'ast',
-    severity: 'error',
-  },
-  WORKFLOW: {
-    ruleCategory: 'code-style',
-    verifier: 'regex',
-    severity: 'warning',
-  },
-  CODE_STYLE: {
-    ruleCategory: 'code-style',
-    verifier: 'regex',
-    severity: 'warning',
-  },
+export const CATEGORY_MAP: Record<StatementCategory, null> = {
+  IMPERATIVE_DIRECT: null,
+  IMPERATIVE_QUALIFIED: null,
+  PREFER_PATTERN: null,
+  TOOLING_COMMAND: null,
+  FILE_STRUCTURE: null,
+  NAMING_CONVENTION: null,
+  WORKFLOW: null,
+  CODE_STYLE: null,
   PATTERN_REFERENCE: null,
   AGENT_BEHAVIOR: null,
-  LANGUAGE_SPECIFIC: {
-    ruleCategory: 'code-style',
-    verifier: 'ast',
-    severity: 'warning',
-  },
+  LANGUAGE_SPECIFIC: null,
   CONTEXT_ONLY: null,
   UNKNOWN: null,
 };
-
-/**
- * Map a statement category to a rule ID prefix.
- *
- * @param category - The statement category
- * @returns A kebab-case prefix for rule IDs
- */
-export function categoryToIdPrefix(category: StatementCategory): string {
-  const prefixes: Record<StatementCategory, string> = {
-    IMPERATIVE_DIRECT: 'imperative',
-    IMPERATIVE_QUALIFIED: 'qualified',
-    PREFER_PATTERN: 'prefer',
-    TOOLING_COMMAND: 'tooling-cmd',
-    FILE_STRUCTURE: 'file-struct',
-    NAMING_CONVENTION: 'naming-conv',
-    WORKFLOW: 'workflow',
-    CODE_STYLE: 'code-style',
-    PATTERN_REFERENCE: 'pattern-ref',
-    AGENT_BEHAVIOR: 'agent-behavior',
-    LANGUAGE_SPECIFIC: 'lang-specific',
-    CONTEXT_ONLY: 'context',
-    UNKNOWN: 'unknown',
-  };
-  return prefixes[category] ?? 'unknown';
-}
-
-/**
- * Build a generic verification pattern from a classified statement.
- *
- * @param stmt - The classified statement
- * @returns A verification pattern with category-based type
- */
-export function buildGenericPattern(stmt: ClassifiedStatement): VerificationPattern {
-  return {
-    type: stmt.category.toLowerCase().replace(/_/g, '-'),
-    target: 'project',
-    expected: stmt.text,
-    scope: 'project',
-  };
-}
 
 /**
  * Truncate description to a reasonable length.

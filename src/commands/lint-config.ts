@@ -10,6 +10,7 @@ import { parseInstructionFile } from '../parsers/index.js';
 import { mapRuleSetToEslintConfig } from '../mapper/index.js';
 import { emitEslintConfig } from '../emitter/eslint.js';
 import type { EslintFormat } from '../mapper/types.js';
+import { resolveSafePath } from '../utils/safe-path.js';
 import { writeFileSync } from 'node:fs';
 
 /**
@@ -28,10 +29,13 @@ export async function handleLintConfig(
 ): Promise<void> {
   const format: EslintFormat = opts.format === 'legacy' ? 'legacy' : 'flat';
 
+  // Resolve and validate input path
+  const safeInputPath = resolveSafePath(filePath);
+
   // Parse the instruction file
   let ruleSet;
   try {
-    ruleSet = parseInstructionFile(filePath);
+    ruleSet = parseInstructionFile(safeInputPath);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     exitWithError(`Failed to parse instruction file: ${message}`);
@@ -45,7 +49,8 @@ export async function handleLintConfig(
 
   // Write to file or stdout
   if (opts.output) {
-    writeFileSync(opts.output, output, 'utf-8');
+    const safeOutputPath = resolveSafePath(opts.output, undefined, { allowExternal: true });
+    writeFileSync(safeOutputPath, output, 'utf-8');
   } else {
     process.stdout.write(output + '\n');
   }

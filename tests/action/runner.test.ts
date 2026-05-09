@@ -79,7 +79,7 @@ describe('runAction (drift mode)', () => {
     await runAction(makeInputs(), makeContext(), deps);
 
     expect(deps.runCommand).toHaveBeenCalledWith(
-      expect.stringContaining('ruleprobe'),
+      expect.any(String),
       expect.arrayContaining(['drift']),
     );
   });
@@ -273,7 +273,7 @@ describe('runAction (verify mode)', () => {
     );
 
     expect(deps.runCommand).toHaveBeenCalledWith(
-      expect.stringContaining('ruleprobe'),
+      expect.any(String),
       expect.arrayContaining(['verify']),
     );
   });

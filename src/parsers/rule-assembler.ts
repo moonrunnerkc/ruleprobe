@@ -2,16 +2,12 @@
  * Pass 3: Rule assembly.
  *
  * Converts classified statements into Rule[] compatible with the v2.0.0
- * pipeline. Rules that are classifiable but not matchable to existing
- * matchers (WORKFLOW, CODE_STYLE, PATTERN_REFERENCE) are still extracted
- * with appropriate category and verifier. Deterministic matchers skip them.
- *
- * Also attempts to match against the existing 82 matchers for backwards
- * compatibility: if a statement matches a specific matcher, prefer that
- * over the generic classification.
+ * pipeline. Only statements that match a concrete deterministic matcher
+ * produce verifiable rules. All other statements go to unparseable,
+ * preventing false passes from generic rules with no check implementation.
  */
 
-import type { Rule, RuleCategory, VerifierType } from '../types.js';
+import type { Rule } from '../types.js';
 import type { ClassifiedStatement } from './pipeline-types.js';
 import { detectQualifier } from './qualifier-detector.js';
 import { RULE_MATCHERS } from './rule-patterns.js';
@@ -20,9 +16,6 @@ import { PROJECT_RULE_MATCHERS } from './rule-patterns-project.js';
 import { ADVANCED_RULE_MATCHERS } from './rule-patterns-advanced.js';
 import type { RuleMatcher } from '../types.js';
 import {
-  CATEGORY_MAP,
-  categoryToIdPrefix,
-  buildGenericPattern,
   truncateDescription,
   stripFormatting,
   deduplicateAssembledRules,
@@ -102,22 +95,9 @@ export function assembleRules(statements: ClassifiedStatement[]): {
       continue;
     }
 
-    // No existing matcher: build a generic rule from classification
-    const mapping = CATEGORY_MAP[stmt.category];
-    if (!mapping) {
-      // Non-verifiable category (WORKFLOW, PATTERN_REFERENCE)
-      // Still extract as a rule but mark as not verifiable
-      const rule = buildGenericRule(stmt);
-      if (rule) {
-        rules.push(rule);
-      } else {
-        unparseable.push(stmt.text);
-      }
-      continue;
-    }
-
-    const rule = buildClassifiedRule(stmt, mapping);
-    rules.push(rule);
+    // No existing matcher: classification-only, not deterministically verifiable.
+    // Send to unparseable rather than creating a false-passing generic rule.
+    unparseable.push(stmt.text);
   }
 
   return {
@@ -172,69 +152,4 @@ function tryMatchExisting(
   return matched;
 }
 
-/**
- * Build a rule from a classified statement that matched no existing matcher.
- */
-function buildClassifiedRule(
-  stmt: ClassifiedStatement,
-  mapping: { ruleCategory: RuleCategory; verifier: VerifierType; severity: 'error' | 'warning' },
-): Rule {
-  assemblerCounter++;
-  const qualifier = detectQualifier(stmt.text);
-  const confidenceLevel = stmt.confidence >= 0.9 ? 'high'
-    : stmt.confidence >= 0.7 ? 'medium'
-      : 'low';
 
-  return {
-    id: `${categoryToIdPrefix(stmt.category)}-${assemblerCounter}`,
-    category: mapping.ruleCategory,
-    source: stmt.text,
-    description: truncateDescription(stmt.text),
-    severity: mapping.severity,
-    verifier: mapping.verifier,
-    pattern: buildGenericPattern(stmt),
-    confidence: confidenceLevel,
-    extractionMethod: 'static',
-    section: stmt.sectionHeader || undefined,
-    qualifier,
-  };
-}
-
-/**
- * Build a rule for non-verifiable categories (AGENT_BEHAVIOR, PATTERN_REFERENCE).
- * These are extracted but flagged as not currently verifiable by code tools.
- */
-function buildGenericRule(stmt: ClassifiedStatement): Rule | null {
-  assemblerCounter++;
-  const qualifier = detectQualifier(stmt.text);
-
-  // Map non-verifiable categories to the closest rule category
-  const categoryMap: Record<string, RuleCategory> = {
-    AGENT_BEHAVIOR: 'agent-behavior',
-    PATTERN_REFERENCE: 'code-style',
-  };
-
-  const ruleCategory = categoryMap[stmt.category];
-  if (!ruleCategory) {
-    return null;
-  }
-
-  return {
-    id: `${categoryToIdPrefix(stmt.category)}-${assemblerCounter}`,
-    category: ruleCategory,
-    source: stmt.text,
-    description: truncateDescription(stmt.text),
-    severity: 'warning',
-    verifier: 'regex',
-    pattern: {
-      type: stmt.category.toLowerCase().replace(/_/g, '-'),
-      target: 'project',
-      expected: stmt.text,
-      scope: 'project',
-    },
-    confidence: stmt.confidence >= 0.7 ? 'medium' : 'low',
-    extractionMethod: 'static',
-    section: stmt.sectionHeader || undefined,
-    qualifier,
-  };
-}

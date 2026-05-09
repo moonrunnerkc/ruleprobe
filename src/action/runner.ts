@@ -13,6 +13,20 @@ import { branchNameFor, commitMessageFor, prTitleFor } from './regenerate.js';
 import type { DriftResult } from '../drift/types.js';
 import type { ActionInputs, ActionDeps, GitHubContext } from './types.js';
 
+/** Resolve the ruleprobe CLI command. Uses RULEPROBE_BIN if set, otherwise npx. */
+function ruleprobeBin(): string {
+  return process.env['RULEPROBE_BIN'] ?? 'npx';
+}
+
+/** Build args for running ruleprobe via npx or direct path. */
+function ruleprobeArgs(command: string, baseArgs: string[]): string[] {
+  const bin = process.env['RULEPROBE_BIN'];
+  if (bin) {
+    return [command, ...baseArgs];
+  }
+  return ['ruleprobe', command, ...baseArgs];
+}
+
 /**
  * Run the full action logic.
  *
@@ -45,7 +59,7 @@ async function runDrift(
   // Determine the eslint config file
   const eslintFile = inputs.eslintFile
     ?? autoDetectEslintFile(changedFiles)
-    ?? findEslintFileInWorkspace(deps, context.workspace);
+    ?? await findEslintFileInWorkspace(deps, context.workspace);
 
   if (!eslintFile) {
     deps.setFailed('No ESLint config file found. Specify one with the eslint-file input.');
@@ -63,13 +77,12 @@ async function runDrift(
   deps.info(`Running drift detection: ${inputs.instructionFile} vs ${eslintFile}`);
 
   // Run ruleprobe drift
-  const driftExitCode = await deps.runCommand('ruleprobe', [
-    'drift',
+  const driftExitCode = await deps.runCommand(ruleprobeBin(), ruleprobeArgs('drift', [
     inputs.instructionFile,
     eslintFile,
     '--format', 'json',
     '--output', `${context.workspace}/.ruleprobe-drift.json`,
-  ]);
+  ]));
 
   if (driftExitCode === 2) {
     deps.setFailed('Drift detection failed with an execution error.');
@@ -87,12 +100,11 @@ async function runDrift(
   }
 
   // Also run text format for the log
-  await deps.runCommand('ruleprobe', [
-    'drift',
+  await deps.runCommand(ruleprobeBin(), ruleprobeArgs('drift', [
     inputs.instructionFile,
     eslintFile,
     '--format', 'text',
-  ]);
+  ]));
 
   // Set outputs
   const driftCount = result.items.length;
@@ -128,8 +140,7 @@ async function runVerify(
   const outputDir = inputs.outputDir ?? 'src';
 
   // Run the text report
-  const textExitCode = await deps.runCommand('ruleprobe', [
-    'verify',
+  const textExitCode = await deps.runCommand(ruleprobeBin(), ruleprobeArgs('verify', [
     inputs.instructionFile,
     outputDir,
     '--agent', inputs.agent ?? 'ci',
@@ -137,11 +148,10 @@ async function runVerify(
     '--severity', inputs.severity ?? 'all',
     '--format', 'text',
     '--output', `${context.workspace}/.ruleprobe-report.txt`,
-  ]);
+  ]));
 
   // Run the JSON report for programmatic consumption
-  await deps.runCommand('ruleprobe', [
-    'verify',
+  await deps.runCommand(ruleprobeBin(), ruleprobeArgs('verify', [
     inputs.instructionFile,
     outputDir,
     '--agent', inputs.agent ?? 'ci',
@@ -149,7 +159,7 @@ async function runVerify(
     '--severity', inputs.severity ?? 'all',
     '--format', 'json',
     '--output', `${context.workspace}/.ruleprobe-report.json`,
-  ]);
+  ]));
 
   // Read JSON report for outputs
   const jsonReport = await deps.readFile(`${context.workspace}/.ruleprobe-report.json`);
@@ -168,7 +178,7 @@ async function runVerify(
 }
 
 /** Find an eslint config file in the workspace by scanning. */
-function findEslintFileInWorkspace(deps: ActionDeps, workspace: string): string | undefined {
+async function findEslintFileInWorkspace(deps: ActionDeps, workspace: string): Promise<string | undefined> {
   const candidates = [
     'eslint.config.ts',
     'eslint.config.mjs',
@@ -184,7 +194,7 @@ function findEslintFileInWorkspace(deps: ActionDeps, workspace: string): string 
 
   for (const candidate of candidates) {
     try {
-      deps.readFile(`${workspace}/${candidate}`);
+      await deps.readFile(`${workspace}/${candidate}`);
       return candidate;
     } catch {
       continue;
@@ -213,12 +223,11 @@ async function regenerateConfig(
   await deps.exec('git', ['config', 'user.email', 'ruleprobe[bot]@users.noreply.github.com']);
 
   // Run ruleprobe lint-config to regenerate
-  const regenExitCode = await deps.runCommand('ruleprobe', [
-    'lint-config',
+  const regenExitCode = await deps.runCommand(ruleprobeBin(), ruleprobeArgs('lint-config', [
     inputs.instructionFile,
     '--format', 'flat',
     '--output', `${context.workspace}/${eslintFile}`,
-  ]);
+  ]));
 
   if (regenExitCode !== 0) {
     deps.warn('Failed to regenerate eslint config.');

@@ -93,9 +93,10 @@ async function verifyNonAstRule(
     default:
       return {
         rule,
-        passed: true,
-        compliance: 1,
+        passed: false,
+        compliance: 0,
         evidence: [],
+        skipped: true,
       };
   }
 }

@@ -337,7 +337,7 @@ describe('mapRuleSetToEslintConfig', () => {
     expect(config.rules[0].ruleName).toBe('no-else-after-return');
   });
 
-  it('maps no-wildcard-exports to import/no-namespace', () => {
+  it('maps no-wildcard-exports to import/no-anonymous-default-export', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'import-no-wildcard-exports-1',
@@ -348,11 +348,11 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('import/no-namespace');
+    expect(config.rules[0].ruleName).toBe('import/no-anonymous-default-export');
     expect(config.rules[0].plugin).toBe('import');
   });
 
-  it('maps no-namespace-imports to @typescript-eslint/consistent-type-imports', () => {
+  it('maps no-namespace-imports to import/no-namespace', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'import-no-namespace-1',
@@ -363,7 +363,7 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('@typescript-eslint/consistent-type-imports');
+    expect(config.rules[0].ruleName).toBe('import/no-namespace');
   });
 
   it('maps no-ts-directives to @typescript-eslint/ban-ts-comment', () => {
@@ -424,7 +424,7 @@ describe('mapRuleSetToEslintConfig', () => {
     expect(config.rules[0].options).toEqual([{ terms: ['todo', 'fixme', 'hack', 'xxx'], location: 'start' }]);
   });
 
-  it('maps no-implicit-any to @typescript-eslint/no-implicit-any', () => {
+  it('maps no-implicit-any to @typescript-eslint/no-explicit-any (closest ESLint rule)', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'type-no-implicit-any-1',
@@ -435,10 +435,10 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('@typescript-eslint/no-implicit-any');
+    expect(config.rules[0].ruleName).toBe('@typescript-eslint/no-explicit-any');
   });
 
-  it('maps no-unused-exports to @typescript-eslint/no-unused-vars (closest match)', () => {
+  it('maps no-unused-exports to import/no-unused-modules', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'structure-no-unused-exports-1',
@@ -449,7 +449,7 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('no-unused-vars');
+    expect(config.rules[0].ruleName).toBe('import/no-unused-modules');
   });
 
   it('maps UPPER_CASE constants to naming-convention', () => {
