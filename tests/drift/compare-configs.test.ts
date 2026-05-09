@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { compareConfigs } from '../../src/drift/compareConfigs.js';
+import { compareConfigs } from '../../src/drift/compare-configs.js';
 import type { EslintConfig, EslintRuleEntry } from '../../src/mapper/types.js';
 import type { ParsedEslintConfig } from '../../src/drift/types.js';
 

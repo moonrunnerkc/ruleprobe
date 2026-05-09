@@ -6,7 +6,7 @@
  * features from raw file vectors.
  */
 
-import type { PatternTopic } from '../../../types.js';
+import type { PatternTopic } from '../types.js';
 import type { FeatureExtractor } from './shared.js';
 import { extractErrorHandling } from './error-handling.js';
 import { extractComponentStructure } from './component-structure.js';

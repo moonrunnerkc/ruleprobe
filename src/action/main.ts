@@ -123,11 +123,11 @@ function createDeps(): ActionDeps {
     },
 
     info(message: string): void {
-      console.log(message);
+      process.stdout.write(`${message}\n`);
     },
 
     warn(message: string): void {
-      console.warn(`::warning::${message}`);
+      process.stderr.write(`::warning::${message}\n`);
     },
 
     setOutput(name: string, value: string): void {
@@ -140,7 +140,7 @@ function createDeps(): ActionDeps {
     },
 
     setFailed(message: string): void {
-      console.error(`::error::${message}`);
+      process.stderr.write(`::error::${message}\n`);
       process.exitCode = 1;
     },
   };
@@ -171,6 +171,6 @@ async function main(): Promise<void> {
 
 main().catch((err: unknown) => {
   const message = err instanceof Error ? err.message : String(err);
-  console.error(`::error::${message}`);
+  process.stderr.write(`::error::${message}\n`);
   process.exitCode = 2;
 });

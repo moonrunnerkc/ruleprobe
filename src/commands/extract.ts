@@ -7,7 +7,7 @@
  * as skipped comments.
  */
 
-import { parseEslintConfigAsync } from '../drift/parseEslintConfig.js';
+import { parseEslintConfigAsync } from '../drift/parse-eslint-config.js';
 import { extractRules, formatRulesMarkdown } from '../extractor/index.js';
 import { resolveSafePath } from '../utils/safe-path.js';
 import { writeFileSync } from 'node:fs';

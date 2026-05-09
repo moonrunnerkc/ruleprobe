@@ -9,7 +9,7 @@
  * Source: 122 WORKFLOW statements in corpus + 10 not-verifiable rules.
  */
 
-import type { RawFileVector } from '../../../types.js';
+import type { RawFileVector } from '../types.js';
 import type { FeatureExtraction, FeatureExtractor } from './shared.js';
 
 /**

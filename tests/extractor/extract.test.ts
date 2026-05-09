@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseEslintConfig } from '../../src/drift/parseEslintConfig.js';
+import { parseEslintConfig } from '../../src/drift/parse-eslint-config.js';
 import { extractRules, formatRulesMarkdown } from '../../src/extractor/index.js';
 import type { ParsedEslintConfig } from '../../src/drift/types.js';
 import { join } from 'node:path';

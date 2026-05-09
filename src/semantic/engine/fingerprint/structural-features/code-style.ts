@@ -6,7 +6,7 @@
  * Source: 29 CODE_STYLE statements in corpus + 6 not-verifiable rules.
  */
 
-import type { RawFileVector } from '../../../types.js';
+import type { RawFileVector } from '../types.js';
 import type { FeatureExtraction, FeatureExtractor } from './shared.js';
 import { countNodeType, getDepth } from './shared.js';
 

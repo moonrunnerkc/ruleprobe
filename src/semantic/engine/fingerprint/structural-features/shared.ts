@@ -6,7 +6,7 @@
  * feature measurements without accessing raw source code.
  */
 
-import type { RawFileVector } from '../../../types.js';
+import type { RawFileVector } from '../types.js';
 
 /** Result of extracting a single feature from a file vector. */
 export interface FeatureExtraction {

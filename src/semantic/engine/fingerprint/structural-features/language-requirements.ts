@@ -6,7 +6,7 @@
  * Source: 31 LANGUAGE_SPECIFIC statements in corpus + 4 not-verifiable rules.
  */
 
-import type { RawFileVector } from '../../../types.js';
+import type { RawFileVector } from '../types.js';
 import type { FeatureExtraction, FeatureExtractor } from './shared.js';
 import { countNodeType } from './shared.js';
 

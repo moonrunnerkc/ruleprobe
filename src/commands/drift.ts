@@ -11,9 +11,9 @@
 
 import { parseInstructionFile } from '../parsers/index.js';
 import { mapRuleSetToEslintConfig } from '../mapper/index.js';
-import { parseEslintConfigAsync } from '../drift/parseEslintConfig.js';
-import { compareConfigs } from '../drift/compareConfigs.js';
-import { formatDriftReport } from '../drift/formatDriftReport.js';
+import { parseEslintConfigAsync } from '../drift/parse-eslint-config.js';
+import { compareConfigs } from '../drift/compare-configs.js';
+import { formatDriftReport } from '../drift/format-drift-report.js';
 import { resolveSafePath } from '../utils/safe-path.js';
 import type { DriftFormat } from '../drift/types.js';
 import { writeFileSync } from 'node:fs';

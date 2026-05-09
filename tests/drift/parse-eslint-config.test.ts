@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseEslintConfig } from '../../src/drift/parseEslintConfig.js';
+import { parseEslintConfig } from '../../src/drift/parse-eslint-config.js';
 import { join } from 'node:path';
 import { writeFileSync, unlinkSync } from 'node:fs';
 

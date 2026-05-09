@@ -5,7 +5,7 @@
  * Source: 1,238 TOOLING_COMMAND statements in corpus (24.3% of all).
  */
 
-import type { RawFileVector } from '../../../types.js';
+import type { RawFileVector } from '../types.js';
 import type { FeatureExtraction, FeatureExtractor } from './shared.js';
 import { countNodeType } from './shared.js';
 

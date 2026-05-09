@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { formatDriftReport } from '../../src/drift/formatDriftReport.js';
+import { formatDriftReport } from '../../src/drift/format-drift-report.js';
 import type { DriftResult, DriftItem } from '../../src/drift/types.js';
 
 /** Build a minimal DriftItem. */
