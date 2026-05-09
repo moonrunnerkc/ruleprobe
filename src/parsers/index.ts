@@ -18,6 +18,7 @@ import {
 } from './structural-parser.js';
 import { classifyAllStatements } from './statement-classifier.js';
 import { assembleRules, resetAssemblerCounter } from './rule-assembler.js';
+import { runDeterministicRubric } from './rubric-deterministic.js';
 
 /**
  * Map of filename patterns to instruction file types.
@@ -101,16 +102,25 @@ export function parseInstructionContent(
   const { rules, unparseable, unclassified } = assembleRules(classified);
 
   // Combine unparseable and unclassified for the RuleSet interface
-  const allUnparseable = [...unparseable, ...unclassified];
+  const initialUnparseable = [...unparseable, ...unclassified];
 
-  if (sourceType === 'unknown' && filePath.endsWith('.md') && rules.length > 0) {
+  // Pass 4: Deterministic rubric decomposition.
+  // Runs without a flag and without any LLM call; subjective phrases
+  // that match a known rubric become real rules tagged
+  // extractionMethod = 'rubric-deterministic' with confidence 'medium'.
+  const existingIds = new Set(rules.map((r) => r.id));
+  const rubricResult = runDeterministicRubric(initialUnparseable, existingIds);
+  const allRules = [...rules, ...rubricResult.rules];
+  const allUnparseable = rubricResult.remaining;
+
+  if (sourceType === 'unknown' && filePath.endsWith('.md') && allRules.length > 0) {
     sourceType = 'generic-markdown';
   }
 
   return {
     sourceFile: filePath,
     sourceType,
-    rules,
+    rules: allRules,
     unparseable: allUnparseable,
   };
 }

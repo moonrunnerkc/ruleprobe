@@ -66,9 +66,16 @@ export function listUsersByRole(role: string): UserRecord[] {
   return allUsers.filter((user) => user.role === role);
 }
 
+/** Base used to encode a random id as alphanumeric characters. */
+const ID_RADIX = 36;
+/** Number of characters retained from the encoded random value. */
+const ID_LENGTH = 9;
+/** Offset used to skip the leading "0." prefix from toString output. */
+const ID_PREFIX_OFFSET = 2;
+
 /** Generate a simple unique identifier. */
 function generateId(): string {
-  return Math.random().toString(36).slice(2, 11);
+  return Math.random().toString(ID_RADIX).slice(ID_PREFIX_OFFSET, ID_PREFIX_OFFSET + ID_LENGTH);
 }
 
 /** Retrieve the in-memory user store. */

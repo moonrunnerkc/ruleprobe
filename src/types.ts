@@ -20,7 +20,7 @@ export type RuleCategory =
   | 'agent-behavior';
 
 /** Which verification engine handles a given rule. */
-export type VerifierType = 'ast' | 'regex' | 'filesystem';
+export type VerifierType = 'ast' | 'regex' | 'filesystem' | 'treesitter';
 
 /**
  * Qualifier describing the strength of an instruction.
@@ -79,7 +79,7 @@ export interface Rule {
   /** Confidence level of the extraction (high = exact keyword match). */
   confidence?: 'high' | 'medium' | 'low';
   /** How this rule was extracted. */
-  extractionMethod?: 'static' | 'llm' | 'rubric' | 'custom';
+  extractionMethod?: 'static' | 'llm' | 'rubric' | 'rubric-deterministic' | 'custom';
   /** Weight within a rubric (0-1). Only set for rubric-decomposed rules. */
   rubricWeight?: number;
   /** The markdown section header this rule was found under. */
