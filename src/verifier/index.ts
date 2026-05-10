@@ -24,6 +24,9 @@ export interface VerifyOptions {
   allowSymlinks?: boolean;
   /** Path to tsconfig.json for type-aware AST checks. */
   projectPath?: string;
+  /** Set of changed file paths (relative to repo root). When set, only
+   * these files are checked in incremental mode. */
+  changedFiles?: Set<string>;
 }
 
 /**
@@ -34,9 +37,12 @@ export interface VerifyOptions {
  * repeated directory traversals. AST rules are batched into a single
  * ts-morph pass to achieve O(files) instead of O(rules * files) parses.
  *
+ * When `changedFiles` is provided, only those files are checked, enabling
+ * incremental verification on PRs without surfacing pre-existing violations.
+ *
  * @param ruleSet - The set of rules to verify
  * @param outputDir - Root directory containing agent-generated output
- * @param options - Verification options (allowSymlinks, etc.)
+ * @param options - Verification options (allowSymlinks, changedFiles, etc.)
  * @returns Array of RuleResults, one per rule, in the same order as ruleSet.rules
  */
 export async function verifyOutput(
@@ -46,13 +52,29 @@ export async function verifyOutput(
 ): Promise<RuleResult[]> {
   const allowSymlinks = options.allowSymlinks ?? false;
   const projectPath = options.projectPath;
+  const changedFiles = options.changedFiles;
   const allFiles = collectFiles(outputDir, allowSymlinks);
+
   const sourceFiles = filterSourceFiles(allFiles);
   const treeSitterFiles = filterTreeSitterFiles(allFiles);
 
+  // AST and regex rules pre-filter to changed files for efficiency: they
+  // have no cross-file dependency, so unchanged files can be skipped
+  // outright in incremental mode.
+  const filteredSourceFiles = changedFiles
+    ? sourceFiles.filter((f) => changedFiles.has(f))
+    : sourceFiles;
+  const filteredTreeSitterFiles = changedFiles
+    ? treeSitterFiles.filter((f) => changedFiles.has(f))
+    : treeSitterFiles;
+
+  // Filesystem rules receive the FULL file list and the changed-set
+  // alongside. Cross-file checks (e.g. test-files-exist) need the full
+  // picture to look up files outside the diff; per-file checks filter
+  // internally using changedFiles.
+
   // Filter to TypeScript/JavaScript files for AST and regex checks
-  // (sourceFiles already excludes minified files via filterSourceFiles)
-  const codeFiles = sourceFiles;
+  const codeFiles = filteredSourceFiles;
 
   // Batch all AST rules for single-pass verification
   const astRules = ruleSet.rules.filter((r) => r.verifier === 'ast');
@@ -67,7 +89,8 @@ export async function verifyOutput(
       results.push(astResultMap.get(rule)!);
     } else {
       const result = await verifyNonAstRule(
-        rule, outputDir, codeFiles, sourceFiles, allFiles, treeSitterFiles, projectPath,
+        rule, outputDir, codeFiles, filteredSourceFiles, allFiles, filteredTreeSitterFiles, projectPath,
+        changedFiles,
       );
       results.push(result);
     }
@@ -79,10 +102,11 @@ export async function verifyOutput(
 /**
  * Verify a single non-AST rule, routing to the correct verifier.
  *
- * Tree-sitter rules run against Python and Go files. Filesystem rules
- * receive the full file list so they can check directory naming and
- * file existence beyond TypeScript/JavaScript. Regex rules use the
- * TS/JS source list.
+ * Tree-sitter rules run against Python and Go files (pre-filtered to
+ * changed files when in incremental mode). Filesystem rules receive
+ * the full file list plus `changedFiles` so cross-file checks like
+ * test-files-exist can resolve test paths outside the diff. Regex
+ * rules use the TS/JS source list (also pre-filtered).
  */
 async function verifyNonAstRule(
   rule: Rule,
@@ -92,10 +116,11 @@ async function verifyNonAstRule(
   allFiles: string[],
   treeSitterFiles: string[],
   _projectPath?: string,
+  changedFiles?: Set<string>,
 ): Promise<RuleResult> {
   switch (rule.verifier) {
     case 'filesystem':
-      return verifyFileSystemRule(rule, outputDir, allFiles);
+      return verifyFileSystemRule(rule, outputDir, allFiles, changedFiles);
     case 'regex':
       return verifyRegexRule(rule, sourceFiles, outputDir);
     case 'treesitter':
@@ -110,4 +135,3 @@ async function verifyNonAstRule(
       };
   }
 }
-

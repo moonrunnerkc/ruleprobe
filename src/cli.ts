@@ -62,6 +62,10 @@ program
   .option('--rubric-decompose', 'decompose subjective rules into measurable rubrics via LLM', false)
   .option('--project <tsconfig>', 'tsconfig.json path for type-aware checks')
   .option('--threshold <number>', 'compliance threshold (0-1) for pass/fail', '0.8')
+  .option(
+    '--changed-since <git-ref>',
+    'only verify files changed relative to the given git ref (branch, tag, or commit)',
+  )
   .action(
     async (
       file: string,
@@ -79,6 +83,7 @@ program
         rubricDecompose: boolean;
         project?: string;
         threshold: string;
+        changedSince?: string;
       },
     ) => {
       await handleVerify(file, outputDir, opts, exitWithError);

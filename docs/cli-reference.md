@@ -35,6 +35,7 @@ ruleprobe verify AGENTS.md ./output --config ruleprobe.config.ts
 ruleprobe verify AGENTS.md ./output --llm-extract
 ruleprobe verify AGENTS.md ./output --rubric-decompose
 ruleprobe verify AGENTS.md ./output --project tsconfig.json
+ruleprobe verify AGENTS.md ./output --changed-since origin/main
 ```
 
 | Option | Default | Description |
@@ -51,8 +52,11 @@ ruleprobe verify AGENTS.md ./output --project tsconfig.json
 | `--rubric-decompose` | `false` | Decompose subjective rules via LLM (requires `OPENAI_API_KEY`) |
 | `--project <tsconfig>` | none | tsconfig.json path for type-aware checks |
 | `--allow-symlinks` | `false` | Follow symlinks outside the working directory |
+| `--changed-since <ref>` | none | Only verify files changed since the given git ref (e.g., `origin/main`) |
 
 **Format highlights:** `summary` outputs a compact per-category table. `detailed` shows per-rule compliance percentages with evidence. `ci` produces key=value output with GitHub Actions `::error` annotations. `rdjson` produces reviewdog-compatible JSON.
+
+**`--changed-since <git-ref>`:** runs `git diff --name-only --diff-filter=ACMR <ref>...HEAD` (added, copied, modified, renamed; deletions excluded) and limits per-file checks to that set. Project-level rules (`changelog-exists`, `strict-mode`, etc.) still run. Cross-file rules like `test-files-exist` see the full file tree, so a missing test for a changed source file is still reported even when the test file itself is unchanged. The flag is opt-in: omit it and `verify` checks every file under `<output-dir>`. Requires `git` on `PATH` and the working directory to be inside a git repo with at least one commit. Exits with code 2 and a descriptive message if either is missing.
 
 **Exit codes:** `0` all rules passed, `1` violations found, `2` execution error.
 

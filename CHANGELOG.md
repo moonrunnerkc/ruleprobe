@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New Features
+
+- **`--changed-since <git-ref>` on `verify`.** Only verify files changed since the given git ref. Runs `git diff --name-only --diff-filter=ACMR <ref>...HEAD` and intersects with the output-dir walk. Available as a `changed-since` input on the GitHub Action in verify mode. Exits 2 with instructions when git is unavailable or the ref is invalid.
+
 ### Resolved Limitations
 
 - **Other-language coverage.** Tree-sitter is now wired into the verifier orchestrator behind a fourth `treesitter` engine. Python and Go files get real AST evidence (function/class naming, function length) rather than regex/filesystem fallbacks. New matcher table at `src/parsers/rule-patterns-treesitter.ts`; integration tests at `tests/verifier/treesitter-integration.test.ts`.

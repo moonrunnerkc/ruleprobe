@@ -69,6 +69,7 @@ ruleprobe parse AGENTS.md --show-unparseable
 
 ```bash
 ruleprobe verify CLAUDE.md ./agent-output --format text
+ruleprobe verify AGENTS.md ./src --changed-since origin/main
 ```
 
 ## What It Does
@@ -142,6 +143,19 @@ ruleprobe analyze ./my-project --format json
 
 Full command reference with all options: [docs/cli-reference.md](docs/cli-reference.md)
 
+### Incremental verification with `--changed-since`
+
+`ruleprobe verify` accepts `--changed-since <git-ref>` to limit per-file checks to files changed between the given ref and `HEAD`. Useful on PRs where you only want to enforce rules on the new diff and not surface pre-existing violations.
+
+```bash
+ruleprobe verify AGENTS.md ./src --changed-since origin/main
+ruleprobe verify AGENTS.md ./src --changed-since $(git merge-base HEAD origin/main)
+```
+
+The flag runs `git diff --name-only --diff-filter=ACMR <ref>...HEAD` (added, copied, modified, renamed; deleted files are excluded). Project-level rules (`changelog-exists`, `strict-mode`, etc.) still run regardless of the diff. Cross-file rules like `test-files-exist` see the full file list so they can find a test file even when the test itself was not changed.
+
+If git is not on `PATH` or the ref is invalid, `verify` exits with code 2 and a descriptive message.
+
 ## GitHub Action
 
 Drop this into `.github/workflows/ruleprobe.yml`:
@@ -188,10 +202,29 @@ No API keys needed, deterministic results, runs in seconds. The action only runs
 | `regenerate-on-drift` | `false` | Open a follow-up PR with regenerated config when drift is detected |
 | `comment-on-pr` | `true` | Post drift results as a PR comment |
 | `fail-on-drift` | `false` | Fail the action if drift is detected |
+| `changed-since` | (unset) | Verify mode only. Git ref to diff against; only files changed in `<ref>...HEAD` are checked per-file |
 
 Drift mode outputs: `drift-count`, `has-drift`.
 
 </details>
+
+### Verify mode with incremental diff
+
+To run `verify` on the PR diff only — surfacing new violations without flagging pre-existing ones — set `mode: verify` and pass the PR base SHA via `changed-since`:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0  # full history so the base SHA is reachable
+- uses: moonrunnerkc/ruleprobe@v4
+  with:
+    mode: verify
+    instruction-file: AGENTS.md
+    output-dir: src
+    changed-since: ${{ github.event.pull_request.base.sha }}
+```
+
+`fetch-depth: 0` is required because `actions/checkout` defaults to a shallow clone and the base SHA may not be present in a shallow history.
 
 ## Programmatic API
 

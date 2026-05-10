@@ -26,18 +26,30 @@ format="${INPUT_FORMAT:-text}"
 severity="${INPUT_SEVERITY:-all}"
 fail_on_violation="${INPUT_FAIL_ON_VIOLATION:-true}"
 reviewdog_format="${INPUT_REVIEWDOG_FORMAT:-false}"
+changed_since="${INPUT_CHANGED_SINCE:-}"
+
+# ── Helper: build common verify args ──
+
+build_verify_args() {
+  local args=()
+  args+=("${instruction_file}")
+  args+=("${output_dir}")
+  args+=(--agent "${agent}")
+  args+=(--model "${model}")
+  args+=(--severity "${severity}")
+  if [[ -n "${changed_since}" ]]; then
+    args+=(--changed-since "${changed_since}")
+  fi
+  printf '%s\n' "${args[@]}"
+}
 
 # ── Run the text report (saved for PR comments) ──
 
 set +e
-node "${RULEPROBE}" verify \
-  "${instruction_file}" \
-  "${output_dir}" \
-  --agent "${agent}" \
-  --model "${model}" \
-  --severity "${severity}" \
-  --format text \
-  > "${REPORT_FILE}" 2>&1
+{
+  build_verify_args
+  echo "--format text"
+} | xargs node "${RULEPROBE}" verify > "${REPORT_FILE}" 2>&1
 text_exit=$?
 set -e
 
@@ -52,14 +64,10 @@ cat "${REPORT_FILE}"
 # ── Run the JSON report (for programmatic consumption and output vars) ──
 
 set +e
-node "${RULEPROBE}" verify \
-  "${instruction_file}" \
-  "${output_dir}" \
-  --agent "${agent}" \
-  --model "${model}" \
-  --severity "${severity}" \
-  --format json \
-  > "${JSON_FILE}" 2>&1
+{
+  build_verify_args
+  echo "--format json"
+} | xargs node "${RULEPROBE}" verify > "${JSON_FILE}" 2>&1
 json_exit=$?
 set -e
 
@@ -89,14 +97,10 @@ echo "Score: ${score}% | Passed: ${passed} | Failed: ${failed} | Total: ${total}
 
 if [[ "${reviewdog_format}" == "true" ]]; then
   set +e
-  node "${RULEPROBE}" verify \
-    "${instruction_file}" \
-    "${output_dir}" \
-    --agent "${agent}" \
-    --model "${model}" \
-    --severity "${severity}" \
-    --format rdjson \
-    > "${RDJSON_FILE}" 2>&1
+  {
+    build_verify_args
+    echo "--format rdjson"
+  } | xargs node "${RULEPROBE}" verify > "${RDJSON_FILE}" 2>&1
   rdjson_exit=$?
   set -e
 
@@ -111,13 +115,10 @@ if [[ "${format}" != "text" && "${format}" != "json" ]]; then
   echo ""
   echo "--- ${format} report ---"
   set +e
-  node "${RULEPROBE}" verify \
-    "${instruction_file}" \
-    "${output_dir}" \
-    --agent "${agent}" \
-    --model "${model}" \
-    --severity "${severity}" \
-    --format "${format}"
+  {
+    build_verify_args
+    echo "--format ${format}"
+  } | xargs node "${RULEPROBE}" verify
   set -e
 fi
 

@@ -65,6 +65,9 @@ inputs:
     description: "Post results as a PR comment (verify mode only)"
     required: false
     default: "true"
+  changed-since:
+    description: "Only verify files changed relative to the given git ref (verify mode only)"
+    required: false
 
 outputs:
   drift-count:
@@ -136,6 +139,7 @@ runs:
         INPUT_SEVERITY: ${{ inputs.severity }}
         INPUT_FAIL_ON_VIOLATION: ${{ inputs.fail-on-violation }}
         INPUT_REVIEWDOG_FORMAT: ${{ inputs.reviewdog-format }}
+        INPUT_CHANGED_SINCE: ${{ inputs.changed-since }}
         RULEPROBE_BIN: ${{ github.action_path }}/dist/cli.js
       run: bash "${{ github.action_path }}/action-scripts/run-verify.sh"
 

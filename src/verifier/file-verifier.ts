@@ -67,17 +67,23 @@ function collectFiles(dir: string, allowSymlinks: boolean = false): string[] {
  *
  * Routes to the appropriate check function based on the rule's
  * verification pattern type. Accepts a pre-collected file list
- * to avoid redundant directory walks.
+ * to avoid redundant directory walks. When `changedFiles` is set,
+ * only changed files are checked (incremental mode). The test-files-exist
+ * rule has special handling: it scans the full file list to build
+ * the set of known test files, but only reports evidence for source
+ * files that are in the changed set.
  *
  * @param rule - The rule to verify
  * @param outputDir - Root directory of agent output
  * @param files - Pre-collected file paths from the directory walk
+ * @param changedFiles - Optional set of changed file paths for incremental mode
  * @returns A RuleResult with pass/fail and evidence
  */
 export function verifyFileSystemRule(
   rule: Rule,
   outputDir: string,
   files: string[],
+  changedFiles?: Set<string>,
 ): RuleResult {
   const patternType = rule.pattern.type;
 
@@ -95,22 +101,22 @@ export function verifyFileSystemRule(
 
   switch (patternType) {
     case 'kebab-case':
-      evidence = checkKebabCaseFileNames(files, outputDir);
+      evidence = checkKebabCaseFileNames(files, outputDir, changedFiles);
       break;
     case 'kebab-case-directories':
-      evidence = checkKebabCaseDirectories(files, outputDir);
+      evidence = checkKebabCaseDirectories(files, outputDir, changedFiles);
       break;
     case 'test-files-exist':
-      evidence = checkTestFilesExist(files, outputDir);
+      evidence = checkTestFilesExist(files, outputDir, changedFiles);
       break;
     case 'test-file-naming':
-      evidence = checkTestFileNaming(files, outputDir);
+      evidence = checkTestFileNaming(files, outputDir, changedFiles);
       break;
     case 'max-file-length': {
       const maxLines = typeof rule.pattern.expected === 'string'
         ? parseInt(rule.pattern.expected, 10)
         : 300;
-      evidence = checkMaxFileLength(files, outputDir, maxLines);
+      evidence = checkMaxFileLength(files, outputDir, maxLines, changedFiles);
       break;
     }
     case 'strict-mode':
@@ -168,13 +174,6 @@ export function verifyFileSystemRule(
 
   // All supported patterns are handled above; the earlier guard
   // ensures we never reach this point with an unsupported pattern.
-  return {
-    rule,
-    passed: evidence.length === 0,
-    compliance: evidence.length === 0 ? 1 : 0,
-    evidence,
-  };
-
   return {
     rule,
     passed: evidence.length === 0,

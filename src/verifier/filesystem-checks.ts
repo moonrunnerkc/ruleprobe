@@ -47,16 +47,21 @@ export function filterTreeSitterFiles(files: string[]): string[] {
  * Check that file names follow the kebab-case convention.
  *
  * Only checks TypeScript/JavaScript files. Allows dotfiles and
- * files with known special names (index, types, etc.).
+ * files with known special names (index, types, etc.). When changedFiles
+ * is set, only checks files in the changed set.
  */
 export function checkKebabCaseFileNames(
   files: string[],
   outputDir: string,
+  changedFiles?: Set<string>,
 ): Evidence[] {
   const evidence: Evidence[] = [];
   const sourceFiles = filterSourceFiles(files);
 
   for (const filePath of sourceFiles) {
+    if (changedFiles && !changedFiles.has(filePath)) {
+      continue;
+    }
     const name = basename(filePath);
     const nameWithoutExt = name.replace(/\.[^.]+$/, '');
 
@@ -93,16 +98,21 @@ const SKIP_DIRS = new Set([
  *
  * Extracts unique directory names from the file list and checks
  * each one. Skips hidden directories (starting with .) and
- * common tooling/build directories.
+ * common tooling/build directories. When changedFiles is set, only
+ * checks directories containing changed files.
  */
 export function checkKebabCaseDirectories(
   files: string[],
   outputDir: string,
+  changedFiles?: Set<string>,
 ): Evidence[] {
   const evidence: Evidence[] = [];
   const checked = new Set<string>();
 
   for (const filePath of files) {
+    if (changedFiles && !changedFiles.has(filePath)) {
+      continue;
+    }
     const rel = relative(outputDir, filePath);
     const parts = rel.split(sep).filter(Boolean);
 
@@ -138,10 +148,16 @@ export function checkKebabCaseDirectories(
  * Check that every source file in src/ has a corresponding test file.
  *
  * Maps src/path/to/file.ts to tests/path/to/file.test.ts.
+ *
+ * When changedFiles is set (incremental mode), builds the full set of
+ * known test files from the complete file list, but only reports evidence
+ * for source files in the changed set. This ensures the rule remains
+ * checkable even when the test file itself was not modified.
  */
 export function checkTestFilesExist(
   files: string[],
   outputDir: string,
+  changedFiles?: Set<string>,
 ): Evidence[] {
   const evidence: Evidence[] = [];
   const sourceFiles = filterSourceFiles(files);
@@ -149,6 +165,8 @@ export function checkTestFilesExist(
   const srcFiles: string[] = [];
   const testFilePaths = new Set<string>();
 
+  // Always build the full picture: all src files and all test files
+  // that exist in the output directory.
   for (const filePath of sourceFiles) {
     const rel = relative(outputDir, filePath);
     if (rel.startsWith('src/') || rel.startsWith('src\\')) {
@@ -160,7 +178,12 @@ export function checkTestFilesExist(
     }
   }
 
+  // In incremental mode, only report evidence for changed source files.
   for (const srcFile of srcFiles) {
+    if (changedFiles && !changedFiles.has(srcFile)) {
+      continue;
+    }
+
     const rel = relative(outputDir, srcFile);
     const srcRelative = rel.replace(/^src[/\\]/, '');
     const nameWithoutExt = srcRelative.replace(/\.[^.]+$/, '');
@@ -182,16 +205,22 @@ export function checkTestFilesExist(
 
 /**
  * Check file length (line count) against a maximum.
+ *
+ * When changedFiles is set, only checks changed files.
  */
 export function checkMaxFileLength(
   files: string[],
   outputDir: string,
   maxLines: number,
+  changedFiles?: Set<string>,
 ): Evidence[] {
   const evidence: Evidence[] = [];
   const sourceFiles = filterSourceFiles(files);
 
   for (const filePath of sourceFiles) {
+    if (changedFiles && !changedFiles.has(filePath)) {
+      continue;
+    }
     try {
       const content = readFileSync(filePath, 'utf-8');
       const lineCount = content.split('\n').length;
@@ -217,16 +246,22 @@ export function checkMaxFileLength(
  * Check that test files follow the *.test.ts naming pattern.
  *
  * Scans files in tests/ or test/ directories and flags any that
- * don't end with .test.ts or .spec.ts.
+ * don't end with .test.ts or .spec.ts. When changedFiles is set,
+ * only checks changed files.
  */
 export function checkTestFileNaming(
   files: string[],
   outputDir: string,
+  changedFiles?: Set<string>,
 ): Evidence[] {
   const evidence: Evidence[] = [];
   const sourceFiles = filterSourceFiles(files);
 
   for (const filePath of sourceFiles) {
+    if (changedFiles && !changedFiles.has(filePath)) {
+      continue;
+    }
+
     const rel = relative(outputDir, filePath);
     const isTestDir = rel.startsWith('tests/') || rel.startsWith('tests\\') ||
       rel.startsWith('test/') || rel.startsWith('test\\');
