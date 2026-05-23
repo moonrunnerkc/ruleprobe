@@ -23,6 +23,24 @@ What is NEVER sent:
 - Source code, variable names, function names, string literals
 - Comments, import paths, module names, file paths, scope names
 
+## LLM Call Budgets
+
+External LLM calls happen only on the opt-in `--llm-extract`,
+`--rubric-decompose`, and `--semantic` paths, and each has an upper
+bound on calls per invocation:
+
+- `--llm-extract`: at most one OpenAI call per invocation. Unparseable
+  lines are sent as a single batch (default 50 lines). Transient 429
+  and 503 responses are retried up to 3 times with exponential
+  backoff; non-transient errors fail immediately.
+- `--rubric-decompose`: at most one OpenAI call per invocation, batch
+  of 20 unparseable lines.
+- `--semantic`: capped by `--max-llm-calls` (default 20). The semantic
+  engine logs and stops escalation when the budget is hit.
+
+If you supply your own API key, these budgets define the maximum cost
+ceiling for a single ruleprobe invocation against your account.
+
 ## Path Traversal Protection
 
 User-supplied paths (instruction files and output directories) are resolved and bounded to the current working directory before any filesystem operation.
