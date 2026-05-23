@@ -45,17 +45,6 @@ RuleProbe exports core pipeline functions, project analysis, configuration, and 
 
 Semantic analysis runs entirely in-process. Raw source code never leaves the machine; only numeric AST vectors, opaque hashes, boolean flags, and rule text are sent to the Anthropic API for LLM-assisted judgments.
 
-## Agent Invocation
-
-| Function | Purpose |
-|----------|---------|
-| `buildAgentConfig(options)` | Build an agent invocation configuration |
-| `invokeAgent(config)` | Invoke an AI agent via SDK |
-| `isAgentSdkAvailable()` | Check if the Claude Agent SDK is installed |
-| `hasAgentOutput(dir)` | Check if a directory contains agent output |
-| `watchForCompletion(options)` | Watch a directory for agent output |
-| `countCodeFiles(dir)` | Count code files in a directory |
-
 ---
 
 ## Usage Examples
@@ -129,21 +118,7 @@ export default defineConfig({
 
 ### Semantic analysis (v4.0.0+)
 
-```typescript
-import { analyzeProject } from 'ruleprobe';
-import { analyzeProjectSemantic, integrateSemanticResults } from 'ruleprobe/semantic';
-import { resolveSemanticConfig } from 'ruleprobe/semantic/config';
-
-const analysis = analyzeProject('./my-project');
-const config = resolveSemanticConfig('./my-project', { anthropicKey: process.env.ANTHROPIC_API_KEY });
-
-if (config) {
-  const rules = analysis.files.flatMap(f => f.ruleSet.rules);
-  const semanticResult = await analyzeProjectSemantic('./my-project', config, rules);
-  const enhanced = integrateSemanticResults(analysis, semanticResult);
-  console.log(`Semantic verdicts: ${semanticResult.report.verdicts.length}`);
-}
-```
+Semantic analysis runs via the `--semantic` flag on the `analyze` command. The underlying `analyzeProjectSemantic`, `integrateSemanticResults`, and `resolveSemanticConfig` functions live in `src/semantic/` but are not part of the published package's main export. Call semantic analysis through the CLI rather than the programmatic API.
 
 ---
 
@@ -195,14 +170,16 @@ interface ProjectAnalysis {
 }
 
 type RuleCategory =
-  | 'naming' | 'forbidden-pattern' | 'structure' | 'test-requirement'
-  | 'import-pattern' | 'error-handling' | 'type-safety' | 'code-style'
-  | 'dependency' | 'preference' | 'file-structure' | 'tooling'
-  | 'testing' | 'workflow' | 'agent-behavior';
+  | 'naming'
+  | 'forbidden-pattern'
+  | 'structure'
+  | 'import-pattern'
+  | 'error-handling'
+  | 'type-safety'
+  | 'code-style'
+  | 'agent-behavior';
 
-type VerifierType =
-  | 'ast' | 'regex' | 'filesystem' | 'treesitter'
-  | 'preference' | 'tooling' | 'config-file' | 'git-history';
+type VerifierType = 'ast' | 'regex' | 'filesystem' | 'treesitter';
 
 type QualifierType =
   | 'always' | 'prefer' | 'when-possible'
