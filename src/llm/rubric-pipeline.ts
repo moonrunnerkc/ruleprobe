@@ -9,31 +9,7 @@
 
 import type { Rule, RuleSet } from '../types.js';
 import type { RubricDecomposer, DecomposedRubric, RubricCheck } from './rubric-types.js';
-
-/**
- * All known pattern types that rubric checks can reference.
- * Kept in sync with the verifier switch statements.
- */
-const KNOWN_PATTERN_TYPES: string[] = [
-  // AST checks
-  'camelCase', 'PascalCase', 'no-any', 'no-console-log', 'named-exports',
-  'jsdoc-public', 'no-path-aliases', 'no-deep-relative-imports',
-  'no-empty-catch', 'no-enum', 'no-type-assertions', 'no-non-null-assertions',
-  'throw-error-only', 'no-console-extended', 'no-nested-ternary',
-  'no-magic-numbers', 'no-else-after-return', 'max-function-length',
-  'max-params', 'no-namespace-imports', 'no-barrel-files', 'no-settimeout-in-tests',
-  'no-var', 'prefer-const', 'no-wildcard-exports',
-  // Regex checks
-  'line-length', 'no-ts-directives', 'no-test-only', 'no-test-skip',
-  'quote-style', 'banned-import', 'no-todo-comments', 'consistent-semicolons',
-  // Filesystem checks
-  'kebab-case', 'test-files-exist', 'max-file-length', 'test-file-naming',
-  'strict-mode', 'file-exists', 'formatter-config', 'pinned-dependencies',
-  // Type-aware checks
-  'no-implicit-any', 'no-unused-exports', 'no-unresolved-imports',
-  // Tree-sitter checks
-  'python-snake-case', 'python-class-naming', 'go-naming', 'function-length',
-];
+import { KNOWN_PATTERN_TYPES } from './known-patterns.js';
 
 /** Options for rubric decomposition. */
 export interface RubricDecomposeOptions {
