@@ -210,10 +210,9 @@ describe('emitEslintConfig', () => {
       const parsed = JSON.parse(output);
       expect(parsed.rules['@typescript-eslint/no-explicit-any']).toBe('error');
       expect(parsed.plugins).toEqual(['@typescript-eslint']);
-      expect(parsed.extends).toEqual([
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-      ]);
+      // Legacy emitter must not auto-enable plugin recommended sets:
+      // it would enable hundreds of rules the flat emitter does not.
+      expect(parsed.extends).toBeUndefined();
     });
 
     it('emits rules with options in legacy format', () => {

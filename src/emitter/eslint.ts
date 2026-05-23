@@ -161,14 +161,10 @@ function emitLegacyConfig(config: EslintConfig): string {
     configObj['plugins'] = config.plugins;
   }
 
-  // Extends
-  if (config.plugins.length > 0) {
-    const extendsList = ['eslint:recommended'];
-    for (const plugin of config.plugins) {
-      extendsList.push(`plugin:${plugin}/recommended`);
-    }
-    configObj['extends'] = extendsList;
-  }
+  // No automatic `extends` block. The flat config emitter does not add
+  // one and emitting eslint:recommended plus plugin recommended sets
+  // here would enable hundreds of unrelated rules. Users who want
+  // recommended sets can extend them in their own config.
 
   // Rules as an object with severity + options
   const rulesObj: Record<string, unknown> = {};
