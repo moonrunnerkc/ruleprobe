@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320">
+  <!-- Background -->
+  <rect width="1280" height="320" fill="#0d1117"/>
+
+  <!-- Left border accent -->
+  <rect x="0" y="0" width="6" height="320" fill="#3178c6"/>
+
+  <!-- Title -->
+  <text
+    x="80" y="174"
+    font-family="'IBM Plex Sans', 'Inter', system-ui, -apple-system, sans-serif"
+    font-weight="700"
+    font-size="100"
+    fill="#ffffff"
+    letter-spacing="-3"
+  >RuleProbe</text>
+
+  <!-- Accent underline -->
+  <rect x="80" y="190" width="360" height="3" rx="1.5" fill="#3178c6"/>
+
+  <!-- Tagline -->
+  <text
+    x="80" y="232"
+    font-family="'IBM Plex Sans', 'Inter', system-ui, -apple-system, sans-serif"
+    font-weight="400"
+    font-size="21"
+    fill="#8b949e"
+  >Translate instruction files to ESLint. Detect drift. Extract rules.</text>
+
+  <!-- Right side: translation diagram -->
+
+  <!-- CLAUDE.md box -->
+  <rect x="820" y="90" width="156" height="56" rx="8" fill="#161b22" stroke="#3178c6" stroke-width="1.5"/>
+  <text
+    x="898" y="124"
+    font-family="'IBM Plex Mono', 'Courier New', monospace"
+    font-size="15"
+    font-weight="600"
+    fill="#3178c6"
+    text-anchor="middle"
+  >CLAUDE.md</text>
+
+  <!-- Arrow right (translate) -->
+  <line x1="976" y1="118" x2="1028" y2="118" stroke="#58a6ff" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="1028,112 1042,118 1028,124" fill="#58a6ff"/>
+
+  <!-- eslint.config box -->
+  <rect x="1042" y="90" width="170" height="56" rx="8" fill="#161b22" stroke="#3178c6" stroke-width="1.5"/>
+  <text
+    x="1127" y="124"
+    font-family="'IBM Plex Mono', 'Courier New', monospace"
+    font-size="15"
+    font-weight="600"
+    fill="#3178c6"
+    text-anchor="middle"
+  >eslint.config.js</text>
+
+  <!-- .eslintrc.json box (existing config) -->
+  <rect x="820" y="178" width="156" height="52" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <text
+    x="898" y="209"
+    font-family="'IBM Plex Mono', 'Courier New', monospace"
+    font-size="14"
+    fill="#6e7681"
+    text-anchor="middle"
+  >.eslintrc.json</text>
+
+  <!-- Dashed drift comparison arrow -->
+  <line x1="976" y1="204" x2="1042" y2="142" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="5,4" stroke-linecap="round" opacity="0.65"/>
+
+  <!-- drift label pill -->
+  <rect x="988" y="163" width="54" height="22" rx="5" fill="#1c2128" stroke="#30363d" stroke-width="1"/>
+  <text
+    x="1015" y="178"
+    font-family="'IBM Plex Sans', 'Inter', system-ui, sans-serif"
+    font-size="12"
+    fill="#58a6ff"
+    text-anchor="middle"
+    opacity="0.9"
+  >drift?</text>
+</svg>

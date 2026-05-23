@@ -4,12 +4,14 @@
  * Serializes an EslintConfig to a runnable ESLint configuration string.
  * Supports flat config (default) and legacy .eslintrc format.
  *
- * Flat config emits valid ES module JavaScript that can be imported by ESLint.
- * Legacy config emits valid JSON suitable for .eslintrc.json files.
+ * Flat config emits valid ES module JavaScript that can be imported by
+ * ESLint. Unmappable rules are appended as JS comments, which remain
+ * valid JavaScript.
  *
- * Unmappable rules are emitted as commented sections with the original
- * instruction text and a one-line reason explaining why no ESLint rule
- * can enforce them.
+ * Legacy config emits strictly valid JSON suitable for .eslintrc.json
+ * files. Unmappable rules are not included in the JSON output because
+ * JSON has no comment syntax; callers should surface them through a
+ * sidecar channel via formatUnmappableSummary().
  */
 
 import type { EslintConfig, EslintFormat, EslintRuleEntry } from '../mapper/types.js';
@@ -159,14 +161,10 @@ function emitLegacyConfig(config: EslintConfig): string {
     configObj['plugins'] = config.plugins;
   }
 
-  // Extends
-  if (config.plugins.length > 0) {
-    const extendsList = ['eslint:recommended'];
-    for (const plugin of config.plugins) {
-      extendsList.push(`plugin:${plugin}/recommended`);
-    }
-    configObj['extends'] = extendsList;
-  }
+  // No automatic `extends` block. The flat config emitter does not add
+  // one and emitting eslint:recommended plus plugin recommended sets
+  // here would enable hundreds of unrelated rules. Users who want
+  // recommended sets can extend them in their own config.
 
   // Rules as an object with severity + options
   const rulesObj: Record<string, unknown> = {};
@@ -179,27 +177,36 @@ function emitLegacyConfig(config: EslintConfig): string {
   }
   configObj['rules'] = rulesObj;
 
-  // Serialize to JSON with indentation
-  const jsonStr = JSON.stringify(configObj, null, 2);
+  // Legacy output is strictly JSON. Unmappable rules cannot be encoded
+  // inside the JSON without breaking JSON.parse, so they are omitted
+  // here. Callers that want to surface them should use
+  // formatUnmappableSummary() and write to stderr or a sidecar path.
+  return JSON.stringify(configObj, null, 2);
+}
 
-  // Append unmappable rules as a comment block after the JSON
+/**
+ * Build a human-readable summary of unmappable rules.
+ *
+ * Returns an empty string when there are no unmappable rules. Otherwise
+ * returns a multi-line block listing each rule's id, reason, and the
+ * original instruction text. Safe to print to stderr or write alongside
+ * the legacy JSON output as a sidecar file.
+ *
+ * @param config - The mapped ESLint config
+ * @returns A summary block or empty string when nothing is unmappable
+ */
+export function formatUnmappableSummary(config: EslintConfig): string {
   if (config.unmappable.length === 0) {
-    return jsonStr;
+    return '';
   }
-
-  const commentLines: string[] = [
-    '',
-    '// Unmappable rules (not part of the JSON config):',
-    '// The following rules have no direct ESLint equivalent.',
-    '',
+  const lines: string[] = [
+    'Unmappable rules (not enforceable by ESLint):',
   ];
   for (const rule of config.unmappable) {
-    commentLines.push(`// [${rule.sourceRuleId}] ${rule.reason}`);
-    commentLines.push(`//   Original: ${rule.sourceText}`);
-    commentLines.push('');
+    lines.push(`  [${rule.sourceRuleId}] ${rule.reason}`);
+    lines.push(`    Original: ${rule.sourceText}`);
   }
-
-  return jsonStr + commentLines.join('\n');
+  return lines.join('\n');
 }
 
 /**

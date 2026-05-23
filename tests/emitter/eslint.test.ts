@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { emitEslintConfig } from '../../src/emitter/eslint.js';
+import { emitEslintConfig, formatUnmappableSummary } from '../../src/emitter/eslint.js';
 import type { EslintConfig } from '../../src/mapper/types.js';
 
 function makeConfig(overrides: Partial<EslintConfig> = {}): EslintConfig {
@@ -210,10 +210,9 @@ describe('emitEslintConfig', () => {
       const parsed = JSON.parse(output);
       expect(parsed.rules['@typescript-eslint/no-explicit-any']).toBe('error');
       expect(parsed.plugins).toEqual(['@typescript-eslint']);
-      expect(parsed.extends).toEqual([
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-      ]);
+      // Legacy emitter must not auto-enable plugin recommended sets:
+      // it would enable hundreds of rules the flat emitter does not.
+      expect(parsed.extends).toBeUndefined();
     });
 
     it('emits rules with options in legacy format', () => {
@@ -269,7 +268,7 @@ describe('emitEslintConfig', () => {
       expect(parsed.rules['prefer-const']).toEqual(['warn', { destructuring: 'all' }]);
     });
 
-    it('emits unmappable rules in a comment block after the JSON', () => {
+    it('keeps legacy output as pure JSON even when unmappable rules exist', () => {
       const config = makeConfig({
         unmappable: [
           {
@@ -281,16 +280,32 @@ describe('emitEslintConfig', () => {
       });
       const output = emitEslintConfig(config, 'legacy');
 
-      // Find the JSON portion (ends before the unmappable comment block, or at end)
-      const commentMarker = '// Unmappable rules';
-      const commentStart = output.indexOf(commentMarker);
-      const jsonPart = commentStart >= 0 ? output.substring(0, commentStart).trimEnd() : output;
-      const parsed = JSON.parse(jsonPart);
+      // The entire output must parse as JSON. No trailing comment block,
+      // no JS-style // markers anywhere.
+      const parsed = JSON.parse(output);
       expect(parsed).toHaveProperty('rules');
+      expect(output).not.toContain('//');
+    });
 
-      // The unmappable section must appear after the JSON
-      expect(output).toContain('// [strict-mode-1]');
-      expect(output).toContain('TypeScript strict mode is a tsconfig setting');
+    it('exposes unmappable rules through formatUnmappableSummary', () => {
+      const config = makeConfig({
+        unmappable: [
+          {
+            sourceRuleId: 'strict-mode-1',
+            sourceText: 'Use TypeScript strict mode',
+            reason: 'TypeScript strict mode is a tsconfig setting',
+          },
+        ],
+      });
+      const summary = formatUnmappableSummary(config);
+      expect(summary).toContain('strict-mode-1');
+      expect(summary).toContain('TypeScript strict mode is a tsconfig setting');
+      expect(summary).toContain('Use TypeScript strict mode');
+    });
+
+    it('returns an empty summary when no rules are unmappable', () => {
+      const config = makeConfig();
+      expect(formatUnmappableSummary(config)).toBe('');
     });
   });
 });

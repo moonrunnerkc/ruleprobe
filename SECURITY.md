@@ -5,7 +5,7 @@
 RuleProbe reads files and produces reports. That is the entire operational scope.
 
 - **No code execution.** ts-morph parses TypeScript into ASTs for structural analysis. It never runs the TypeScript compiler's emit pipeline and never executes scanned code.
-- **No network calls by default.** RuleProbe has zero runtime network dependencies. It does not phone home, fetch updates, or transmit any data. Network calls happen only when you explicitly opt in with `--llm-extract`, `--rubric-decompose`, `--semantic`, or `ruleprobe run`.
+- **No network calls by default.** RuleProbe has zero runtime network dependencies. It does not phone home, fetch updates, or transmit any data. Network calls happen only when you explicitly opt in with `--llm-extract`, `--rubric-decompose`, or `--semantic`.
 - **No file modification.** RuleProbe never writes to the scanned directory. Output goes to stdout or to a user-specified `--output` path, nowhere else.
 - **No auth, no database, no state.** Each invocation is stateless. Nothing is persisted between runs.
 
@@ -22,6 +22,24 @@ What is sent to the Anthropic API (only when LLM escalation is triggered):
 What is NEVER sent:
 - Source code, variable names, function names, string literals
 - Comments, import paths, module names, file paths, scope names
+
+## LLM Call Budgets
+
+External LLM calls happen only on the opt-in `--llm-extract`,
+`--rubric-decompose`, and `--semantic` paths, and each has an upper
+bound on calls per invocation:
+
+- `--llm-extract`: at most one OpenAI call per invocation. Unparseable
+  lines are sent as a single batch (default 50 lines). Transient 429
+  and 503 responses are retried up to 3 times with exponential
+  backoff; non-transient errors fail immediately.
+- `--rubric-decompose`: at most one OpenAI call per invocation, batch
+  of 20 unparseable lines.
+- `--semantic`: capped by `--max-llm-calls` (default 20). The semantic
+  engine logs and stops escalation when the budget is hit.
+
+If you supply your own API key, these budgets define the maximum cost
+ceiling for a single ruleprobe invocation against your account.
 
 ## Path Traversal Protection
 
@@ -47,7 +65,7 @@ npm run audit
 
 ### Current audit status
 
-As of v0.1.0, `npm audit` reports 5 moderate advisories in `esbuild`, a transitive dev dependency of vitest. These affect the vitest development server only and have no impact on RuleProbe's runtime behavior. esbuild is not bundled in the published package.
+As of v4.5.0, `npm audit` reports 7 moderate advisories in the `vitest` dev-dependency chain (`vite`, `esbuild`, `postcss`, `brace-expansion`). All four are dev-tooling only. None are reachable at runtime and none are included in the published package; the `files` field in package.json restricts the npm artifact to `dist/`, `action.yml`, and metadata.
 
 ## Reporting Security Issues
 

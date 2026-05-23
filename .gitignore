@@ -3,9 +3,33 @@ dist/
 coverage/
 *.tsbuildinfo
 .DS_Store
+Thumbs.db
+desktop.ini
 
 # Environment variables
 .env
+.env.*
+!.env.example
+!.env.template
+
+# Credential file extensions
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# Editor backups
+*~
+*.bak
+*.orig
+*.swp
+*.swo
+
+# npm and yarn debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Phase 0 data collection cache and output
 .cache/
@@ -26,6 +50,9 @@ tests/fixtures/calibration/payloads/*-payload.json
 .ruleprobe/
 test-treesitter*.mjs
 
+# Publication prep tooling output (local only)
+.pubprep/
+
 # Private project docs (keep local only)
 .github/copilot-instructions.md
 .github/ruleprobe-e2e-verification-guide.md
@@ -33,4 +60,3 @@ docs/ruleprobe-build-guide.md
 .ruleprobe-semantic/
 .codex
 .codex-tmp/
-.ruleprobe-semantic/

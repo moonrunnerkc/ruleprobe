@@ -8,31 +8,7 @@
 
 import type { Rule, RuleSet } from '../types.js';
 import type { LlmExtractOptions, LlmRuleCandidate } from './types.js';
-
-/**
- * All known pattern types across all verifiers.
- *
- * This list is used in LLM prompts so the model knows which
- * checks are available. Keep in sync with the verifier switch
- * statements in ast-verifier.ts, regex-verifier.ts, and
- * file-verifier.ts.
- */
-const KNOWN_PATTERN_TYPES: string[] = [
-  // AST checks
-  'camelCase', 'PascalCase', 'no-any', 'no-console-log', 'named-exports',
-  'jsdoc-public', 'no-path-aliases', 'no-deep-relative-imports',
-  'no-empty-catch', 'no-enum', 'no-type-assertions', 'no-non-null-assertions',
-  'throw-error-only', 'no-console-extended', 'no-nested-ternary',
-  'no-magic-numbers', 'no-else-after-return', 'max-function-length',
-  'max-params', 'no-namespace-imports', 'no-barrel-files', 'no-settimeout-in-tests',
-  'no-var', 'prefer-const', 'no-wildcard-exports',
-  // Regex checks
-  'line-length', 'no-ts-directives', 'no-test-only', 'no-test-skip',
-  'quote-style', 'banned-import', 'no-todo-comments', 'consistent-semicolons',
-  // Filesystem checks
-  'kebab-case', 'test-files-exist', 'max-file-length', 'test-file-naming',
-  'strict-mode', 'file-exists', 'formatter-config', 'pinned-dependencies',
-];
+import { KNOWN_PATTERN_TYPES } from './known-patterns.js';
 
 /**
  * Run LLM extraction on a RuleSet's unparseable lines.

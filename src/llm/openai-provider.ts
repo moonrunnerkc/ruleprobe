@@ -19,6 +19,47 @@ export interface OpenAiProviderConfig {
   baseUrl?: string;
   /** Request timeout in milliseconds. Defaults to 30000. */
   timeoutMs?: number;
+  /**
+   * Total attempts on transient errors (429 and 503). Defaults to 3.
+   * Set to 1 to disable retries. The first attempt counts.
+   */
+  maxAttempts?: number;
+  /**
+   * Initial backoff in milliseconds between retries. Doubled each
+   * subsequent attempt. Honored only when the response has no
+   * Retry-After header. Defaults to 1000.
+   */
+  retryBaseDelayMs?: number;
+  /**
+   * Sleep implementation, overridable for tests. Defaults to
+   * setTimeout-based wait.
+   */
+  sleep?: (ms: number) => Promise<void>;
+  /**
+   * Fetch implementation, overridable for tests. Defaults to global fetch.
+   */
+  fetchImpl?: typeof fetch;
+}
+
+/** Parse a Retry-After header into milliseconds. Returns null if absent or invalid. */
+function parseRetryAfter(header: string | null): number | null {
+  if (header === null || header === '') {
+    return null;
+  }
+  const seconds = Number(header);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.round(seconds * 1000);
+  }
+  const date = Date.parse(header);
+  if (!Number.isNaN(date)) {
+    return Math.max(0, date - Date.now());
+  }
+  return null;
+}
+
+/** Default sleep implementation using setTimeout. */
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -42,6 +83,10 @@ export function createOpenAiProvider(config: OpenAiProviderConfig = {}): LlmProv
   const model = config.model ?? 'gpt-4o-mini';
   const baseUrl = (config.baseUrl ?? 'https://api.openai.com/v1').replace(/\/$/, '');
   const timeoutMs = config.timeoutMs ?? 30000;
+  const maxAttempts = Math.max(1, config.maxAttempts ?? 3);
+  const retryBaseDelayMs = config.retryBaseDelayMs ?? 1000;
+  const sleep = config.sleep ?? defaultSleep;
+  const fetchFn = config.fetchImpl ?? fetch;
 
   return {
     name: `openai/${model}`,
@@ -55,33 +100,54 @@ export function createOpenAiProvider(config: OpenAiProviderConfig = {}): LlmProv
       }
 
       const prompt = buildExtractionPrompt(lines, knownPatternTypes);
+      const body = JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: prompt.system },
+          { role: 'user', content: prompt.user },
+        ],
+        temperature: 0,
+        response_format: { type: 'json_object' },
+      });
 
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-      try {
-        const response = await fetch(`${baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: 'system', content: prompt.system },
-              { role: 'user', content: prompt.user },
-            ],
-            temperature: 0,
-            response_format: { type: 'json_object' },
-          }),
-          signal: controller.signal,
-        });
+        let response: Response;
+        try {
+          response = await fetchFn(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+            body,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
+
+        // Retry only on 429 (rate limit) and 503 (service unavailable).
+        // Other non-ok statuses surface as errors immediately because
+        // they indicate a config or request problem retrying cannot
+        // fix.
+        const retryable = response.status === 429 || response.status === 503;
+        if (!response.ok && retryable && attempt < maxAttempts) {
+          const retryAfter = parseRetryAfter(response.headers.get('Retry-After'));
+          const backoff = retryAfter ?? retryBaseDelayMs * Math.pow(2, attempt - 1);
+          process.stderr.write(
+            `OpenAI API returned ${response.status}; retrying in ${backoff}ms (attempt ${attempt}/${maxAttempts})\n`,
+          );
+          await sleep(backoff);
+          continue;
+        }
 
         if (!response.ok) {
-          const body = await response.text();
+          const errBody = await response.text();
           throw new Error(
-            `OpenAI API error ${response.status}: ${body.slice(0, 200)}`,
+            `OpenAI API error ${response.status}: ${errBody.slice(0, 200)}`,
           );
         }
 
@@ -95,9 +161,10 @@ export function createOpenAiProvider(config: OpenAiProviderConfig = {}): LlmProv
         }
 
         return parseExtractionResponse(content, lines, knownPatternTypes);
-      } finally {
-        clearTimeout(timer);
       }
+
+      // Loop exits via return or throw; unreachable in practice.
+      throw new Error('OpenAI API retries exhausted without a final response');
     },
   };
 }

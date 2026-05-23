@@ -8,7 +8,7 @@
 
 import { parseInstructionFile } from '../parsers/index.js';
 import { mapRuleSetToEslintConfig } from '../mapper/index.js';
-import { emitEslintConfig } from '../emitter/eslint.js';
+import { emitEslintConfig, formatUnmappableSummary } from '../emitter/eslint.js';
 import type { EslintFormat } from '../mapper/types.js';
 import { resolveSafePath } from '../utils/safe-path.js';
 import { writeFileSync } from 'node:fs';
@@ -53,5 +53,15 @@ export async function handleLintConfig(
     writeFileSync(safeOutputPath, output, 'utf-8');
   } else {
     process.stdout.write(output + '\n');
+  }
+
+  // Legacy JSON output cannot carry unmappable rules inline (no JSON
+  // comment syntax). Surface them on stderr so the user still sees
+  // which instructions had no ESLint equivalent.
+  if (format === 'legacy') {
+    const summary = formatUnmappableSummary(eslintConfig);
+    if (summary !== '') {
+      process.stderr.write(summary + '\n');
+    }
   }
 }
