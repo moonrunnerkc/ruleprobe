@@ -5,7 +5,7 @@
 RuleProbe reads files and produces reports. That is the entire operational scope.
 
 - **No code execution.** ts-morph parses TypeScript into ASTs for structural analysis. It never runs the TypeScript compiler's emit pipeline and never executes scanned code.
-- **No network calls by default.** RuleProbe has zero runtime network dependencies. It does not phone home, fetch updates, or transmit any data. Network calls happen only when you explicitly opt in with `--llm-extract`, `--rubric-decompose`, `--semantic`, or `ruleprobe run`.
+- **No network calls by default.** RuleProbe has zero runtime network dependencies. It does not phone home, fetch updates, or transmit any data. Network calls happen only when you explicitly opt in with `--llm-extract`, `--rubric-decompose`, or `--semantic`.
 - **No file modification.** RuleProbe never writes to the scanned directory. Output goes to stdout or to a user-specified `--output` path, nowhere else.
 - **No auth, no database, no state.** Each invocation is stateless. Nothing is persisted between runs.
 
@@ -47,7 +47,7 @@ npm run audit
 
 ### Current audit status
 
-As of v0.1.0, `npm audit` reports 5 moderate advisories in `esbuild`, a transitive dev dependency of vitest. These affect the vitest development server only and have no impact on RuleProbe's runtime behavior. esbuild is not bundled in the published package.
+As of v4.5.0, `npm audit` reports 7 moderate advisories in the `vitest` dev-dependency chain (`vite`, `esbuild`, `postcss`, `brace-expansion`). All four are dev-tooling only. None are reachable at runtime and none are included in the published package; the `files` field in package.json restricts the npm artifact to `dist/`, `action.yml`, and metadata.
 
 ## Reporting Security Issues
 
