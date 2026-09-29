@@ -44,7 +44,7 @@ export function resolveSafePath(
     real = resolved;
   }
 
-  if (!options?.allowExternal) {
+  if (options?.allowExternal) {
     const normalizedBoundary = boundary.endsWith(sep) ? boundary : boundary + sep;
 
     if (real !== boundary && !real.startsWith(normalizedBoundary)) {
