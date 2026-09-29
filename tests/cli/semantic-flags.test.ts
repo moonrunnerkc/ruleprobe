@@ -6,12 +6,15 @@ import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-const CLI_PATH = resolve(__dirname, '../../dist/cli.js');
+// Runs the CLI from source through tsx, so the test does not depend on a `dist/`
+// left behind by an earlier `npm run build`. A fresh checkout has no dist, and the
+// spawned process then exited at once with empty stdout.
+const CLI_PATH = resolve(__dirname, '../../src/cli.ts');
 const FIXTURE_DIR = resolve(__dirname, '../semantic/fixtures/sample-project');
 
 /** Helper to run the CLI as a child process. */
 function runCli(args: string[], env?: Record<string, string>): { stdout: string; stderr: string } {
-  const result = spawnSync('node', [CLI_PATH, ...args], {
+  const result = spawnSync(process.execPath, ['--import', 'tsx', CLI_PATH, ...args], {
     encoding: 'utf-8',
     timeout: 30000,
     env: { ...process.env, ...env },
