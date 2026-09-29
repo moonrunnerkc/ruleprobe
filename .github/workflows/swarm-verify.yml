@@ -1,0 +1,19 @@
+# Added by the swarm-verify rollout. Verifies each pull request's head in a network-disabled
+# container, signs the verdict as a GitHub attestation and posts one comment bound to the head.
+# Pinned by full commit; the tag it corresponds to is in the comment beside the pin.
+name: swarm-verify
+on:
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: moonrunnerkc/swarm-verify@5abe0fd26e2438564030cbe76de945fedfc308df # v1.1.0
+        with:
+          install: true
