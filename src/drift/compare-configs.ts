@@ -43,16 +43,19 @@ export function compareConfigs(
     mdConfig.rules.map((r) => [r.ruleName, r]),
   );
 
-  // Collect unmappable rule names to exclude from comparison
-  const unmappableRuleIds = new Set(
-    mdConfig.unmappable.map((u) => u.sourceRuleId),
-  );
-
   // Check md rules: present in md but missing/different in eslint
   for (const mdRule of mdConfig.rules) {
     const fileRule = fileRulesByName.get(mdRule.ruleName);
 
     if (!fileRule || fileRule.severity === 'off') {
+      const relatedName = mdRule.ruleName === '@typescript-eslint/naming-convention' ? 'camelcase'
+        : mdRule.ruleName === 'camelcase' ? '@typescript-eslint/naming-convention' : undefined;
+      const related = relatedName && fileRulesByName.get(relatedName);
+      if (related && related.severity !== 'off') {
+        items.push({ kind: 'partial-match', ruleName: mdRule.ruleName, mdRuleId: mdRule.sourceRuleId,
+          message: `${related.ruleName} is related to ${mdRule.ruleName}, but does not establish the same enforcement.` });
+        continue;
+      }
       // Rule exists in md but is absent or disabled in eslint
       items.push({
         kind: 'md-only',
@@ -118,5 +121,14 @@ export function compareConfigs(
     mdFile: mdConfig.sourceFile,
     eslintFile: fileConfig.sourceFile,
     hasDrift: items.length > 0,
+  };
+}
+/** Compare only the rules resolved for each checked path. */
+export function compareResolvedConfigs(mdConfig: EslintConfig, configs: ParsedEslintConfig[], eslintFile: string): DriftResult {
+  const items = configs.flatMap(config => compareConfigs(mdConfig, config).items.map(item => ({ ...item, filePath: config.filePath })));
+  return {
+    items, mdFile: mdConfig.sourceFile, eslintFile, hasDrift: items.length > 0,
+    pathsChecked: configs.flatMap(config => config.filePath ? [config.filePath] : []),
+    resolution: configs.map(config => ({ filePath: config.filePath, mode: config.resolution ?? 'fallback', reason: config.fallbackReason })),
   };
 }

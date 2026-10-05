@@ -193,7 +193,23 @@ Full API reference: [docs/api-reference.md](docs/api-reference.md)
 
 ## Security
 
-RuleProbe never executes scanned code, makes no network calls by default, and never writes to the scanned directory. The optional `--llm-extract`, `--rubric-decompose`, and `--semantic` flags call external APIs using your own keys. User-supplied paths are resolved and restricted to the working directory; symlinks outside it are skipped unless you pass `--allow-symlinks`. All runtime dependencies are pinned to exact versions; see [SECURITY.md](SECURITY.md) for the full model.
+Loading a JavaScript or TypeScript ESLint config executes that config and its imported modules with the permissions of the RuleProbe process. Normal drift mode uses the repository's installed ESLint and `calculateConfigForFile()` for each source path. Install the repository dependencies first. Use this mode only for trusted repositories, or in an isolated, unprivileged PR job without secrets or a write token. The Action loads the config from the checked-out PR; do not use normal mode on untrusted PR code in a privileged `pull_request_target` job.
+
+For untrusted repositories, use a trusted RuleProbe installation and a pre-exported JSON snapshot:
+
+```bash
+ruleprobe drift AGENTS.md eslint-snapshot.json --config-json
+```
+
+JSON mode reads data only: it does not import ESLint, plugins, `eslint.config.*`, or `ruleprobe.config.*` from the repository. Export the snapshot in a trusted or isolated environment, keyed by source path relative to the config directory:
+
+```json
+{"files":{"src/value.ts":{"rules":{"no-var":[2]}}}}
+```
+
+Each value is the resolved `rules` object wrapped in `{ "rules": ... }` from `await eslint.calculateConfigForFile(path)`. Snapshot accuracy and freshness are the producer's responsibility. `--files src/value.ts tests/value.ts` restricts the checked paths. Without it, normal mode discovers JS/TS sources under the config directory, excluding dependencies, build output and coverage. Reports list paths checked. Plain JSON rule objects and static parsing are labeled **fallback** because they cannot establish per-file enforcement or resolve inherited configuration.
+
+The optional legacy LLM and semantic flags call external APIs using your own keys. Output paths and config regeneration can write files when requested. See [SECURITY.md](SECURITY.md) for the trust boundary.
 
 ## Limitations
 

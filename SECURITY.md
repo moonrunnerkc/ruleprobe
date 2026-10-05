@@ -2,10 +2,10 @@
 
 ## Security Model
 
-RuleProbe reads files and produces reports. That is the entire operational scope.
+RuleProbe reads instruction files, loads ESLint configuration, and produces reports or requested config output.
 
-- **No code execution.** ts-morph parses TypeScript into ASTs for structural analysis. It never runs the TypeScript compiler's emit pipeline and never executes scanned code.
-- **No network calls by default.** RuleProbe has zero runtime network dependencies. It does not phone home, fetch updates, or transmit any data. Network calls happen only when you explicitly opt in with `--llm-extract`, `--rubric-decompose`, or `--semantic`.
+- **Configuration executes code.** Normal drift and extraction load JavaScript/TypeScript ESLint configs and their imports. Treat the repository, its dependencies, and configs as executable code. Use isolated, unprivileged jobs for PR code, without secrets or write credentials. `drift --config-json` reads a pre-exported JSON snapshot without importing repository modules; use a trusted RuleProbe installation for this mode. See the README for the snapshot format.
+- **Config code can perform arbitrary I/O.** The following network restrictions apply to RuleProbe itself, not to loaded configs. It does not phone home, fetch updates, or transmit any data. Network calls happen only when you explicitly opt in with `--llm-extract`, `--rubric-decompose`, or `--semantic`.
 - **No file modification.** RuleProbe never writes to the scanned directory. Output goes to stdout or to a user-specified `--output` path, nowhere else.
 - **No auth, no database, no state.** Each invocation is stateless. Nothing is persisted between runs.
 

@@ -24,6 +24,7 @@ function countByKind(items: DriftItem[]): Record<string, number> {
 /** Format a single drift item as text. */
 function formatItemText(item: DriftItem): string {
   const parts: string[] = [`  [${item.kind}] ${item.ruleName}`];
+  if (item.filePath) parts.push(`    file: ${item.filePath}`);
   if (item.mdRuleId) parts.push(`    rule: ${item.mdRuleId}`);
   if (item.mdDescription) parts.push(`    description: ${item.mdDescription}`);
   if (item.mdSeverity) parts.push(`    md severity: ${item.mdSeverity}`);
@@ -76,15 +77,15 @@ function formatMarkdown(result: DriftResult): string {
     '',
     `Between \`${result.mdFile}\` and \`${result.eslintFile}\`:`,
     '',
-    '| Kind | Rule | MD Severity | ESLint Severity | MD Options | ESLint Options |',
-    '|------|------|-------------|-----------------|------------|----------------|',
+    '| File | Kind | Rule | MD Severity | ESLint Severity | MD Options | ESLint Options |',
+    '|------|------|------|-------------|-----------------|------------|----------------|',
   ];
 
   for (const item of result.items) {
     const mdOpts = item.mdOptions && item.mdOptions.length > 0 ? JSON.stringify(item.mdOptions) : '-';
     const eslintOpts = item.eslintOptions && item.eslintOptions.length > 0 ? JSON.stringify(item.eslintOptions) : '-';
     lines.push(
-      `| ${item.kind} | \`${item.ruleName}\` | ${item.mdSeverity ?? '-'} | ${item.eslintSeverity ?? '-'} | ${mdOpts} | ${eslintOpts} |`,
+      `| ${item.filePath ?? '-'} | ${item.kind} | \`${item.ruleName}\` | ${item.mdSeverity ?? '-'} | ${item.eslintSeverity ?? '-'} | ${mdOpts} | ${eslintOpts} |`,
     );
   }
 
@@ -99,12 +100,11 @@ function formatMarkdown(result: DriftResult): string {
  * @returns Formatted string ready for output
  */
 export function formatDriftReport(result: DriftResult, format: DriftFormat = 'text'): string {
-  switch (format) {
-    case 'json':
-      return formatJson(result);
-    case 'markdown':
-      return formatMarkdown(result);
-    default:
-      return formatText(result);
-  }
+  if (format === 'json') return formatJson(result);
+  const metadata = [
+    ...(result.pathsChecked ? [`Paths checked: ${result.pathsChecked.join(', ') || '(none)'}`] : []),
+    ...(result.resolution ?? []).filter(entry => entry.mode === 'fallback').map(entry => `Fallback: ${entry.reason}`),
+  ];
+  const report = format === 'markdown' ? formatMarkdown(result) : formatText(result);
+  return [...metadata, report].join('\n\n');
 }

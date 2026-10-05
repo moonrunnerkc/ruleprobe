@@ -15,6 +15,7 @@
 
 import { readFileSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { ParsedEslintConfig, ParsedEslintRule } from './types.js';
 
 /** Normalize a severity value to "error" | "warn" | "off". */
@@ -22,7 +23,7 @@ function normalizeSeverity(severity: unknown): 'error' | 'warn' | 'off' {
   if (severity === 'error' || severity === 2) return 'error';
   if (severity === 'warn' || severity === 1) return 'warn';
   if (severity === 'off' || severity === 0) return 'off';
-  return 'off';
+  throw new Error(`Invalid ESLint rule severity: ${JSON.stringify(severity)}`);
 }
 
 /**
@@ -47,8 +48,7 @@ function parseRuleEntry(ruleName: string, value: unknown): ParsedEslintRule {
     return { ruleName, severity, options };
   }
 
-  // Fallback: treat as off if unparseable
-  return { ruleName, severity: 'off', options: [] };
+  throw new Error(`Invalid ESLint rule entry for ${ruleName}`);
 }
 
 /**
@@ -80,6 +80,7 @@ function extractFlatConfigRules(configArray: unknown[]): ParsedEslintRule[] {
   for (const configObj of configArray) {
     if (configObj && typeof configObj === 'object' && !Array.isArray(configObj)) {
       const obj = configObj as Record<string, unknown>;
+      if (obj['files'] || obj['ignores']) continue;
       if (obj['rules'] && typeof obj['rules'] === 'object' && !Array.isArray(obj['rules'])) {
         for (const [ruleName, ruleValue] of Object.entries(obj['rules'] as Record<string, unknown>)) {
           rules.push(parseRuleEntry(ruleName, ruleValue));
@@ -87,7 +88,7 @@ function extractFlatConfigRules(configArray: unknown[]): ParsedEslintRule[] {
       }
     }
   }
-  return rules;
+  return [...new Map(rules.map(rule => [rule.ruleName, rule])).values()];
 }
 
 /** File extensions that require dynamic import (JS-like configs). */
@@ -123,22 +124,20 @@ export function parseEslintConfig(filePath: string): ParsedEslintConfig {
     throw new Error(`Failed to parse ESLint config at ${filePath}: ${message}`);
   }
 
-  // Determine config format: array = flat config, object = legacy
-  if (Array.isArray(parsed)) {
-    return {
-      rules: extractFlatConfigRules(parsed),
-      sourceFile: filePath,
-    };
-  }
+  return parseConfigObject(parsed, filePath);
+}
 
-  if (parsed && typeof parsed === 'object') {
-    return {
-      rules: extractLegacyRules(parsed as Record<string, unknown>),
-      sourceFile: filePath,
-    };
+/** Static fallback only: scoped entries and inherited configs are not resolved. */
+export function parseConfigObject(config: unknown, sourceFile: string): ParsedEslintConfig {
+  if (!config || typeof config !== 'object') {
+    throw new Error(`Unexpected ESLint config format at ${sourceFile}: expected object or array`);
   }
-
-  throw new Error(`Unexpected ESLint config format at ${filePath}: expected object or array`);
+  return {
+    rules: Array.isArray(config) ? extractFlatConfigRules(config) : extractLegacyRules(config as Record<string, unknown>),
+    sourceFile,
+    resolution: 'fallback',
+    fallbackReason: 'Static parse; file scopes, ignores and inherited configs are not resolved.',
+  };
 }
 
 /**
@@ -161,7 +160,7 @@ export async function parseEslintConfigAsync(filePath: string): Promise<ParsedEs
 
   // JS/TS configs require dynamic import
   const absolutePath = resolve(filePath);
-  const fileUrl = new URL(`file://${absolutePath}`).href;
+  const fileUrl = pathToFileURL(absolutePath).href;
 
   let mod: unknown;
   try {
@@ -176,19 +175,5 @@ export async function parseEslintConfigAsync(filePath: string): Promise<ParsedEs
 
   const config = (mod as Record<string, unknown>)['default'] ?? mod;
 
-  if (Array.isArray(config)) {
-    return {
-      rules: extractFlatConfigRules(config),
-      sourceFile: filePath,
-    };
-  }
-
-  if (config && typeof config === 'object') {
-    return {
-      rules: extractLegacyRules(config as Record<string, unknown>),
-      sourceFile: filePath,
-    };
-  }
-
-  throw new Error(`Unexpected ESLint config format in ${filePath}: expected object or array`);
+  return parseConfigObject(config, filePath);
 }

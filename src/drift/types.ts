@@ -20,6 +20,10 @@ export interface ParsedEslintRule {
 
 /** A parsed ESLint config file, ready for comparison. */
 export interface ParsedEslintConfig {
+  filePath?: string;
+  resolution?: 'eslint' | 'json' | 'fallback';
+  fallbackReason?: string;
+  ignored?: boolean;
   /** All rule entries found in the config. */
   rules: ParsedEslintRule[];
   /** Path to the source config file. */
@@ -28,6 +32,7 @@ export interface ParsedEslintConfig {
 
 /** The kind of drift between two configs. */
 export type DriftKind =
+  | 'partial-match'
   | 'md-only'
   | 'eslint-only'
   | 'severity-mismatch'
@@ -35,6 +40,7 @@ export type DriftKind =
 
 /** A single drift item describing a mismatch. */
 export interface DriftItem {
+  filePath?: string;
   kind: DriftKind;
   /** The ESLint rule name where the drift was found. */
   ruleName: string;
@@ -56,6 +62,9 @@ export interface DriftItem {
 
 /** The result of comparing a CLAUDE.md mapping against an ESLint config. */
 export interface DriftResult {
+  pathsChecked?: string[];
+  resolution?: Array<{ filePath?: string; mode: 'eslint' | 'json' | 'fallback'; reason?: string }>;
+
   /** All drift items found. */
   items: DriftItem[];
   /** The CLAUDE.md source file path. */

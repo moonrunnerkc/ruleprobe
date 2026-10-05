@@ -151,7 +151,9 @@ program
   .argument('<eslint-file>', 'path to ESLint config file')
   .option('--format <format>', 'output format (text|json|markdown)', 'text')
   .option('--output <path>', 'write report to file instead of stdout')
-  .action(async (mdFile: string, eslintFile: string, opts: { format: string; output?: string }) => {
+  .option('--config-json', 'Read pre-exported JSON without executing repository code')
+  .option('--files <paths...>', 'Source paths to resolve relative to the config directory')
+  .action(async (mdFile: string, eslintFile: string, opts: { format: string; output?: string; configJson?: boolean; files?: string[] }) => {
     await handleDrift(mdFile, eslintFile, opts, exitWithError);
   });
 
