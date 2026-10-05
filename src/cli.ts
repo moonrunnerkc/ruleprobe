@@ -182,4 +182,6 @@ function exitWithError(message: string): never {
   process.exit(2);
 }
 
-program.parse();
+program.parseAsync().catch((error: unknown) => {
+  exitWithError(error instanceof Error ? error.message : String(error));
+});

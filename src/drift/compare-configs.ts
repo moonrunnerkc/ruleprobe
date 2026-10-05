@@ -8,6 +8,8 @@
  * since they have no ESLint equivalent to compare against.
  */
 
+import { dirname, resolve } from 'node:path';
+import { scopeApplies } from '../parsers/instruction-scope.js';
 import type { EslintConfig } from '../mapper/types.js';
 import type { DriftItem, DriftResult, ParsedEslintConfig } from './types.js';
 
@@ -126,15 +128,17 @@ export function compareConfigs(
 }
 /** Compare only the rules resolved for each checked path. */
 export function compareResolvedConfigs(mdConfig: EslintConfig, configs: ParsedEslintConfig[], eslintFile: string): DriftResult {
-  const items = configs.flatMap(config => compareConfigs(mdConfig, config).items.map(item => ({ ...item, filePath: config.filePath })));
-  const paths = configs.flatMap(config => config.filePath ? [config.filePath] : []);
-  const comparisonStatus = mdConfig.rules.length === 0 || configs.length === 0 ? 'nothing-compared'
-    : configs.some(config => config.resolution === 'fallback') ? 'fallback' : 'compared';
+  const applicable = configs.filter(config => !mdConfig.scope?.conditional &&
+    (!config.filePath || scopeApplies(mdConfig.scope, resolve(dirname(resolve(eslintFile)), config.filePath))));
+  const items = applicable.flatMap(config => compareConfigs(mdConfig, config).items.map(item => ({ ...item, filePath: config.filePath, instructionFile: mdConfig.sourceFile })));
+  const paths = applicable.flatMap(config => config.filePath ? [config.filePath] : []);
+  const comparisonStatus = mdConfig.rules.length === 0 || applicable.length === 0 ? 'nothing-compared'
+    : applicable.some(config => config.resolution !== 'eslint' && config.resolution !== 'json') ? 'fallback' : 'compared';
   const coverage = mdConfig.coverage?.map(line => ({
     ...line,
     files: paths,
-    enforcedOnBothSides: line.status === 'translated' ? configs.filter(config =>
-      config.filePath && !config.ignored && config.resolution !== 'fallback'
+    enforcedOnBothSides: line.status === 'translated' ? applicable.filter(config =>
+      config.filePath && !config.ignored && (config.resolution === 'eslint' || config.resolution === 'json')
       && line.ruleNames.length > 0
       && !items.some(item => item.filePath === config.filePath && item.kind !== 'eslint-only' && line.ruleNames.includes(item.ruleName)),
     ).map(config => config.filePath!) : [],
@@ -142,7 +146,22 @@ export function compareResolvedConfigs(mdConfig: EslintConfig, configs: ParsedEs
   return {
     comparisonStatus, coverage,
     items, mdFile: mdConfig.sourceFile, eslintFile,
-    hasDrift: items.some(item => item.kind !== 'eslint-only') || coverage?.some(line => line.status === 'unsupported' || line.status === 'partial') === true,
+    hasDrift: items.some(item => item.kind !== 'eslint-only') || (applicable.length > 0 && coverage?.some(line => line.status === 'unsupported' || line.status === 'partial') === true),
+    pathsChecked: configs.flatMap(config => config.filePath ? [config.filePath] : []),
+    resolution: configs.map(config => ({ filePath: config.filePath, mode: config.resolution ?? 'fallback', reason: config.fallbackReason })),
+  };
+}
+
+/** Combine instruction reports without widening their scopes. */
+export function compareInstructionConfigs(instructions: EslintConfig[], configs: ParsedEslintConfig[], eslintFile: string, mdFile: string): DriftResult {
+  const reports = instructions.map(instruction => compareResolvedConfigs(instruction, configs, eslintFile));
+  const items = reports.flatMap(report => report.items);
+  return {
+    mdFile, eslintFile, items,
+    hasDrift: reports.some(report => report.hasDrift),
+    comparisonStatus: reports.some(report => report.comparisonStatus === 'fallback') ? 'fallback'
+      : reports.some(report => report.comparisonStatus === 'compared') ? 'compared' : 'nothing-compared',
+    coverage: reports.flatMap(report => report.coverage ?? []),
     pathsChecked: configs.flatMap(config => config.filePath ? [config.filePath] : []),
     resolution: configs.map(config => ({ filePath: config.filePath, mode: config.resolution ?? 'fallback', reason: config.fallbackReason })),
   };

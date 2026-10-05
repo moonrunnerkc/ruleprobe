@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ESLint } from 'eslint';
 
@@ -71,6 +71,22 @@ describe('CI drift exits', () => {
     const eslint = new ESLint({ cwd, overrideConfigFile: configFile });
     const messages = (await eslint.lintFiles(['sample.ts']))[0].messages;
     expect(messages.map(message => message.ruleId)).toEqual(hasDrift ? [] : ['no-var']);
+  });
+
+  it('checks discovered instructions with their own scopes', () => {
+    const cwd = fixture();
+    mkdirSync(resolve(cwd, 'packages/api'), { recursive: true });
+    mkdirSync(resolve(cwd, '.cursor/rules'), { recursive: true });
+    writeFileSync(resolve(cwd, 'AGENTS.md'), '# Root instructions');
+    writeFileSync(resolve(cwd, 'packages/api/AGENTS.md'), '- Never use var.');
+    writeFileSync(resolve(cwd, 'packages/api/value.ts'), 'var value = 1;');
+    writeFileSync(resolve(cwd, '.cursor/rules/service.mdc'), '---\nalwaysApply: false\n---\n- Never use any type.');
+    writeFileSync(resolve(cwd, 'eslint.config.mjs'), "export default [{ files: ['**/*.ts'], rules: {} }];");
+    const result = run(cwd, ['drift', '.', 'eslint.config.mjs', '--format', 'json', '--files', 'sample.ts', 'packages/api/value.ts']);
+    expect(result.status, result.stderr).toBe(1);
+    const report = JSON.parse(result.stdout);
+    expect(report.items).toMatchObject([{ kind: 'md-only', ruleName: 'no-var', filePath: 'packages/api/value.ts' }]);
+    expect(report.coverage).toContainEqual(expect.objectContaining({ status: 'conditional', enforcedOnBothSides: [] }));
   });
 
   it('fails rather than certifying an empty comparison', () => {

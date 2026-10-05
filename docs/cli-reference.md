@@ -107,9 +107,9 @@ ruleprobe lint-config AGENTS.md --format flat --output eslint.ruleprobe.mjs
 
 ---
 
-## `ruleprobe drift <md-file> <eslint-file>`
+## `ruleprobe drift <instruction-file-or-directory> <eslint-file>`
 
-Detect drift between an instruction file and the ESLint config resolved per source file. Use `--files <paths...>` to restrict paths. Loading JS/TS config executes it; `--config-json` reads pre-exported per-file JSON without importing repository modules. Reports rules present in only one side, severity mismatches, and argument differences.
+Detect drift between an instruction file (or all discovered instruction files in a directory) and the ESLint config resolved per source file. Nested AGENTS directory scopes, Cursor globs and Copilot applyTo scopes are preserved; agent-selected Cursor rules are conditional. Use `--files <paths...>` to restrict paths. Loading JS/TS config executes it; `--config-json` reads pre-exported per-file JSON without importing repository modules. Reports rules present in only one side, severity mismatches, and argument differences.
 
 ```bash
 ruleprobe drift CLAUDE.md eslint.config.mjs

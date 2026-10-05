@@ -14,6 +14,7 @@
  * sidecar channel via formatUnmappableSummary().
  */
 
+import { relative, resolve } from 'node:path';
 import type { EslintConfig, EslintFormat, EslintRuleEntry } from '../mapper/types.js';
 
 export const FRAGMENT_HEADER = '// RuleProbe-owned ESLint fragment';
@@ -100,7 +101,7 @@ function flatConfigPluginEntries(plugins: string[]): string {
 }
 
 /** Build the flat config output string. */
-function emitFlatConfig(config: EslintConfig): string {
+function emitFlatConfig(config: EslintConfig, baseDir: string): string {
   const lines: string[] = [];
 
   // Header comment
@@ -118,7 +119,16 @@ function emitFlatConfig(config: EslintConfig): string {
   // Config export
   lines.push('export default [');
   lines.push('  {');
-  lines.push("    files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],");
+  const sourceGlob = '**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}';
+  let prefix = config.scope ? relative(baseDir, config.scope.baseDir).replaceAll('\\', '/') : '';
+  if (prefix.startsWith('../') || prefix === '..') {
+    const fromScope = relative(config.scope!.baseDir, baseDir).replaceAll('\\', '/');
+    if (!fromScope.startsWith('../') && fromScope !== '..' && config.scope?.patterns.length === 1 && config.scope.patterns[0] === '**/*') prefix = '';
+    else throw new Error('Generate scoped glob fragments at the instruction scope root or an ancestor directory.');
+  }
+  const files = config.scope && !config.scope.conditional
+    ? config.scope.patterns.map(pattern => [sourceGlob, prefix ? `${prefix}/${pattern}` : pattern]) : [sourceGlob];
+  lines.push(`    files: ${JSON.stringify(files)},`);
   lines.push('    languageOptions: { parser: tsParser },');
 
   // Plugin entries as an object
@@ -130,15 +140,18 @@ function emitFlatConfig(config: EslintConfig): string {
 
   // Rules
   lines.push('    rules: {');
-  for (let i = 0; i < config.rules.length; i++) {
-    const entry = config.rules[i]!;
+  const activeRules = config.scope?.conditional ? [] : config.rules;
+  for (let i = 0; i < activeRules.length; i++) {
+    const entry = activeRules[i]!;
     const entryStr = flatConfigRuleEntry(entry);
-    const comma = i < config.rules.length - 1 ? ',' : '';
+    const comma = i < activeRules.length - 1 ? ',' : '';
     lines.push(`      ${entryStr}${comma}  // ${entry.description}`);
   }
   lines.push('    },');
   lines.push('  },');
   lines.push('];');
+
+  if (config.scope?.conditional) lines.push('// Conditional instruction file: no always-on rules emitted.');
 
   // Unmappable rules as comments
   if (config.unmappable.length > 0) {
@@ -224,11 +237,13 @@ export function formatUnmappableSummary(config: EslintConfig): string {
  *
  * @param config - The mapped ESLint config
  * @param format - Output format: 'flat' (default) or 'legacy'
+ * @param baseDir - Directory of the consuming flat config; emitted file globs are relative to it
  * @returns A string containing the ESLint configuration
  */
-export function emitEslintConfig(config: EslintConfig, format: EslintFormat = 'flat'): string {
+export function emitEslintConfig(config: EslintConfig, format: EslintFormat = 'flat', baseDir = process.cwd()): string {
   if (format === 'legacy') {
+    if (config.scope) throw new Error('Scoped instructions require flat config output.');
     return emitLegacyConfig(config);
   }
-  return emitFlatConfig(config);
+  return emitFlatConfig(config, resolve(baseDir));
 }

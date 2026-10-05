@@ -89,7 +89,15 @@ ruleprobe verify AGENTS.md ./src --changed-since origin/main
 ruleprobe analyze ./my-project --format json
 ```
 
-Seven instruction file formats are supported: `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `copilot-instructions.md`, `GEMINI.md`, `.windsurfrules`, `.rules`. Full flag reference: [docs/cli-reference.md](docs/cli-reference.md)
+Root instruction formats include: `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `copilot-instructions.md`, `GEMINI.md`, `.windsurfrules`, `.rules`. Discovery also includes nested `AGENTS.md`, `.cursor/rules/*.mdc`, and `.github/instructions/**/*.instructions.md`. Nested `AGENTS.md` applies to its directory tree. Cursor `globs` and Copilot `applyTo` are read from YAML frontmatter; comma-separated strings and lists are supported. Invalid scope metadata fails explicitly instead of widening applicability. Cursor rules without globs or `alwaysApply: true` are reported as conditional and emit no always-on ESLint rules. `alwaysApply: true` takes precedence over Cursor globs.
+
+Pass a project directory to the existing drift command to check all discovered instruction files:
+
+```bash
+ruleprobe drift . eslint.config.mjs
+```
+
+Each coverage row identifies its instruction file and applicable checked paths. Generate scoped fragments at the consuming config directory, with `lint-config packages/api/AGENTS.md --output eslint.ruleprobe.mjs`; the file globs remain package-scoped. Fragments should live beside the consuming flat config. Scoped instructions require flat output. Full flag reference: [docs/cli-reference.md](docs/cli-reference.md)
 
 ## Configuration
 
@@ -236,7 +244,7 @@ The optional legacy LLM and semantic flags call external APIs using your own key
 ## Limitations
 
 - Not all rules map to ESLint. Test file requirements, git conventions, and preference pairs are reported as unmappable so you can enforce them through other tooling.
-- Monorepo drift detection scans from the repo root and uses the first ESLint config found. Specify paths explicitly for per-package instruction files or configs.
+- Drift resolves the selected ESLint config per source path. Independently configured packages need separate runs with their own ESLint config. Scope frontmatter supports relative inclusion globs; negated globs and parent traversal are rejected.
 
 ## Contributing
 

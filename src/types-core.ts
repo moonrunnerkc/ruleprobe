@@ -42,6 +42,8 @@ export type QualifierType =
 export type InstructionFileType =
   | 'claude.md'
   | 'agents.md'
+  | 'cursor-mdc'
+  | 'copilot-scoped'
   | 'cursorrules'
   | 'copilot-instructions'
   | 'gemini.md'
@@ -90,8 +92,16 @@ export interface Rule {
   qualifier?: QualifierType;
 }
 
+/** Applicability relative to the instruction directory or frontmatter scope root. */
+export interface InstructionScope {
+  baseDir: string;
+  patterns: string[];
+  conditional: boolean;
+}
+
 /** A complete set of rules extracted from a single instruction file. */
 export interface RuleSet {
+  scope?: InstructionScope;
   sourceLines?: Array<{ line: number; text: string }>;
   /** Path to the instruction file that was parsed. */
   sourceFile: string;

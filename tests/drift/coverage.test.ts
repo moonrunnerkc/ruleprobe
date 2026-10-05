@@ -38,8 +38,8 @@ describe('instruction coverage', () => {
     const result = await report('translated');
     expect(result.comparisonStatus).toBe('compared');
     expect(result.coverage).toEqual([
-      { line: 2, text: '- Never use var.', status: 'translated', files: ['sample.ts'], ruleNames: ['no-var'], enforcedOnBothSides: ['sample.ts'] },
-      { line: 3, text: '- Never use any type.', status: 'translated', files: ['sample.ts'], ruleNames: ['@typescript-eslint/no-explicit-any'], enforcedOnBothSides: ['sample.ts'] },
+      { sourceFile: resolve('tests/drift/fixtures/instruction-coverage/translated.md'), line: 2, text: '- Never use var.', status: 'translated', files: ['sample.ts'], ruleNames: ['no-var'], enforcedOnBothSides: ['sample.ts'] },
+      { sourceFile: resolve('tests/drift/fixtures/instruction-coverage/translated.md'), line: 3, text: '- Never use any type.', status: 'translated', files: ['sample.ts'], ruleNames: ['@typescript-eslint/no-explicit-any'], enforcedOnBothSides: ['sample.ts'] },
     ]);
   });
 

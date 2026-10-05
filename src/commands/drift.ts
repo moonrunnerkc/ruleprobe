@@ -9,14 +9,15 @@
  * Exit codes: 0 = no drift, 1 = drift found, 2 = execution error.
  */
 
+import { discoverInstructionFiles } from '../parsers/discover-instructions.js';
 import { parseInstructionFile } from '../parsers/index.js';
 import { mapRuleSetToEslintConfig } from '../mapper/index.js';
 import { resolveEslintConfigs } from '../drift/resolve-eslint-config.js';
-import { compareResolvedConfigs } from '../drift/compare-configs.js';
+import { compareInstructionConfigs } from '../drift/compare-configs.js';
 import { formatDriftReport } from '../drift/format-drift-report.js';
 import { resolveSafePath } from '../utils/safe-path.js';
 import type { DriftFormat } from '../drift/types.js';
-import { writeFileSync } from 'node:fs';
+import { statSync, writeFileSync } from 'node:fs';
 
 /**
  * Handle the drift command.
@@ -41,16 +42,17 @@ export async function handleDrift(
   const safeEslintPath = resolveSafePath(eslintFile);
 
   // Parse the instruction file into rules
-  let ruleSet;
+  let ruleSets;
   try {
-    ruleSet = parseInstructionFile(safeInputPath);
+    const paths = statSync(safeInputPath).isDirectory() ? discoverInstructionFiles(safeInputPath) : [safeInputPath];
+    ruleSets = paths.map(path => parseInstructionFile(path));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     exitWithError(`Failed to parse instruction file: ${message}`);
   }
 
   // Map rules to ESLint config
-  const mdConfig = mapRuleSetToEslintConfig(ruleSet);
+  const mdConfigs = ruleSets.map(ruleSet => mapRuleSetToEslintConfig(ruleSet));
 
   // Parse the existing ESLint config (async to support JS/TS files)
   let fileConfig;
@@ -62,7 +64,7 @@ export async function handleDrift(
   }
 
   // Compare
-  const result = compareResolvedConfigs(mdConfig, fileConfig, safeEslintPath);
+  const result = compareInstructionConfigs(mdConfigs, fileConfig, safeEslintPath, safeInputPath);
 
   // Format and output
   const output = formatDriftReport(result, format);

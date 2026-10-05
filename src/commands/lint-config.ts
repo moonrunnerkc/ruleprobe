@@ -6,6 +6,7 @@
  * .eslintrc format via --format.
  */
 
+import { dirname, resolve } from 'node:path';
 import { parseInstructionFile } from '../parsers/index.js';
 import { mapRuleSetToEslintConfig } from '../mapper/index.js';
 import { emitEslintConfig, formatUnmappableSummary, FRAGMENT_HEADER } from '../emitter/eslint.js';
@@ -45,7 +46,7 @@ export async function handleLintConfig(
   const eslintConfig = mapRuleSetToEslintConfig(ruleSet);
 
   // Emit the config
-  const output = emitEslintConfig(eslintConfig, format);
+  const output = emitEslintConfig(eslintConfig, format, opts.output ? dirname(resolve(opts.output)) : process.cwd());
 
   // Write to file or stdout
   if (opts.output && !opts.preview) {

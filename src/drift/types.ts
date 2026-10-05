@@ -40,6 +40,7 @@ export type DriftKind =
 
 /** A single drift item describing a mismatch. */
 export interface DriftItem {
+  instructionFile?: string;
   filePath?: string;
   kind: DriftKind;
   /** The ESLint rule name where the drift was found. */

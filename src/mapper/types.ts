@@ -5,6 +5,8 @@
  * parsed RuleProbe rules and emitted ESLint config files.
  */
 
+import type { InstructionScope } from '../types.js';
+
 /** Output format for the generated ESLint config. */
 export type EslintFormat = 'flat' | 'legacy';
 
@@ -39,6 +41,7 @@ export interface UnmappableRule {
 
 /** Translation coverage for one prose instruction line. */
 export interface TranslationCoverage {
+  sourceFile?: string;
   line?: number;
   text: string;
   status: 'translated' | 'partial' | 'unsupported' | 'conditional';
@@ -49,6 +52,7 @@ export interface TranslationCoverage {
 
 /** The complete output of mapping a RuleSet to ESLint config. */
 export interface EslintConfig {
+  scope?: InstructionScope;
   coverage?: TranslationCoverage[];
   /** All mappable ESLint rule entries. */
   rules: EslintRuleEntry[];

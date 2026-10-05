@@ -226,6 +226,7 @@ export function mapRuleSetToEslintConfig(ruleSet: RuleSet): EslintConfig {
   )];
 
   return {
+    scope: ruleSet.scope,
     coverage: translationCoverage(ruleSet, rules, unmappable),
     rules,
     unmappable,

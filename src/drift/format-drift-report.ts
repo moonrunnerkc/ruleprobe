@@ -24,6 +24,7 @@ function countByKind(items: DriftItem[]): Record<string, number> {
 /** Format a single drift item as text. */
 function formatItemText(item: DriftItem): string {
   const parts: string[] = [`  [${item.kind}] ${item.ruleName}`];
+  if (item.instructionFile) parts.push(`    instruction: ${item.instructionFile}`);
   if (item.filePath) parts.push(`    file: ${item.filePath}`);
   if (item.mdRuleId) parts.push(`    rule: ${item.mdRuleId}`);
   if (item.mdDescription) parts.push(`    description: ${item.mdDescription}`);
@@ -106,7 +107,7 @@ export function formatDriftReport(result: DriftResult, format: DriftFormat = 'te
   const metadata = [
     ...(result.comparisonStatus ? [`Comparison: ${result.comparisonStatus}`] : []),
     ...(result.coverage?.length ? ['Coverage:', ...result.coverage.map(line =>
-      `  ${line.line ?? '?'}: ${line.text} | ${line.status} | files: ${line.files.join(', ') || '(none)'} | enforced on both sides: ${line.enforcedOnBothSides.join(', ') || '(none)'}${line.reason ? ` | ${line.reason}` : ''}`)] : []),
+      `  ${line.sourceFile ?? result.mdFile}:${line.line ?? '?'}: ${line.text} | ${line.status} | files: ${line.files.join(', ') || '(none)'} | enforced on both sides: ${line.enforcedOnBothSides.join(', ') || '(none)'}${line.reason ? ` | ${line.reason}` : ''}`)] : []),
     ...(result.pathsChecked ? [`Paths checked: ${result.pathsChecked.join(', ') || '(none)'}`] : []),
     ...(result.resolution ?? []).filter(entry => entry.mode === 'fallback').map(entry => `Fallback: ${entry.reason}`),
   ];

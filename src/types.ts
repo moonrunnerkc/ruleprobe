@@ -12,6 +12,7 @@ export type {
   VerifierType,
   QualifierType,
   InstructionFileType,
+  InstructionScope,
   VerificationPattern,
   Rule,
   RuleSet,

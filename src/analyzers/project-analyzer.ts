@@ -6,8 +6,9 @@
  * a unified ProjectAnalysis.
  */
 
-import { existsSync, statSync, realpathSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { relative } from 'node:path';
+import { discoverInstructionFiles } from '../parsers/discover-instructions.js';
+export { discoverInstructionFiles } from '../parsers/discover-instructions.js';
 import type {
   ProjectAnalysis,
   FileAnalysis,
@@ -18,35 +19,7 @@ import type {
   CategoryScore,
   Rule,
 } from '../types.js';
-import { INSTRUCTION_FILE_NAMES } from '../types.js';
 import { parseInstructionFile } from '../parsers/index.js';
-
-/**
- * Discover instruction files in a project directory.
- *
- * Checks for each known instruction file name at the project root.
- *
- * @param projectDir - Root directory of the project
- * @returns Array of absolute paths to found instruction files
- */
-export function discoverInstructionFiles(projectDir: string): string[] {
-  const found: string[] = [];
-  const seenRealPaths = new Set<string>();
-  for (const name of INSTRUCTION_FILE_NAMES) {
-    const fullPath = join(projectDir, name);
-    if (existsSync(fullPath) && statSync(fullPath).isFile()) {
-      // Deduplicate symlinks that resolve to the same file
-      // (e.g. CLAUDE.md, AGENTS.md, GEMINI.md all pointing to .rules)
-      const realPath = realpathSync(fullPath);
-      if (seenRealPaths.has(realPath)) {
-        continue;
-      }
-      seenRealPaths.add(realPath);
-      found.push(fullPath);
-    }
-  }
-  return found;
-}
 
 /**
  * Normalize a rule's source text for deduplication.

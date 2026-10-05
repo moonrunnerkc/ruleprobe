@@ -11,13 +11,14 @@ export function translationCoverage(ruleSet: RuleSet, entries: EslintRuleEntry[]
     const ids = new Set(rules.map(rule => rule.id));
     const mapped = entries.filter(entry => entry.sourceRuleId.split(', ').some(id => ids.has(id)));
     const unsupported = unmappable.filter(rule => ids.has(rule.sourceRuleId));
-    const status = mapped.length === 0 ? 'unsupported' : unsupported.length > 0 ? 'partial' : 'translated';
+    const status = ruleSet.scope?.conditional ? 'conditional' : mapped.length === 0 ? 'unsupported' : unsupported.length > 0 ? 'partial' : 'translated';
     return {
       ...line,
+      sourceFile: ruleSet.sourceFile,
       status,
       files: [],
       ruleNames: mapped.map(entry => entry.ruleName),
-      ...(status !== 'translated' ? { reason: unsupported.map(rule => rule.reason).join(' ') || 'No complete ESLint translation for this instruction line.' } : {}),
+      ...(status !== 'translated' ? { reason: (status === 'conditional' ? 'Cursor selects this rule by relevance or manual invocation; it is not always applied.' : unsupported.map(rule => rule.reason).join(' ')) || 'No complete ESLint translation for this instruction line.' } : {}),
     };
   });
 }

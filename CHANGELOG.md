@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Correctness
 
+- Discovery includes nested AGENTS.md, Cursor MDC and Copilot path-specific instruction files. Translation and drift retain directory/frontmatter scopes; conditional Cursor rules never count as always-on enforcement.
+
 - Extra ESLint rules are informational and no longer cause drift exit 1. Missing requirements, unsupported instructions and unverified fallback comparisons fail CI.
 - Regeneration previews and updates only a RuleProbe-owned fragment; existing hand-written configs are preserved.
 

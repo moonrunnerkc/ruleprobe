@@ -11,6 +11,7 @@
 
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
+import { parseInstructionScope } from './instruction-scope.js';
 import { instructionLines } from './instruction-lines.js';
 import type { InstructionFileType, RuleSet } from '../types.js';
 import {
@@ -26,6 +27,8 @@ import { runDeterministicRubric } from './rubric-deterministic.js';
  * Checked in order; first match wins.
  */
 const FILE_TYPE_PATTERNS: Array<{ pattern: RegExp; type: InstructionFileType }> = [
+  { pattern: /\.mdc$/i, type: 'cursor-mdc' },
+  { pattern: /\.instructions\.md$/i, type: 'copilot-scoped' },
   { pattern: /^CLAUDE\.md$/i, type: 'claude.md' },
   { pattern: /^AGENTS\.md$/i, type: 'agents.md' },
   { pattern: /^\.cursorrules$/i, type: 'cursorrules' },
@@ -87,6 +90,8 @@ export function parseInstructionContent(
   content: string,
   filePath: string,
 ): RuleSet {
+  const scoped = parseInstructionScope(content, filePath);
+  content = scoped.content;
   let sourceType = detectFileType(filePath);
 
   // Reset counter for deterministic IDs per parse call
@@ -119,6 +124,7 @@ export function parseInstructionContent(
   }
 
   return {
+    ...(scoped.scope ? { scope: scoped.scope } : {}),
     sourceLines: instructionLines(content),
     sourceFile: filePath,
     sourceType,
