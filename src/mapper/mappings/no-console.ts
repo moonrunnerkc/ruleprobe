@@ -1,5 +1,5 @@
 /**
- * Mapping: no-console-log and no-console-extended → no-console
+ * Mapping: console restrictions → ESLint rules
  *
  * Bans console statements in production code.
  * The extended variant bans all console methods;
@@ -8,12 +8,15 @@
 
 import type { EslintRuleEntry } from '../types.js';
 
-/** Map no-console-log to no-console with allow: []. */
+/** Restrict console.log without banning other console methods. */
 export function mapNoConsoleLog(): EslintRuleEntry {
   return {
-    ruleName: 'no-console',
+    ruleName: 'no-restricted-syntax',
     severity: 'error',
-    options: [{ allow: [] }],
+    options: [{
+      selector: "MemberExpression[object.name='console'][property.name='log'], MemberExpression[object.name='console'][computed=true][property.value='log']",
+      message: 'console.log is not allowed.',
+    }],
     sourceRuleId: '',
     description: 'console.log must not be used in production code',
   };

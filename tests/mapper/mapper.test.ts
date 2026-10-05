@@ -49,7 +49,7 @@ describe('mapRuleSetToEslintConfig', () => {
     expect(config.rules[0].plugin).toBe('@typescript-eslint');
   });
 
-  it('maps no-console-log to no-console', () => {
+  it('maps no-console-log to a console.log selector', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'forbidden-no-console-log-1',
@@ -58,7 +58,7 @@ describe('mapRuleSetToEslintConfig', () => {
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('no-console');
+    expect(config.rules[0].ruleName).toBe('no-restricted-syntax');
     expect(config.rules[0].severity).toBe('error');
   });
 
@@ -312,7 +312,7 @@ describe('mapRuleSetToEslintConfig', () => {
     expect(config.rules[0].ruleName).toBe('max-params');
   });
 
-  it('maps throw-error-only to no-throw-literal', () => {
+  it('reports throw-error-only as requiring type-aware linting', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'error-throw-types-1',
@@ -321,8 +321,8 @@ describe('mapRuleSetToEslintConfig', () => {
       }),
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
-    expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('no-throw-literal');
+    expect(config.rules).toHaveLength(0);
+    expect(config.unmappable[0].reason).toContain('type-aware');
   });
 
   it('maps no-else-after-return to the core no-else-return rule', () => {
@@ -410,7 +410,7 @@ describe('mapRuleSetToEslintConfig', () => {
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
     expect(config.rules[0].ruleName).toBe('quotes');
-    expect(config.rules[0].options).toEqual(['error', 'single', { avoidEscape: true }]);
+    expect(config.rules[0].options).toEqual(['single', { avoidEscape: true }]);
   });
 
   it('maps no-todo-comments to no-warning-comments', () => {
@@ -425,10 +425,10 @@ describe('mapRuleSetToEslintConfig', () => {
     const config = mapRuleSetToEslintConfig(ruleSet);
     expect(config.rules).toHaveLength(1);
     expect(config.rules[0].ruleName).toBe('no-warning-comments');
-    expect(config.rules[0].options).toEqual([{ terms: ['todo', 'fixme', 'hack', 'xxx'], location: 'start' }]);
+    expect(config.rules[0].options).toEqual([{ terms: ['todo', 'fixme', 'hack', 'xxx'], location: 'anywhere' }]);
   });
 
-  it('maps no-implicit-any to @typescript-eslint/no-explicit-any (closest ESLint rule)', () => {
+  it('reports no-implicit-any as a compiler requirement', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'type-no-implicit-any-1',
@@ -438,11 +438,11 @@ describe('mapRuleSetToEslintConfig', () => {
       }),
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
-    expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('@typescript-eslint/no-explicit-any');
+    expect(config.rules).toHaveLength(0);
+    expect(config.unmappable[0].reason).toBeTruthy();
   });
 
-  it('maps no-unused-exports to import/no-unused-modules', () => {
+  it('reports no-unused-exports as requiring project setup', () => {
     const ruleSet = makeRuleSet([
       makeRule({
         id: 'structure-no-unused-exports-1',
@@ -452,8 +452,8 @@ describe('mapRuleSetToEslintConfig', () => {
       }),
     ]);
     const config = mapRuleSetToEslintConfig(ruleSet);
-    expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].ruleName).toBe('import/no-unused-modules');
+    expect(config.rules).toHaveLength(0);
+    expect(config.unmappable[0].reason).toBeTruthy();
   });
 
   it('maps UPPER_CASE constants to naming-convention', () => {

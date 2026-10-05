@@ -70,8 +70,7 @@ function upperCaseConstants(): NamingEntry[] {
     {
       selector: 'variable',
       modifiers: ['const'],
-      format: ['camelCase', 'UPPER_CASE'],
-      leadingUnderscore: 'allow',
+      format: ['UPPER_CASE'],
     },
   ];
 }
@@ -141,10 +140,7 @@ export function addNamingPattern(
       namingSourceIds.push(sourceRuleId);
       return true;
     case 'camelCase':
-      if (namingSourceIds.length === 0) {
-        // First camelCase rule: use general selectors
-        namingEntries.push(...camelCaseVariables());
-      }
+      namingEntries.push(...camelCaseVariables());
       namingSourceIds.push(sourceRuleId);
       return true;
     case 'UPPER_CASE':

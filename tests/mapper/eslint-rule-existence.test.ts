@@ -39,13 +39,11 @@ import {
   mapConsistentSemicolons,
   mapQuoteStyle,
 } from '../../src/mapper/mappings/code-style.js';
-import { mapNoEmptyCatch, mapThrowErrorOnly } from '../../src/mapper/mappings/error-handling.js';
+import { mapNoEmptyCatch } from '../../src/mapper/mappings/error-handling.js';
 import {
   mapNoEnum,
   mapNoTypeAssertions,
   mapNonNullAssertions,
-  mapNoImplicitAny,
-  mapNoUnusedExports,
   mapNoTsDirectives,
 } from '../../src/mapper/mappings/type-safety.js';
 import { mapMaxFunctionLength, mapMaxParams } from '../../src/mapper/mappings/function-limits.js';
@@ -108,12 +106,9 @@ const MAPPER_RULES: Array<{ description: string; name: string; plugin?: string }
   { description: 'mapConsistentSemicolons', name: mapConsistentSemicolons('always').ruleName, plugin: mapConsistentSemicolons('always').plugin },
   { description: 'mapQuoteStyle', name: mapQuoteStyle('single').ruleName, plugin: mapQuoteStyle('single').plugin },
   { description: 'mapNoEmptyCatch', name: mapNoEmptyCatch().ruleName, plugin: mapNoEmptyCatch().plugin },
-  { description: 'mapThrowErrorOnly', name: mapThrowErrorOnly().ruleName, plugin: mapThrowErrorOnly().plugin },
   { description: 'mapNoEnum', name: mapNoEnum().ruleName, plugin: mapNoEnum().plugin },
   { description: 'mapNoTypeAssertions', name: mapNoTypeAssertions().ruleName, plugin: mapNoTypeAssertions().plugin },
   { description: 'mapNonNullAssertions', name: mapNonNullAssertions().ruleName, plugin: mapNonNullAssertions().plugin },
-  { description: 'mapNoImplicitAny', name: mapNoImplicitAny().ruleName, plugin: mapNoImplicitAny().plugin },
-  { description: 'mapNoUnusedExports', name: mapNoUnusedExports().ruleName, plugin: mapNoUnusedExports().plugin },
   { description: 'mapNoTsDirectives', name: mapNoTsDirectives().ruleName, plugin: mapNoTsDirectives().plugin },
   { description: 'mapMaxFunctionLength', name: mapMaxFunctionLength('50').ruleName, plugin: mapMaxFunctionLength('50').plugin },
   { description: 'mapMaxParams', name: mapMaxParams('4').ruleName, plugin: mapMaxParams('4').plugin },

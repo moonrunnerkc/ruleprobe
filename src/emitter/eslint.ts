@@ -30,7 +30,7 @@ function formatOptionValue(value: unknown, indent: string): string {
     return 'null';
   }
   if (typeof value === 'string') {
-    return `'${value.replace(/'/g, "\\'")}'`;
+    return JSON.stringify(value);
   }
   if (typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
@@ -45,7 +45,7 @@ function formatOptionValue(value: unknown, indent: string): string {
     const entries = Object.entries(obj);
     if (entries.length === 0) return '{}';
     const inner = entries
-      .map(([key, val]) => `${indent}  ${key}: ${formatOptionValue(val, indent + '  ')}`)
+      .map(([key, val]) => `${indent}  ${JSON.stringify(key)}: ${formatOptionValue(val, indent + '  ')}`)
       .join(',\n');
     return `{\n${inner}\n${indent}}`;
   }
@@ -106,6 +106,8 @@ function emitFlatConfig(config: EslintConfig): string {
   lines.push(`// Source: ${config.sourceFile}`);
   lines.push('');
 
+  lines.push("import tsParser from '@typescript-eslint/parser';");
+
   // Imports for plugins
   if (config.plugins.length > 0) {
     lines.push(flatConfigImports(config.plugins));
@@ -114,6 +116,8 @@ function emitFlatConfig(config: EslintConfig): string {
   // Config export
   lines.push('export default [');
   lines.push('  {');
+  lines.push("    files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],");
+  lines.push('    languageOptions: { parser: tsParser },');
 
   // Plugin entries as an object
   if (config.plugins.length > 0) {

@@ -31,7 +31,11 @@ export interface MappingEntry {
  * Key is the pattern type, value is a one-line reason explaining why.
  * Only includes types produced by remaining matchers.
  */
-export const UNMAPPABLE_TYPES: Record<string, string> = {};
+export const UNMAPPABLE_TYPES: Record<string, string> = {
+  'throw-error-only': 'Requires type-aware linting; no-throw-literal permits non-Error values stored in variables.',
+  'no-implicit-any': 'Requires the TypeScript noImplicitAny compiler option; no-explicit-any does not enforce it.',
+  'no-unused-exports': 'Requires project import-graph analysis; import/no-unused-modules needs additional project setup and cannot run in this generated flat config.',
+};
 
 /**
  * The bidirectional mapping table.
@@ -72,14 +76,11 @@ export const MAPPINGS: MappingEntry[] = [
 
   // error handling
   { patternType: 'no-empty-catch', eslintRuleName: 'no-empty', defaultSeverity: 'error', description: 'Catch blocks must not be empty' },
-  { patternType: 'throw-error-only', eslintRuleName: 'no-throw-literal', defaultSeverity: 'error', description: 'Only Error objects may be thrown' },
 
   // type safety
   { patternType: 'no-enum', eslintRuleName: 'no-restricted-syntax', defaultSeverity: 'warn', description: 'Enums must not be used; prefer union types' },
   { patternType: 'no-type-assertions', eslintRuleName: '@typescript-eslint/consistent-type-assertions', plugin: '@typescript-eslint', defaultSeverity: 'warn', description: 'Type assertions (as casts) must not be used' },
   { patternType: 'no-non-null-assertions', eslintRuleName: '@typescript-eslint/no-non-null-assertion', plugin: '@typescript-eslint', defaultSeverity: 'warn', description: 'Non-null assertions (!) must not be used' },
-  { patternType: 'no-implicit-any', eslintRuleName: '@typescript-eslint/no-implicit-any', plugin: '@typescript-eslint', defaultSeverity: 'warn', description: 'No implicit any types' },
-  { patternType: 'no-unused-exports', eslintRuleName: 'import/no-unused-modules', plugin: 'import', defaultSeverity: 'warn', description: 'Exported declarations must be imported by other files' },
   { patternType: 'no-ts-directives', eslintRuleName: '@typescript-eslint/ban-ts-comment', plugin: '@typescript-eslint', defaultSeverity: 'error', description: 'TypeScript suppression directives must not be used' },
 
   // function limits

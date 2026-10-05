@@ -77,7 +77,7 @@ export function mapQuoteStyle(expected: string | boolean): EslintRuleEntry {
   return {
     ruleName: 'quotes',
     severity: 'warn',
-    options: ['error', quoteType, { avoidEscape: true }],
+    options: [quoteType, { avoidEscape: true }],
     sourceRuleId: '',
     description: `Strings must use ${quoteType} quotes`,
   };

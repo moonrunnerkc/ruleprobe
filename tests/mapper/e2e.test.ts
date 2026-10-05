@@ -34,7 +34,7 @@ describe('lint-config end-to-end', () => {
     expect(ruleNames).toContain('prefer-const');
     expect(ruleNames).toContain('no-var');
     expect(ruleNames).toContain('no-empty');
-    expect(ruleNames).toContain('no-throw-literal');
+    expect(config.unmappable.some(rule => rule.reason.includes('type-aware'))).toBe(true);
     expect(ruleNames).toContain('no-console');
 
     // Should have naming-convention (merged from pascalcase + camelcase)

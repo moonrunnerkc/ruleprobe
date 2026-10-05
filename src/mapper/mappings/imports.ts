@@ -43,6 +43,7 @@ export function mapNoNamespaceImports(): EslintRuleEntry {
 export function mapNoPathAliases(): EslintRuleEntry {
   return {
     ruleName: 'no-restricted-imports',
+    options: [{ patterns: [{ regex: '^(?!\\.{1,2}/)' }] }],
     severity: 'warn',
     sourceRuleId: '',
     description: 'Imports must use relative paths, not path aliases',

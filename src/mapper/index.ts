@@ -34,13 +34,11 @@ import {
   mapConsistentSemicolons,
   mapQuoteStyle,
 } from './mappings/code-style.js';
-import { mapNoEmptyCatch, mapThrowErrorOnly } from './mappings/error-handling.js';
+import { mapNoEmptyCatch } from './mappings/error-handling.js';
 import {
   mapNoEnum,
   mapNoTypeAssertions,
   mapNonNullAssertions,
-  mapNoImplicitAny,
-  mapNoUnusedExports,
   mapNoTsDirectives,
 } from './mappings/type-safety.js';
 import { mapMaxFunctionLength, mapMaxParams } from './mappings/function-limits.js';
@@ -120,8 +118,6 @@ function mapRule(rule: Rule): EslintRuleEntry | null {
     // error handling
     case 'no-empty-catch':
       return { ...mapNoEmptyCatch(), severity, sourceRuleId: rule.id, description: rule.description };
-    case 'throw-error-only':
-      return { ...mapThrowErrorOnly(), severity, sourceRuleId: rule.id, description: rule.description };
 
     // type safety
     case 'no-enum':
@@ -130,10 +126,6 @@ function mapRule(rule: Rule): EslintRuleEntry | null {
       return { ...mapNoTypeAssertions(), severity, sourceRuleId: rule.id, description: rule.description };
     case 'no-non-null-assertions':
       return { ...mapNonNullAssertions(), severity, sourceRuleId: rule.id, description: rule.description };
-    case 'no-implicit-any':
-      return { ...mapNoImplicitAny(), severity, sourceRuleId: rule.id, description: rule.description };
-    case 'no-unused-exports':
-      return { ...mapNoUnusedExports(), severity, sourceRuleId: rule.id, description: rule.description };
     case 'no-ts-directives':
       return { ...mapNoTsDirectives(), severity, sourceRuleId: rule.id, description: rule.description };
 
@@ -190,7 +182,20 @@ export function mapRuleSetToEslintConfig(ruleSet: RuleSet): EslintConfig {
 
     const entry = mapRule(rule);
     if (entry) {
-      rules.push(entry);
+      const existing = rules.find(candidate => candidate.ruleName === entry.ruleName);
+      if (!existing) {
+        rules.push(entry);
+      } else if (entry.ruleName === 'no-restricted-syntax') {
+        existing.options = [...existing.options ?? [], ...entry.options ?? []]
+          .filter((option, index, all) => all.findIndex(value => JSON.stringify(value) === JSON.stringify(option)) === index);
+        existing.sourceRuleId += `, ${entry.sourceRuleId}`;
+        existing.severity = existing.severity === 'error' || entry.severity === 'error' ? 'error' : 'warn';
+      } else if (JSON.stringify(existing.options) === JSON.stringify(entry.options)) {
+        existing.sourceRuleId += `, ${entry.sourceRuleId}`;
+        existing.severity = existing.severity === 'error' || entry.severity === 'error' ? 'error' : 'warn';
+      } else {
+        throw new Error(`Conflicting instructions for ${entry.ruleName}: ${existing.sourceRuleId} and ${entry.sourceRuleId}`);
+      }
     } else {
       // Check if we have a known reason for this pattern type
       const reason = UNMAPPABLE_TYPES[type] ?? `No ESLint rule enforces "${type}" constraints.`;
