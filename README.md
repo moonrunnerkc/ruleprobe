@@ -52,6 +52,8 @@ ruleprobe drift CLAUDE.md .eslintrc.json
 ruleprobe drift CLAUDE.md .eslintrc.json --format markdown
 ```
 
+Drift reports include each prose instruction line, its translation status, applicable checked files, unsupported reasons, and files where it is enforced on both sides. That last group identifies possible instruction lines to remove after review; it does not measure agent task success. Headings and fenced examples are excluded. A zero-rule or zero-path comparison says `nothing-compared` and exits 1. `hasDrift: false` alone does not mean that anything was compared. Static fallback never qualifies as enforced on both sides.
+
 **Convert ESLint rules back to instruction prose:**
 
 ```bash

@@ -6,7 +6,7 @@
  * mismatches in both directions.
  */
 
-import type { EslintSeverity } from '../mapper/types.js';
+import type { EslintSeverity, TranslationCoverage } from '../mapper/types.js';
 
 /** A normalized ESLint rule entry parsed from a config file. */
 export interface ParsedEslintRule {
@@ -62,6 +62,8 @@ export interface DriftItem {
 
 /** The result of comparing a CLAUDE.md mapping against an ESLint config. */
 export interface DriftResult {
+  comparisonStatus?: 'compared' | 'nothing-compared' | 'fallback';
+  coverage?: Array<TranslationCoverage & { enforcedOnBothSides: string[] }>;
   pathsChecked?: string[];
   resolution?: Array<{ filePath?: string; mode: 'eslint' | 'json' | 'fallback'; reason?: string }>;
 

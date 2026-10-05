@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Correctness
+
+- Drift reports include instruction-line coverage and per-file enforcement. A comparison with no translated requirements or no source paths reports `comparisonStatus: "nothing-compared"` and exits 1 instead of reporting a clean exit 0. `hasDrift` remains separate from whether a comparison occurred.
+- Generated proxy checks for subjective instructions are reported as unsupported translations, not as enforcement of the original instruction.
+
 ### New Features
 
 - **`--changed-since <git-ref>` on `verify`.** Only verify files changed since the given git ref. Runs `git diff --name-only --diff-filter=ACMR <ref>...HEAD` and intersects with the output-dir walk. Available as a `changed-since` input on the GitHub Action in verify mode. Exits 2 with instructions when git is unavailable or the ref is invalid.

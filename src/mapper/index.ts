@@ -10,6 +10,7 @@
  * @typescript-eslint/naming-convention config.
  */
 
+import { translationCoverage } from './coverage.js';
 import type { RuleSet, Rule } from '../types.js';
 import type { EslintConfig, EslintRuleEntry, EslintSeverity, UnmappableRule } from './types.js';
 import { UNMAPPABLE_TYPES } from '../mappings/index.js';
@@ -173,6 +174,11 @@ export function mapRuleSetToEslintConfig(ruleSet: RuleSet): EslintConfig {
 
   for (const rule of ruleSet.rules) {
     const { type } = rule.pattern;
+    if (rule.extractionMethod === 'rubric-deterministic' || rule.extractionMethod === 'rubric' || rule.extractionMethod === 'llm') {
+      unmappable.push({ sourceRuleId: rule.id, sourceText: rule.source,
+        reason: 'Inferred proxy checks do not establish enforcement of this instruction.' });
+      continue;
+    }
 
     // Naming convention rules are accumulated and merged
     if (NAMING_PATTERN_TYPES.has(type)) {
@@ -220,6 +226,7 @@ export function mapRuleSetToEslintConfig(ruleSet: RuleSet): EslintConfig {
   )];
 
   return {
+    coverage: translationCoverage(ruleSet, rules, unmappable),
     rules,
     unmappable,
     plugins,

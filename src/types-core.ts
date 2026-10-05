@@ -92,6 +92,7 @@ export interface Rule {
 
 /** A complete set of rules extracted from a single instruction file. */
 export interface RuleSet {
+  sourceLines?: Array<{ line: number; text: string }>;
   /** Path to the instruction file that was parsed. */
   sourceFile: string;
   /** Detected file format. */

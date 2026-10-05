@@ -11,6 +11,7 @@
 
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
+import { instructionLines } from './instruction-lines.js';
 import type { InstructionFileType, RuleSet } from '../types.js';
 import {
   parseStructuredMarkdown,
@@ -118,6 +119,7 @@ export function parseInstructionContent(
   }
 
   return {
+    sourceLines: instructionLines(content),
     sourceFile: filePath,
     sourceType,
     rules: allRules,

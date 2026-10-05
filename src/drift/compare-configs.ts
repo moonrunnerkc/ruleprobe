@@ -121,12 +121,26 @@ export function compareConfigs(
     mdFile: mdConfig.sourceFile,
     eslintFile: fileConfig.sourceFile,
     hasDrift: items.length > 0,
+    comparisonStatus: mdConfig.rules.length === 0 ? 'nothing-compared' : 'compared',
   };
 }
 /** Compare only the rules resolved for each checked path. */
 export function compareResolvedConfigs(mdConfig: EslintConfig, configs: ParsedEslintConfig[], eslintFile: string): DriftResult {
   const items = configs.flatMap(config => compareConfigs(mdConfig, config).items.map(item => ({ ...item, filePath: config.filePath })));
+  const paths = configs.flatMap(config => config.filePath ? [config.filePath] : []);
+  const comparisonStatus = mdConfig.rules.length === 0 || configs.length === 0 ? 'nothing-compared'
+    : configs.some(config => config.resolution === 'fallback') ? 'fallback' : 'compared';
+  const coverage = mdConfig.coverage?.map(line => ({
+    ...line,
+    files: paths,
+    enforcedOnBothSides: line.status === 'translated' ? configs.filter(config =>
+      config.filePath && !config.ignored && config.resolution !== 'fallback'
+      && line.ruleNames.length > 0
+      && !items.some(item => item.filePath === config.filePath && item.kind !== 'eslint-only' && line.ruleNames.includes(item.ruleName)),
+    ).map(config => config.filePath!) : [],
+  }));
   return {
+    comparisonStatus, coverage,
     items, mdFile: mdConfig.sourceFile, eslintFile, hasDrift: items.length > 0,
     pathsChecked: configs.flatMap(config => config.filePath ? [config.filePath] : []),
     resolution: configs.map(config => ({ filePath: config.filePath, mode: config.resolution ?? 'fallback', reason: config.fallbackReason })),

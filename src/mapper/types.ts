@@ -37,8 +37,19 @@ export interface UnmappableRule {
   reason: string;
 }
 
+/** Translation coverage for one prose instruction line. */
+export interface TranslationCoverage {
+  line?: number;
+  text: string;
+  status: 'translated' | 'partial' | 'unsupported' | 'conditional';
+  files: string[];
+  ruleNames: string[];
+  reason?: string;
+}
+
 /** The complete output of mapping a RuleSet to ESLint config. */
 export interface EslintConfig {
+  coverage?: TranslationCoverage[];
   /** All mappable ESLint rule entries. */
   rules: EslintRuleEntry[];
   /** Rules that have no ESLint equivalent. */

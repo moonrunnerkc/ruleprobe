@@ -40,6 +40,7 @@ function formatItemText(item: DriftItem): string {
 
 /** Format a drift report as plain text. */
 function formatText(result: DriftResult): string {
+  if (result.comparisonStatus === 'nothing-compared') return 'Nothing compared: no translated requirements or no applicable source paths.';
   if (!result.hasDrift) {
     return `No drift detected between ${result.mdFile} and ${result.eslintFile}`;
   }
@@ -68,6 +69,7 @@ function formatJson(result: DriftResult): string {
 
 /** Format a drift report as markdown. */
 function formatMarkdown(result: DriftResult): string {
+  if (result.comparisonStatus === 'nothing-compared') return 'Nothing compared: no translated requirements or no applicable source paths.';
   if (!result.hasDrift) {
     return `## No drift detected\n\nNo drift between \`${result.mdFile}\` and \`${result.eslintFile}\`.`;
   }
@@ -102,6 +104,9 @@ function formatMarkdown(result: DriftResult): string {
 export function formatDriftReport(result: DriftResult, format: DriftFormat = 'text'): string {
   if (format === 'json') return formatJson(result);
   const metadata = [
+    ...(result.comparisonStatus ? [`Comparison: ${result.comparisonStatus}`] : []),
+    ...(result.coverage?.length ? ['Coverage:', ...result.coverage.map(line =>
+      `  ${line.line ?? '?'}: ${line.text} | ${line.status} | files: ${line.files.join(', ') || '(none)'} | enforced on both sides: ${line.enforcedOnBothSides.join(', ') || '(none)'}${line.reason ? ` | ${line.reason}` : ''}`)] : []),
     ...(result.pathsChecked ? [`Paths checked: ${result.pathsChecked.join(', ') || '(none)'}`] : []),
     ...(result.resolution ?? []).filter(entry => entry.mode === 'fallback').map(entry => `Fallback: ${entry.reason}`),
   ];
