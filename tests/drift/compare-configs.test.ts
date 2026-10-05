@@ -91,7 +91,7 @@ describe('compareConfigs', () => {
     ]);
 
     const result = compareConfigs(mdConfig, fileConfig);
-    expect(result.hasDrift).toBe(true);
+    expect(result.hasDrift).toBe(false);
     const eslintOnly = result.items.filter((i) => i.kind === 'eslint-only');
     expect(eslintOnly).toHaveLength(1);
     expect(eslintOnly[0].ruleName).toBe('sonarjs/no-identical-conditions');

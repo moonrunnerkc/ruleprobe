@@ -41,13 +41,13 @@ function formatItemText(item: DriftItem): string {
 /** Format a drift report as plain text. */
 function formatText(result: DriftResult): string {
   if (result.comparisonStatus === 'nothing-compared') return 'Nothing compared: no translated requirements or no applicable source paths.';
-  if (!result.hasDrift) {
+  if (!result.hasDrift && result.items.length === 0) {
     return `No drift detected between ${result.mdFile} and ${result.eslintFile}`;
   }
 
   const counts = countByKind(result.items);
   const lines: string[] = [
-    `Drift detected between ${result.mdFile} and ${result.eslintFile}`,
+    `${result.hasDrift ? 'Drift detected' : 'Informational ESLint rules'} between ${result.mdFile} and ${result.eslintFile}`,
     '',
     'Summary:',
     `  ${counts['md-only']} md-only, ${counts['eslint-only']} eslint-only, ${counts['severity-mismatch']} severity-mismatch, ${counts['config-arg-mismatch']} config-arg-mismatch`,
@@ -70,12 +70,12 @@ function formatJson(result: DriftResult): string {
 /** Format a drift report as markdown. */
 function formatMarkdown(result: DriftResult): string {
   if (result.comparisonStatus === 'nothing-compared') return 'Nothing compared: no translated requirements or no applicable source paths.';
-  if (!result.hasDrift) {
+  if (!result.hasDrift && result.items.length === 0) {
     return `## No drift detected\n\nNo drift between \`${result.mdFile}\` and \`${result.eslintFile}\`.`;
   }
 
   const lines: string[] = [
-    '## Drift detected',
+    result.hasDrift ? '## Drift detected' : '## Informational ESLint rules',
     '',
     `Between \`${result.mdFile}\` and \`${result.eslintFile}\`:`,
     '',

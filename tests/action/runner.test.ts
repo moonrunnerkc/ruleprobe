@@ -228,8 +228,10 @@ describe('runAction (drift mode)', () => {
       deps,
     );
 
-    // Should call exec to run lint-config, git checkout, etc.
-    expect(deps.exec).toHaveBeenCalled();
+    expect(deps.runCommand).toHaveBeenCalledWith(expect.any(String), expect.arrayContaining(['--preview']));
+    expect(deps.runCommand).toHaveBeenCalledWith(expect.any(String), expect.arrayContaining(['--output', '/home/runner/work/repo/eslint.ruleprobe.mjs']));
+    expect(deps.exec).toHaveBeenCalledWith('git', ['add', 'eslint.ruleprobe.mjs']);
+    expect(deps.exec).not.toHaveBeenCalledWith('git', ['add', '.eslintrc.json']);
   });
 
   it('does not regenerate when no drift even if regenerateOnDrift is true', async () => {

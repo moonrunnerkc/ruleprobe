@@ -6,6 +6,7 @@
  * and update existing comments instead of posting duplicates.
  */
 
+import { formatDriftReport } from '../drift/format-drift-report.js';
 import type { DriftItem, DriftResult } from '../drift/types.js';
 
 /** Hidden marker used to find and update existing RuleProbe drift comments. */
@@ -58,6 +59,9 @@ function formatDriftTable(items: DriftItem[]): string {
  * @returns A formatted markdown string ready to post as a PR comment
  */
 export function formatDriftComment(result: DriftResult): string {
+  if (result.comparisonStatus) {
+    return `${DRIFT_MARKER}\n${formatDriftReport(result, 'markdown')}`;
+  }
   if (!result.hasDrift) {
     return [
       DRIFT_MARKER,

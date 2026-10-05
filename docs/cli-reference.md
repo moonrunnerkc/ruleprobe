@@ -91,35 +91,39 @@ Checks for `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.github/copilot-instructio
 
 ## `ruleprobe lint-config <instruction-file>`
 
-Parse an instruction file and emit an ESLint config. Flat config is the default; use `--format legacy` for `.eslintrc.json` output.
+Parse an instruction file and emit an ESLint config. Flat config fragments are the default. `--preview` writes nothing; `--output` refuses to replace files without the RuleProbe ownership marker. Import the fragment from your existing config. `--format legacy` is for older ESLint only; ESLint 10 requires flat config.
 
 ```bash
 ruleprobe lint-config CLAUDE.md
-ruleprobe lint-config CLAUDE.md --format legacy --output .eslintrc.json
-ruleprobe lint-config AGENTS.md --format flat --output eslint.config.js
+ruleprobe lint-config CLAUDE.md --output eslint.ruleprobe.mjs --preview
+ruleprobe lint-config AGENTS.md --format flat --output eslint.ruleprobe.mjs
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--format <format>` | `flat` | Output format: `flat` (ESLint flat config) or `legacy` (`.eslintrc.json`) |
-| `--output <path>` | stdout | Write config to file |
+| `--output <path>` | stdout | Write the owned fragment |
+| `--preview` | `false` | Print the fragment without writing |
 
 ---
 
 ## `ruleprobe drift <md-file> <eslint-file>`
 
-Detect drift between an instruction file and an ESLint config. Reports rules present in only one side, severity mismatches, and argument differences.
+Detect drift between an instruction file and the ESLint config resolved per source file. Use `--files <paths...>` to restrict paths. Loading JS/TS config executes it; `--config-json` reads pre-exported per-file JSON without importing repository modules. Reports rules present in only one side, severity mismatches, and argument differences.
 
 ```bash
-ruleprobe drift CLAUDE.md .eslintrc.json
+ruleprobe drift CLAUDE.md eslint.config.mjs
 ruleprobe drift CLAUDE.md eslint.config.js --format markdown
-ruleprobe drift AGENTS.md .eslintrc.json --format json --output drift-report.json
+ruleprobe drift AGENTS.md eslint-snapshot.json --config-json --format json --output drift-report.json
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--format <format>` | `text` | Output format: `text`, `json`, or `markdown` |
 | `--output <path>` | stdout | Write report to file |
+
+
+Exit codes: `0` verified requirements with no drift (extra ESLint rules are informational), `1` missing or unsupported enforcement, nothing compared, or static fallback, `2` execution error.
 
 ---
 

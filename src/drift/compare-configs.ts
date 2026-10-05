@@ -120,7 +120,7 @@ export function compareConfigs(
     items,
     mdFile: mdConfig.sourceFile,
     eslintFile: fileConfig.sourceFile,
-    hasDrift: items.length > 0,
+    hasDrift: items.some(item => item.kind !== 'eslint-only'),
     comparisonStatus: mdConfig.rules.length === 0 ? 'nothing-compared' : 'compared',
   };
 }
@@ -141,7 +141,8 @@ export function compareResolvedConfigs(mdConfig: EslintConfig, configs: ParsedEs
   }));
   return {
     comparisonStatus, coverage,
-    items, mdFile: mdConfig.sourceFile, eslintFile, hasDrift: items.length > 0,
+    items, mdFile: mdConfig.sourceFile, eslintFile,
+    hasDrift: items.some(item => item.kind !== 'eslint-only') || coverage?.some(line => line.status === 'unsupported' || line.status === 'partial') === true,
     pathsChecked: configs.flatMap(config => config.filePath ? [config.filePath] : []),
     resolution: configs.map(config => ({ filePath: config.filePath, mode: config.resolution ?? 'fallback', reason: config.fallbackReason })),
   };

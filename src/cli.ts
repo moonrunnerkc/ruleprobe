@@ -136,7 +136,8 @@ program
   .argument('<instruction-file>', 'path to instruction file')
   .option('--format <format>', 'output format (flat|legacy)', 'flat')
   .option('--output <path>', 'write config to file instead of stdout')
-  .action(async (file: string, opts: { format: string; output?: string }) => {
+  .option('--preview', 'Print the generated fragment without writing files')
+  .action(async (file: string, opts: { format: string; output?: string; preview?: boolean }) => {
     await handleLintConfig(file, opts, exitWithError);
   });
 

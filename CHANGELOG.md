@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Correctness
 
+- Extra ESLint rules are informational and no longer cause drift exit 1. Missing requirements, unsupported instructions and unverified fallback comparisons fail CI.
+- Regeneration previews and updates only a RuleProbe-owned fragment; existing hand-written configs are preserved.
+
 - Drift reports include instruction-line coverage and per-file enforcement. A comparison with no translated requirements or no source paths reports `comparisonStatus: "nothing-compared"` and exits 1 instead of reporting a clean exit 0. `hasDrift` remains separate from whether a comparison occurred.
 - Generated proxy checks for subjective instructions are reported as unsupported translations, not as enforcement of the original instruction.
 

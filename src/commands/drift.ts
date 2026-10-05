@@ -74,7 +74,7 @@ export async function handleDrift(
   }
 
   // Exit code: 0 no drift, 1 drift, 2 error (handled by exitWithError)
-  if (result.hasDrift || result.comparisonStatus === 'nothing-compared') {
+  if (result.hasDrift || result.comparisonStatus !== 'compared') {
     process.exitCode = 1;
   }
 }

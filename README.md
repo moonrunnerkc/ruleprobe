@@ -42,14 +42,24 @@ For maintainers who use AI coding agents and ESLint. Works with any instruction 
 
 ```bash
 ruleprobe lint-config CLAUDE.md
-ruleprobe lint-config AGENTS.md --format legacy --output .eslintrc.json
+ruleprobe lint-config AGENTS.md --output eslint.ruleprobe.mjs --preview
+ruleprobe lint-config AGENTS.md --output eslint.ruleprobe.mjs
 ```
+
+`lint-config` prints a RuleProbe-owned fragment. `--preview` writes nothing; `--output` prints and writes it, refusing to overwrite a file without the ownership marker. Regeneration replaces only this fragment. Install `@typescript-eslint/parser` and any plugins imported by the fragment. Activate it in your hand-written flat config:
+
+```js
+import ruleprobe from './eslint.ruleprobe.mjs';
+export default [...ruleprobe];
+```
+
+Keep your existing config entries alongside the spread. ESLint applies later entries last, so run drift after integration to check effective enforcement. The fragment implements relative-only imports for the relative-path instruction, including rejecting bare package imports. Legacy JSON output remains available for older ESLint versions; ESLint 10 requires flat config.
 
 **Detect drift between an instruction file and an existing ESLint config:**
 
 ```bash
-ruleprobe drift CLAUDE.md .eslintrc.json
-ruleprobe drift CLAUDE.md .eslintrc.json --format markdown
+ruleprobe drift CLAUDE.md eslint.config.mjs
+ruleprobe drift CLAUDE.md eslint.config.mjs --format markdown
 ```
 
 Drift reports include each prose instruction line, its translation status, applicable checked files, unsupported reasons, and files where it is enforced on both sides. That last group identifies possible instruction lines to remove after review; it does not measure agent task success. Headings and fenced examples are excluded. A zero-rule or zero-path comparison says `nothing-compared` and exits 1. `hasDrift: false` alone does not mean that anything was compared. Static fallback never qualifies as enforced on both sides.
@@ -127,17 +137,25 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
       - uses: moonrunnerkc/ruleprobe@v4
         with:
           instruction-file: CLAUDE.md
+          comment-on-pr: 'false'
+          fail-on-drift: 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-No API keys needed. The action runs only when instruction files or ESLint configs change in the PR. Pin to `@v4.5.0` for reproducible builds.
+This read-only example does not post PR comments. Normal mode executes checked-out config code; use the JSON mode described below for untrusted repositories. No API keys needed. The action runs only when instruction files or ESLint configs change in the PR. Pin to `@v4.5.0` for reproducible builds.
 
 <details>
 <summary>Full action options</summary>
@@ -151,6 +169,8 @@ No API keys needed. The action runs only when instruction files or ESLint config
 | `comment-on-pr` | `true` | Post drift results as a PR comment |
 | `fail-on-drift` | `false` | Fail the action if drift is detected |
 | `changed-since` | unset | Verify mode only: git ref to diff against |
+
+Missing or unverified documented enforcement fails CI when `fail-on-drift` is enabled. Extra ESLint rules are informational and do not fail CI.
 
 Drift mode outputs: `drift-count`, `has-drift`.
 

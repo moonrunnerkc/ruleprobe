@@ -169,7 +169,7 @@ export async function parseEslintConfigAsync(filePath: string): Promise<ParsedEs
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(
       `Failed to import ESLint config at ${filePath}: ${message}. ` +
-      `Ensure all plugin dependencies are installed, or convert to .eslintrc.json for reliable parsing.`,
+      `Install the config dependencies and use eslint.config.mjs flat config. For untrusted repositories, use drift --config-json with a pre-exported JSON snapshot.`,
     );
   }
 

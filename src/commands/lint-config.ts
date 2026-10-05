@@ -8,10 +8,10 @@
 
 import { parseInstructionFile } from '../parsers/index.js';
 import { mapRuleSetToEslintConfig } from '../mapper/index.js';
-import { emitEslintConfig, formatUnmappableSummary } from '../emitter/eslint.js';
+import { emitEslintConfig, formatUnmappableSummary, FRAGMENT_HEADER } from '../emitter/eslint.js';
 import type { EslintFormat } from '../mapper/types.js';
 import { resolveSafePath } from '../utils/safe-path.js';
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 /**
  * Handle the lint-config command.
@@ -24,7 +24,7 @@ import { writeFileSync } from 'node:fs';
  */
 export async function handleLintConfig(
   filePath: string,
-  opts: { format: string; output?: string },
+  opts: { format: string; output?: string; preview?: boolean },
   exitWithError: (message: string) => never,
 ): Promise<void> {
   const format: EslintFormat = opts.format === 'legacy' ? 'legacy' : 'flat';
@@ -48,8 +48,12 @@ export async function handleLintConfig(
   const output = emitEslintConfig(eslintConfig, format);
 
   // Write to file or stdout
-  if (opts.output) {
+  if (opts.output && !opts.preview) {
     const safeOutputPath = resolveSafePath(opts.output, undefined, { allowExternal: true });
+    if (existsSync(safeOutputPath) && (format !== 'flat' || !readFileSync(safeOutputPath, 'utf8').startsWith(FRAGMENT_HEADER + '\n'))) {
+      exitWithError(`Refusing to overwrite ${opts.output}: it is not a RuleProbe-owned fragment. Use --output eslint.ruleprobe.mjs and import that fragment into your flat config.`);
+    }
+    process.stdout.write(output + '\n');
     writeFileSync(safeOutputPath, output, 'utf-8');
   } else {
     process.stdout.write(output + '\n');
