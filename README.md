@@ -1,261 +1,254 @@
-<p align="center">
-  <img src="./assets/cover.svg" alt="RuleProbe cover" width="100%">
-</p>
-
 # RuleProbe
 
-When your `CLAUDE.md` says "use camelCase" but ESLint doesn't enforce it, drift has already happened. RuleProbe reads an instruction file and translates it to an ESLint config. It detects what each enforces but the other misses, or converts ESLint rules back to instruction prose.
+**Keep AI coding instructions and ESLint enforcement in sync.**
+
+RuleProbe translates supported instructions from `AGENTS.md`, `CLAUDE.md`, and related files into ESLint configuration fragments. It checks whether those requirements match the ESLint configuration applied to your source files, and can turn supported ESLint rules back into instruction prose.
 
 [![npm version](https://img.shields.io/npm/v/ruleprobe?style=flat-square)](https://www.npmjs.com/package/ruleprobe)
-[![build](https://img.shields.io/github/actions/workflow/status/moonrunnerkc/ruleprobe/self-check.yml?style=flat-square&label=build)](https://github.com/moonrunnerkc/ruleprobe/actions/workflows/self-check.yml)
-[![license](https://img.shields.io/github/license/moonrunnerkc/ruleprobe?style=flat-square)](https://github.com/moonrunnerkc/ruleprobe/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6?style=flat-square)](https://www.typescriptlang.org)
-[![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-339933?style=flat-square)](https://nodejs.org)
-[![stars](https://img.shields.io/github/stars/moonrunnerkc/ruleprobe?style=flat-square)](https://github.com/moonrunnerkc/ruleprobe/stargazers)
+[![MIT license](https://img.shields.io/github/license/moonrunnerkc/ruleprobe?style=flat-square)](LICENSE)
 
-## Installation
+[Quick start](#quick-start) · [Workflows](#workflows) · [Coverage](#coverage-and-limits) · [GitHub Action](#github-action) · [CLI reference](docs/cli-reference.md)
 
-Requires Node.js 18 or later.
+For maintainers using AI coding agents alongside ESLint, RuleProbe helps answer three questions:
 
-```bash
-npm install -g ruleprobe
+- Which written rules can become executable lint rules?
+- Which requirements are missing from the effective ESLint configuration?
+- Which supported ESLint rules can be documented for an agent?
+
+The translation and drift workflows are deterministic and require no LLM or API key. ESLint runs the resulting checks; RuleProbe checks the connection between your instructions and configuration.
+
+> [!IMPORTANT]
+> This README describes the development source. The published npm package, `4.5.0`, predates `--preview`, `--config-json`, scoped instruction discovery, and the newer drift safeguards. The `@v4` Action tag also points to older code. Use the source installation and pinned Action revision below for the behavior documented here.
+
+## See the gap
+
+Given these instructions in `AGENTS.md`:
+
+```markdown
+# Coding rules
+
+- Never use var.
+- No empty catch blocks.
 ```
 
-Or try it without installing:
+Check them against your ESLint configuration:
 
 ```bash
-npx ruleprobe --help
+ruleprobe drift AGENTS.md eslint.config.mjs
 ```
 
-Confirm it's working:
+If the corresponding rules are missing, the report includes:
 
-```bash
-ruleprobe --version
-# 4.5.0
+```text
+  [md-only] no-var
+  [md-only] no-empty
 ```
 
-## Usage
+Reports also identify the instruction lines, translation status, source paths checked, and paths where the requirements are enforced on both sides. A clean comparison describes configuration coverage. It does not prove that the code passes ESLint or that an agent completed its task correctly.
 
-For maintainers who use AI coding agents and ESLint. Works with any instruction file format your agents read.
+## Quick start
 
-**Translate an instruction file to an ESLint config:**
+### Install the documented source
+
+Use Node.js 24 or Node.js 22.13+, npm, and Git. These commands select the source revision used by this guide:
 
 ```bash
-ruleprobe lint-config CLAUDE.md
+git clone https://github.com/moonrunnerkc/ruleprobe.git
+cd ruleprobe
+git checkout 81453c1b8446adcc1a74d60605d6198be90ec146
+npm ci --ignore-scripts
+npm run build
+npm link --ignore-scripts
+cd ..
+```
+
+### Try a complete example
+
+Create a small JavaScript project. The dependency versions below match the versions used to check this example.
+
+```bash
+mkdir ruleprobe-demo
+cd ruleprobe-demo
+npm init -y
+npm install --save-dev --save-exact eslint@9.39.4 @typescript-eslint/parser@8.59.2
+mkdir src
+printf "export const serviceName = 'ruleprobe-demo';\n" > src/index.js
+printf '# Coding rules\n\n- Never use var.\n- No empty catch blocks.\n' > AGENTS.md
+```
+
+Preview the generated fragment, then write it:
+
+```bash
 ruleprobe lint-config AGENTS.md --output eslint.ruleprobe.mjs --preview
 ruleprobe lint-config AGENTS.md --output eslint.ruleprobe.mjs
 ```
 
-`lint-config` prints a RuleProbe-owned fragment. `--preview` writes nothing; `--output` prints and writes it, refusing to overwrite a file without the ownership marker. Regeneration replaces only this fragment. Install `@typescript-eslint/parser` and any plugins imported by the fragment. Activate it in your hand-written flat config:
+Create `eslint.config.mjs` with:
 
-```js
+```javascript
 import ruleprobe from './eslint.ruleprobe.mjs';
+
 export default [...ruleprobe];
 ```
 
-Keep your existing config entries alongside the spread. ESLint applies later entries last, so run drift after integration to check effective enforcement. The fragment implements relative-only imports for the relative-path instruction, including rejecting bare package imports. Legacy JSON output remains available for older ESLint versions; ESLint 10 requires flat config.
-
-**Detect drift between an instruction file and an existing ESLint config:**
+Check the effective configuration, then lint the source:
 
 ```bash
-ruleprobe drift CLAUDE.md eslint.config.mjs
-ruleprobe drift CLAUDE.md eslint.config.mjs --format markdown
+ruleprobe drift AGENTS.md eslint.config.mjs --files src/index.js
+npx eslint src/index.js
 ```
 
-Drift reports include each prose instruction line, its translation status, applicable checked files, unsupported reasons, and files where it is enforced on both sides. That last group identifies possible instruction lines to remove after review; it does not measure agent task success. Headings and fenced examples are excluded. A zero-rule or zero-path comparison says `nothing-compared` and exits 1. `hasDrift: false` alone does not mean that anything was compared. Static fallback never qualifies as enforced on both sides.
+The drift report should show `Comparison: compared`, both instructions enforced for `src/index.js`, and no drift. ESLint should exit successfully.
 
-**Convert ESLint rules back to instruction prose:**
+### Add it to an existing project
+
+Run the same translation commands from your project root, using your instruction filename. Put `eslint.ruleprobe.mjs` beside the flat config that imports it. Add the import and spread to your existing configuration, preserving its other entries.
+
+Review the generated rules before integrating them. Every flat fragment imports `@typescript-eslint/parser`; additional mappings can import `@typescript-eslint/eslint-plugin`, `eslint-plugin-import`, `eslint-plugin-jsdoc`, or `eslint-plugin-unicorn`. Install the packages imported by your fragment using versions compatible with your project's ESLint and Node.js.
+
+Later flat-config entries can override earlier ones. Run drift against the final configuration after integration. Generating a file alone does not activate enforcement.
+
+## Workflows
+
+### Translate instructions into a config fragment
+
+Use `lint-config` as shown in the quick start whenever your instructions change. `--preview` writes nothing. `--output` prints and writes the fragment, refusing to overwrite a file without the RuleProbe ownership marker. Regeneration replaces the owned fragment, so keep manual configuration in the consuming config.
+
+Flat config is the default. `--format legacy` emits JSON for older ESLint setups; scoped instructions require flat output.
+
+### Check instruction and configuration drift
 
 ```bash
-ruleprobe extract .eslintrc.json
+ruleprobe drift AGENTS.md eslint.config.mjs
+ruleprobe drift . eslint.config.mjs --format markdown
+ruleprobe drift AGENTS.md eslint.config.mjs --format json --output drift-report.json
+```
+
+Pass a directory to include all discovered instruction files. Normal drift mode uses the project's installed ESLint to resolve configuration for each checked JavaScript or TypeScript file. Install the project's dependencies first. Use `--files` to limit the checked paths.
+
+**Trust boundary:** loading a JavaScript or TypeScript ESLint config executes that config and its imports. Use a trusted repository or an isolated, unprivileged environment. For data-only comparisons, see [Security](#security).
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | A comparison was completed with no missing or mismatched requirements. Extra ESLint rules are informational. |
+| `1` | Missing or mismatched requirements, unsupported or partial instruction coverage on applicable paths, a static fallback, or nothing compared. |
+| `2` | An execution error prevented the check. |
+
+Check `comparisonStatus` and `pathsChecked` in JSON reports. `hasDrift: false` alone does not establish that anything was compared. Paths listed as enforced on both sides can help you review redundant instructions; they are not evidence that removing those instructions will preserve agent behavior.
+
+### Extract instruction prose from ESLint
+
+```bash
 ruleprobe extract .eslintrc.json --output rules-section.md
 ```
 
-**See what rules RuleProbe can parse from an instruction file:**
+Review the generated Markdown before adding it to an instruction file. Extraction uses supported rule mappings, skips stylistic rules, and reports unmapped rules. It does not resolve inherited configuration, and flat-config entries with `files` or `ignores` are excluded. A scoped config can therefore produce an empty rules section. Extraction is not a lossless round trip.
+
+### Inspect instruction coverage
 
 ```bash
-ruleprobe parse CLAUDE.md --show-unparseable
+ruleprobe parse AGENTS.md --show-unparseable
+ruleprobe analyze . --format json
 ```
 
-**Check code against extracted rules (legacy verify mode):**
+`parse` shows extracted rules and unparseable content. `analyze` discovers instruction files and reports detected rule conflicts, redundancies, and category coverage. It is not a complete semantic analysis of every instruction.
 
-```bash
-ruleprobe verify AGENTS.md ./src --changed-since origin/main
-```
+## Coverage and limits
 
-**Discover and cross-reference all instruction files in a project:**
+Discovery recognizes root-level `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, `.windsurfrules`, and `.rules`, plus `.github/copilot-instructions.md`.
 
-```bash
-ruleprobe analyze ./my-project --format json
-```
+| Scoped format | Applicability |
+| --- | --- |
+| Nested `AGENTS.md` | Its containing directory and descendants. |
+| `.cursor/rules/*.mdc` | Frontmatter `globs`, or all paths when `alwaysApply: true`. Rules without either are conditional. |
+| `.github/instructions/**/*.instructions.md` | Frontmatter `applyTo` globs. |
 
-Root instruction formats include: `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `copilot-instructions.md`, `GEMINI.md`, `.windsurfrules`, `.rules`. Discovery also includes nested `AGENTS.md`, `.cursor/rules/*.mdc`, and `.github/instructions/**/*.instructions.md`. Nested `AGENTS.md` applies to its directory tree. Cursor `globs` and Copilot `applyTo` are read from YAML frontmatter; comma-separated strings and lists are supported. Invalid scope metadata fails explicitly instead of widening applicability. Cursor rules without globs or `alwaysApply: true` are reported as conditional and emit no always-on ESLint rules. `alwaysApply: true` takes precedence over Cursor globs.
+Relative inclusion globs are supported; negation, absolute paths, and parent traversal are rejected. Conditional Cursor rules emit no always-on ESLint rules. Invalid scope metadata fails explicitly.
 
-Pass a project directory to the existing drift command to check all discovered instruction files:
+- **Supported patterns only.** RuleProbe recognizes specific instruction patterns. Arbitrary prose, subjective guidance, and every rule understood by an agent are not automatically translatable. Inferred proxy checks do not count as enforcement of the original instruction.
+- **Review translation semantics.** Inspect the emitted options and scope. For example, the relative-import mapping also rejects bare package imports.
+- **Coverage depends on checked paths.** A zero-rule or zero-path comparison is not a successful verification. Independently configured packages need separate runs against their own ESLint configs.
+- **Configuration checks are bounded.** Static parsing cannot establish per-file enforcement or resolve inherited configuration. Keep ESLint and your tests in CI.
 
-```bash
-ruleprobe drift . eslint.config.mjs
-```
-
-Each coverage row identifies its instruction file and applicable checked paths. Generate scoped fragments at the consuming config directory, with `lint-config packages/api/AGENTS.md --output eslint.ruleprobe.mjs`; the file globs remain package-scoped. Fragments should live beside the consuming flat config. Scoped instructions require flat output. Full flag reference: [docs/cli-reference.md](docs/cli-reference.md)
-
-## Configuration
-
-RuleProbe auto-discovers a config file in the working directory or any parent. Pass `--config <path>` to override. Supported names, in priority order: `ruleprobe.config.ts`, `ruleprobe.config.js`, `ruleprobe.config.json`, `.ruleproberc.json`.
-
-```typescript
-// ruleprobe.config.ts
-import { defineConfig } from 'ruleprobe';
-
-export default defineConfig({
-  // Rules the parser can't extract from your instruction file
-  rules: [
-    {
-      id: 'custom-no-lodash',
-      category: 'import-pattern',
-      description: 'Ban lodash imports',
-      verifier: 'regex',
-      pattern: { type: 'banned-import', target: '*.ts', expected: 'lodash', scope: 'file' },
-    },
-  ],
-
-  // Change severity or thresholds on extracted rules
-  overrides: [
-    { ruleId: 'naming-camelcase', severity: 'warning' },
-    { ruleId: 'structure-max-file-length', expected: '500' },
-  ],
-
-  // Remove rules you don't want checked
-  exclude: ['forbidden-no-console-log'],
-});
-```
-
-`defineConfig()` is a no-op passthrough that provides TypeScript type checking.
+See the [matcher reference](docs/matchers.md) for supported instruction patterns and the [CLI reference](docs/cli-reference.md) for command options. Legacy `verify` remains available for direct code checks; its optional LLM features are separate from the primary translation and drift workflows.
 
 ## GitHub Action
 
-Add drift detection to every pull request (PR):
+For a repository with `AGENTS.md`, `eslint.config.mjs`, and an npm lockfile, save this as `.github/workflows/ruleprobe.yml`:
 
 ```yaml
-# .github/workflows/ruleprobe.yml
-name: RuleProbe Drift
-on: [pull_request]
+name: RuleProbe drift
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
-  drift-check:
+  drift:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
       - run: npm ci --ignore-scripts
-      - uses: moonrunnerkc/ruleprobe@v4
+      - uses: moonrunnerkc/ruleprobe@81453c1b8446adcc1a74d60605d6198be90ec146
         with:
-          instruction-file: CLAUDE.md
+          instruction-file: AGENTS.md
+          eslint-file: eslint.config.mjs
           comment-on-pr: 'false'
           fail-on-drift: 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-This read-only example does not post PR comments. Normal mode executes checked-out config code; use the JSON mode described below for untrusted repositories. No API keys needed. The action runs only when instruction files or ESLint configs change in the PR. Pin to `@v4.5.0` for reproducible builds.
+This uses the documented source revision and read-only token permissions. It does not post comments or regenerate files. The Action checks changed filenames and skips drift when neither an explicitly configured input nor a recognized instruction/config filename changed. To check every PR regardless of changed filenames, invoke the CLI directly in your workflow.
 
-<details>
-<summary>Full action options</summary>
-
-| Input | Default | Description |
-|-------|---------|-------------|
-| `mode` | `drift` | `drift` (default) or `verify` (legacy) |
-| `instruction-file` | required | Path to instruction file |
-| `eslint-file` | auto-detected | Path to ESLint config |
-| `regenerate-on-drift` | `false` | Open a follow-up PR with the regenerated config |
-| `comment-on-pr` | `true` | Post drift results as a PR comment |
-| `fail-on-drift` | `false` | Fail the action if drift is detected |
-| `changed-since` | unset | Verify mode only: git ref to diff against |
-
-Missing or unverified documented enforcement fails CI when `fail-on-drift` is enabled. Extra ESLint rules are informational and do not fail CI.
-
-Drift mode outputs: `drift-count`, `has-drift`.
-
-</details>
-
-## How It Works
-
-```
-Instruction File --> Parser --> RuleSet --> Mapper  --> ESLint Config
-Instruction File --> Parser --> RuleSet --.
-ESLint Config    --> Parser --> Parsed  --+--> Drift Detector --> Drift Report
-ESLint Config    --> Extractor           --> Markdown Rules Section
-Agent Output     --> Verifier (verify mode, legacy)
-```
-
-| Engine | What it checks |
-|--------|----------------|
-| AST (Abstract Syntax Tree) via ts-morph | TypeScript and JavaScript structure, naming, imports, type safety |
-| Tree-sitter | Python and Go: function naming, function length |
-| Regex | Line-level patterns across any text file |
-| Filesystem | File existence, naming conventions, directory structure |
-
-34 ESLint-mappable matchers across 7 categories (`naming`, `forbidden-pattern`, `structure`, `import-pattern`, `error-handling`, `type-safety`, `code-style`). Rules with no ESLint equivalent appear as comments in generated configs. Full matcher table: [docs/matchers.md](docs/matchers.md)
-
-## Programmatic API
-
-```typescript
-import { parseInstructionFile, verifyOutput, generateReport, formatReport } from 'ruleprobe';
-
-const ruleSet = parseInstructionFile('CLAUDE.md');
-const results = await verifyOutput(ruleSet, './agent-output');
-const report = generateReport(
-  { agent: 'claude-code', model: 'opus-4', taskTemplateId: 'manual',
-    outputDir: './agent-output', timestamp: new Date().toISOString(), durationSeconds: null },
-  ruleSet,
-  results,
-);
-console.log(formatReport(report, 'summary'));
-```
-
-Full API reference: [docs/api-reference.md](docs/api-reference.md)
+The job executes the checked-out ESLint config. Keep it isolated from secrets and write credentials; do not run untrusted PR configuration in a privileged `pull_request_target` job. All inputs are listed in [action.yml](action.yml).
 
 ## Security
 
-Loading a JavaScript or TypeScript ESLint config executes that config and its imported modules with the permissions of the RuleProbe process. Normal drift mode uses the repository's installed ESLint and `calculateConfigForFile()` for each source path. Install the repository dependencies first. Use this mode only for trusted repositories, or in an isolated, unprivileged PR job without secrets or a write token. The Action loads the config from the checked-out PR; do not use normal mode on untrusted PR code in a privileged `pull_request_target` job.
-
-For untrusted repositories, use a trusted RuleProbe installation and a pre-exported JSON snapshot:
+Use a trusted RuleProbe installation and a pre-exported per-file JSON snapshot to compare untrusted repository data without importing its ESLint config, plugins, or RuleProbe config:
 
 ```bash
 ruleprobe drift AGENTS.md eslint-snapshot.json --config-json
 ```
 
-JSON mode reads data only: it does not import ESLint, plugins, `eslint.config.*`, or `ruleprobe.config.*` from the repository. Export the snapshot in a trusted or isolated environment, keyed by source path relative to the config directory:
+The snapshot contains resolved rules keyed by source path relative to the config directory:
 
 ```json
-{"files":{"src/value.ts":{"rules":{"no-var":[2]}}}}
+{
+  "files": {
+    "src/index.js": {
+      "rules": {
+        "no-var": [2],
+        "no-empty": [2, { "allowEmptyCatch": false }]
+      }
+    }
+  }
+}
 ```
 
-Each value is the resolved `rules` object wrapped in `{ "rules": ... }` from `await eslint.calculateConfigForFile(path)`. Snapshot accuracy and freshness are the producer's responsibility. `--files src/value.ts tests/value.ts` restricts the checked paths. Without it, normal mode discovers JS/TS sources under the config directory, excluding dependencies, build output and coverage. Reports list paths checked. Plain JSON rule objects and static parsing are labeled **fallback** because they cannot establish per-file enforcement or resolve inherited configuration.
+Export each entry from ESLint's `calculateConfigForFile()` in a trusted or isolated environment. The snapshot producer is responsible for its accuracy and freshness. A plain JSON rules object is a static fallback, not verified per-file enforcement.
 
-The optional legacy LLM and semantic flags call external APIs using your own keys. Output paths and config regeneration can write files when requested. See [SECURITY.md](SECURITY.md) for the trust boundary.
+Optional `--llm-extract`, `--rubric-decompose`, and `--semantic` features call external APIs when enabled. See [SECURITY.md](SECURITY.md) for execution boundaries and reporting security issues.
 
-## Limitations
+## Documentation and contributing
 
-- Not all rules map to ESLint. Test file requirements, git conventions, and preference pairs are reported as unmappable so you can enforce them through other tooling.
-- Drift resolves the selected ESLint config per source path. Independently configured packages need separate runs with their own ESLint config. Scope frontmatter supports relative inclusion globs; negated globs and parent traversal are rejected.
+[CLI reference](docs/cli-reference.md) · [Matcher reference](docs/matchers.md) · [Programmatic API](docs/api-reference.md) · [Changelog](CHANGELOG.md)
 
-## Contributing
+To contribute, read [AGENTS.md](AGENTS.md), install dependencies with `npm ci --ignore-scripts`, and run:
 
 ```bash
-git clone https://github.com/moonrunnerkc/ruleprobe.git
-cd ruleprobe && npm install
+npm run build
 npm test
 ```
 
-Issues and pull requests welcome at [github.com/moonrunnerkc/ruleprobe](https://github.com/moonrunnerkc/ruleprobe).
+[Report a bug](https://github.com/moonrunnerkc/ruleprobe/issues) with the instruction text, relevant config, command, and observed result. Include a small reproduction when possible.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE), maintained by [Brad Kinnard](https://github.com/moonrunnerkc).
